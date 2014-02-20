@@ -1,4 +1,10 @@
-EasyHybrid
-==========
+[EasyHybrid](http://app.hnu.edu.cn) — easy cordova development approach
+=======================================================================
 
-an javascript development approach base on cordova-js
+EasyHybrid是两个作者为了第一个合作开发的手机项目而编写的一个极其微型的框架，作者尝试使用相同的AMD模型对cordova的插件进行整合，以减少页面中需要加载的文件数量，目前项目还在开发中
+
+源代码结构
+--------------------
+
+
+
