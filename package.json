@@ -3,11 +3,18 @@
     "description": "an javascript development approach base on cordova-js",
     "version": "0.1.0",
     "homepage": "https://github.com/easyhybrid/EasyHybrid",
-    "author": {
-        "name": "清月_荷雾",
-        "email": "441984145@qq.com",
-        "url": "http://app.hnu.edu.cn/wuqi"
-    },
+    "author": [
+        {
+            "name": "赤菁风铃",
+            "email": "liuxuanzy@qq.com",
+            "url": "http://app.hnu.edu.cn/fengling"
+        },
+        {
+            "name": "清月_荷雾",
+            "email": "441984145@qq.com",
+            "url": "http://app.hnu.edu.cn/wuqi"
+        }
+    ],
     "repository": {
         "type": "git",
         "url": "git://github.com/easyhybrid/EasyHybrid.git"
