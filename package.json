@@ -28,7 +28,7 @@
             "url": "https://github.com/easyhybrid/EasyHybrid/blob/master/LICENSE"
         }
     ],
-    "main": "lib/EasyHybrid",
+    "main": "index.js",
     "engines": {
         "node": ">= 0.10.0"
     },
