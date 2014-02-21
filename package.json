@@ -1,6 +1,6 @@
 {
     "name": "EasyHybrid",
-    "description": "an javascript development approach base on cordova-js",
+    "description": "an easy javascript development approach base on cordova-js",
     "version": "0.1.0",
     "homepage": "https://github.com/easyhybrid/EasyHybrid",
     "author": [
@@ -39,7 +39,6 @@
         "grunt-contrib-concat": "~0.3.0",
         "grunt-contrib-uglify": "~0.2.0",
         "grunt-contrib-jshint": "~0.6.0",
-        "grunt-contrib-nodeunit": "~0.2.0",
         "grunt-contrib-watch": "~0.4.0",
         "grunt": "~0.4.2"
     },
