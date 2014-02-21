@@ -58,14 +58,53 @@ module.exports = function (grunt) {
         });
     });
 
+    grunt.task.registerTask("easy-hybrid-index", function () {
+        var flist = fs.readdirSync(path.join(process.cwd(), ".tmp/compress"));
+        flist.forEach(function (item) {
+            //生成index.js文件
+            var content = 'define("hybrid/index",function (require, exports, module) {\n';
+            content += "\n    //下边为加载patch代码\n";
+            var list3 = grunt.file.expand({
+                cwd: ".tmp/compress/" + item + "/js/patch/"
+            }, "*.js");
+            list3.forEach(function (item) {
+                content += '    require("hybrid/patch/' + item.split(".")[0] + '");\n';
+            });
+            content += '\n    var core = require("./core");\n';
+            function quickend(type) {
+                content += '\n    //下边为' + type + '注册代码\n';
+                var list = grunt.file.expand({
+                    cwd: ".tmp/compress/" + item + "/js/" + type + "/"
+                }, "*.js");
+                list.forEach(function (item) {
+                    content += '    core.register("' + type + '", require("hybrid/' + type + "/" + item.split(".")[0] + '"));\n';
+                });
+            }
+
+            ["ui", "plugin"].forEach(quickend);
+
+            content += '\n    //下边为view注册代码\n';
+            var list2 = grunt.file.expand({
+                cwd: ".tmp/compress/" + item + "/js/view/"
+            }, "*/*.js");
+            list2.forEach(function (item) {
+                content += '    core.register("view", "' + item.split(".")[0] + '", require("hybrid/view/' + item.split(".")[0] + '"));\n';
+            });
+
+            content += '\n    //下边为初始化项目代码\n';
+            content += '    exports.init = require("hybrid/init")(core);\n';
+            content += '});';
+            grunt.file.write(".tmp/compress/" + item + "/js/index.js", content);
+        });
+    });
+
     grunt.task.registerTask("easy-hybrid-rescue", "clean and rescue the old config", function () {
         grunt.config.init(grunt.config.get("_back"));
     });
 
-
     grunt.task.registerMultiTask("hybrid", "an javascript development approach base on cordova-js", function () {
         var me = this;
-        var tasks = ["copy:lib", "copy:source", "copy:platform", "clean:ora", "easy-hybrid-rename"];//任务列表
+        var tasks = ["copy:lib", "copy:source", "copy:platform", "clean:ora", "easy-hybrid-rename", "easy-hybrid-index"];//任务列表
         var lib_path = me.data.lib || "merge";
         var pkg = me.data.pkg;
         var config = {
@@ -131,114 +170,113 @@ module.exports = function (grunt) {
         tasks.push("easy-hybrid-rescue");
         grunt.task.run(tasks);
     });
-
-    /**
-     * 基础库复制条件生成
-     * @param lib_path 库路径类型
-     * @param pkg 程序配置包
-     * @returns {object} 过滤函数
-     */
-    function filterLirary(lib_path, pkg) {
-        var copy = {files: []};
-        var flag = false;
-        var filter = createFilter(pkg, true, "");
-        if (lib_path === "package" || lib_path === "merge") {
-            copy.files.push({
-                expand: true,
-                cwd: 'node_modules/easy-hybrid/src/lib/',
-                src: ["**", "!**/css/**"],
-                dest: '.tmp/ora/js/',
-                filter: filter
-            });
-            copy.files.push({
-                expand: true,
-                cwd: 'node_modules/easy-hybrid/src/lib/css/',
-                src: ["**"],
-                dest: '.tmp/ora/css',
-                filter: filter
-            });
-            flag = true;
-        }
-        if (lib_path === "project" || lib_path === "merge") {
-            copy.files.push({
-                expand: true,
-                cwd: 'src/lib/',
-                src: ["**", "!**/css/**"],
-                dest: '.tmp/ora/js/',
-                filter: filter
-            });
-            copy.files.push({
-                expand: true,
-                cwd: 'src/lib/css/',
-                src: ["**"],
-                dest: '.tmp/ora/css/',
-                filter: filter
-            });
-            flag = true;
-        }
-        if (!flag) {
-            copy.files.push({
-                expand: true,
-                cwd: lib_path,
-                src: ["**", "!**/css/**"],
-                dest: '.tmp/ora/js/',
-                filter: filter
-            });
-            copy.files.push({
-                expand: true,
-                cwd: lib_path + "css/",
-                src: ["**"],
-                dest: '.tmp/ora/css/',
-                filter: filter
-            });
-        }
-        return copy;
-    }
-
-    /**
-     * 用于生成复制过滤函数
-     * @param {object} pkg 程序配置包
-     * @param {bool} isLib 是不是库
-     * @param {string} platform 平台
-     * @returns {Function} 过滤函数
-     */
-    function createFilter(pkg, isLib, platform) {
-        var plats = "";
-        if (pkg.cordova) {//过滤掉所有的cordova开头的文件
-            plats += "cordova-|";
-        }
-        if (platform) {
-            pkg.platform.forEach(function (item) {
-                if (item === platform) {
-                    return;
-                }
-                plats += item + "-|";
-                plats += "cordova-" + item + "-|";
-            });
-        }
-        plats = plats.slice(0, -1);
-        var match = new RegExp("^(" + plats + ")");
-        if (isLib) {
-            return function (src) {
-                if (src.indexOf(".") < 0) {
-                    return true;
-                }
-                var arr = src.split(/\/|\\/);
-                var basename = (arr.pop() || "").split(".")[0] || "";
-                var type = arr.pop() || "";
-                return !(type in pkg) || pkg[type].include.indexOf(basename) >= 0 || !(pkg[type].exclude.indexOf(basename) >= 0 || plats && match.test(basename));
-            }
-        }
-        else {
-            return function (src) {
-                if (src.indexOf(".") < 0) {
-                    return true;
-                }
-                var arr = src.split(/\/|\\/);
-                var basename = (arr.pop() || "").split(".")[0] || "";
-                return !plats || !match.test(basename)
-            }
-        }
-    }
 };
 
+/**
+ * 基础库复制条件生成
+ * @param lib_path 库路径类型
+ * @param pkg 程序配置包
+ * @returns {object} 过滤函数
+ */
+function filterLirary(lib_path, pkg) {
+    var copy = {files: []};
+    var flag = false;
+    var filter = createFilter(pkg, true, "");
+    if (lib_path === "package" || lib_path === "merge") {
+        copy.files.push({
+            expand: true,
+            cwd: 'node_modules/easy-hybrid/src/lib/',
+            src: ["**", "!**/css/**"],
+            dest: '.tmp/ora/js/',
+            filter: filter
+        });
+        copy.files.push({
+            expand: true,
+            cwd: 'node_modules/easy-hybrid/src/lib/css/',
+            src: ["**"],
+            dest: '.tmp/ora/css',
+            filter: filter
+        });
+        flag = true;
+    }
+    if (lib_path === "project" || lib_path === "merge") {
+        copy.files.push({
+            expand: true,
+            cwd: 'src/lib/',
+            src: ["**", "!**/css/**"],
+            dest: '.tmp/ora/js/',
+            filter: filter
+        });
+        copy.files.push({
+            expand: true,
+            cwd: 'src/lib/css/',
+            src: ["**"],
+            dest: '.tmp/ora/css/',
+            filter: filter
+        });
+        flag = true;
+    }
+    if (!flag) {
+        copy.files.push({
+            expand: true,
+            cwd: lib_path,
+            src: ["**", "!**/css/**"],
+            dest: '.tmp/ora/js/',
+            filter: filter
+        });
+        copy.files.push({
+            expand: true,
+            cwd: lib_path + "css/",
+            src: ["**"],
+            dest: '.tmp/ora/css/',
+            filter: filter
+        });
+    }
+    return copy;
+}
+
+/**
+ * 用于生成复制过滤函数
+ * @param {object} pkg 程序配置包
+ * @param {bool} isLib 是不是库
+ * @param {string} platform 平台
+ * @returns {Function} 过滤函数
+ */
+function createFilter(pkg, isLib, platform) {
+    var plats = "";
+    if (pkg.cordova) {//过滤掉所有的cordova开头的文件
+        plats += "cordova-|";
+    }
+    if (platform) {
+        pkg.platform.forEach(function (item) {
+            if (item === platform) {
+                return;
+            }
+            plats += item + "-|";
+            plats += "cordova-" + item + "-|";
+        });
+    }
+    plats = plats.slice(0, -1);
+    var match = new RegExp("^(" + plats + ")");
+    if (isLib) {
+        return function (src) {
+            if (src.indexOf(".") < 0) {
+                return true;
+            }
+            var arr = src.split(/\/|\\/);
+            var basename = (arr.pop() || "").split(".")[0] || "";
+            var type = arr.pop() || "";
+            return !(type in pkg) || pkg[type].include.indexOf(basename) >= 0 || !(pkg[type].exclude.indexOf(basename) >= 0 || plats && match.test(basename));
+        }
+    }
+    else {
+        return function (src) {
+            if (src.indexOf(".") < 0) {
+                return true;
+            }
+            var arr = src.split(/\/|\\/);
+            var basename = (arr.pop() || "").split(".")[0] || "";
+            return !plats || !match.test(basename)
+        }
+    }
+}
