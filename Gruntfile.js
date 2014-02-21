@@ -1,25 +1,18 @@
-var fs = require("fs");
-var path = require("path");
 module.exports = function (grunt) {
-    var root = path.join(process.cwd(), "src");
-    var projects = {};
-    var fileList = fs.readdirSync(root);
-    fileList.forEach(function (item) {
-        var state = fs.statSync(path.join(root, item));
-        if (item === "lib" || state.isFile()) {
-            return;
-        }
-        var pack = require(path.join(root, item, "package"));
-        if (pack.enable) {
-            projects[item] = {
-                pkg: pack
-            };
+    grunt.config.init({
+        base: process.cwd(),
+        hybrid: {
+            demo: {
+                lib: "project",//使用base/src/lib作为基础库，为package时，会使用base/node_modules/easy-hybrid/src/lib作为基础库，为merge时，会对两者进行归并
+                //lib:"package",//使用base/src/lib作为基础库
+                //lib:"merge",//会对project和package进行归并，这个是默认选项
+                //lib:"./aaa/lib"//使用自定义路径
+                pkg: require("./src/demo/package.js")//项目的配置信息，示例使用了JS文件以便于说明用法，其它项目可直接使用JSON文件,也可以写在Gruntfile内
+            }
         }
     });
 
-    grunt.config.init({
-        easyhybrid: projects
-    });
     grunt.task.loadTasks("tasks");
-    grunt.task.registerTask('default', ["easyhybrid"]);
+
+    grunt.task.registerTask("default", "hybrid:demo");
 };

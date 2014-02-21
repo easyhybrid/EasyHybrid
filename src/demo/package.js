@@ -7,17 +7,13 @@
  */
 
 module.exports = {
-    cordova: {
-        enable: false,//是否使用cordova，当为true时，plugin和patch下所有以cordova-开头的插件将会被exclude，同时会在非web和dev版本的index.html中追加cordova相关文件
-        version: "3.0.1",//使用的版本应当大于3.0
-        plugins: []//需要加载的插件列表
-    },
+    cordova: false,//是否使用cordova，当为true时，plugin和patch下所有以cordova-开头的插件将会被exclude，同时在项目编译时会使用cordova自带的引导方式进行引导
     enable: true,//是否开启项目，当为false时，将不会编译此项目
-    "package": {//项目的简介
+    "package": {//项目的简介，本项目中的内容会出现在core.config中
         name: "EasyHybrid演示项目",
         author: "赤菁风铃"
     },
-    patch: {//用于为系统添加方法或者统一不同平台之间的接口差距，以保证页面开发逻辑的统一
+    patch: {//用于为系统添加方法或者统一不同平台之间的接口差距，以保证页面开发逻辑的统一，当cordova为true时，请include cordova-web-fix插件
         include: [],
         exclude: []
     },
@@ -26,7 +22,8 @@ module.exports = {
         include: [],
         exclude: []
     },
-    sources: [//需要额外添加的远程CSS或者JS库
+    proxy: "",//dev版本使用的HTTP请求代理地址（用于解决跨域请求问题）
+    sources: [//需要额外添加的其它CSS或者JS库，当cordova，当为true时,请在此添加cordova.js和cordova-plugin.js，cordova在创建工程时会自动将他们添加到工程中
     ],
     ui: {//系统中使用到的UI组件，请注意UIObject和UIView将会被忽略
         include: [],
