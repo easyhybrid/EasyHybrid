@@ -14,7 +14,6 @@ module.exports = function (grunt) {
     grunt.task.loadNpmTasks("grunt-contrib-copy");
     grunt.task.loadNpmTasks("grunt-contrib-cssmin");
     grunt.task.loadNpmTasks("grunt-contrib-uglify");
-    grunt.task.loadNpmTasks("grunt-contrib-watch");
     grunt.task.registerTask("easy-hybrid-rescue", "clean and rescue the old config", function () {
         grunt.config.init(grunt.config.get("_back"));
     });
@@ -30,7 +29,8 @@ module.exports = function (grunt) {
         var flag = false;
         if (lib_path === "package" || lib_path === "merge") {
             config.copy.lib_package = {
-                src: ["node_modules/easy-hybrid/src/lib/**"],
+                cwd: 'node_modules/easy-hybrid/src/lib/',
+                src: ["**"],
                 dest: '.tmp/lib_ora_unfilter/'
             };
             flag = true;
@@ -38,7 +38,8 @@ module.exports = function (grunt) {
         }
         if (lib_path === "project" || lib_path === "merge") {
             config.copy.lib_project = {
-                src: ["src/lib/**"],
+                cwd: 'src/lib/',
+                src: ["**"],
                 dest: '.tmp/lib_ora_unfilter/'
             };
             flag = true;
@@ -46,7 +47,8 @@ module.exports = function (grunt) {
         }
         if (!flag) {
             config.copy.lib_user = {
-                src: [lib_path + "/**"],
+                cwd: lib_path,
+                src: ["**"],
                 dest: '.tmp/lib_ora_unfilter/'
             };
             tasks.push("copy:lib_user");
