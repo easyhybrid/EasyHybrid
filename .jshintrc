@@ -1,6 +1,7 @@
 {
     "curly": true,    // true: 确保if while for后边都有一个{}
     "eqeqeq": true,   // true: 确保在和系统false常量比较时使用了===
+    "evil": true,     // 允许使用eval
     "immed": true,    // true: 闭包函数严格模式检查 `(function () { } ());`
     "laxbreak": true, // true: 忽略换行检查
     "latedef": true,  // true: 变量要在使用前被定义

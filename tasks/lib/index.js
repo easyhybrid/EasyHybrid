@@ -152,6 +152,7 @@ function run(data) {
         '                v.push(map[i]);\n' +
         '            }\n' +
         '        }\n' +
+        '        /*jshint evil: true */' +
         '        return (new Function(p, \"var _s=[];_s.push(' + source + ' return _s;\")).apply(null, v).join("");\n' +
         '    }\n' +
         '};';

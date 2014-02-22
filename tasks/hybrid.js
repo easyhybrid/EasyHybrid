@@ -155,8 +155,7 @@ module.exports = function (grunt) {
             },
             jshint: {
                 all: [
-                    '.tmp/dev/compress/**/*.js',
-                    "!.tmp/dev/compress/**/*-tpl.js"
+                    '.tmp/*/compress/**/*.js',
                 ],
                 options: {
                     jshintrc: '.jshintrc'
