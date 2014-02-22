@@ -14,6 +14,7 @@ module.exports = function (grunt) {
     grunt.task.registerTask("easy-hybrid-rescue", "clean and rescue the old config", function () {
         grunt.config.init(grunt.config.get("easy-hybrid-rescue"));
     });
+
     //书写文件ID，将node.js模式的代码 转化成供loader加载的代码
     grunt.task.registerTask("easy-hybrid-rename", "rename file", function () {
         var config = grunt.config.get("easy-hybrid-rename");
@@ -54,51 +55,92 @@ module.exports = function (grunt) {
         });
     });
 
+    //生成index.js文件
     grunt.task.registerTask("easy-hybrid-index", function () {
-        var flist = fs.readdirSync(path.join(process.cwd(), ".tmp/compress"));
-        flist.forEach(function (item) {
-            //生成index.js文件
-            var content = 'define("hybrid/index",function (require, exports, module) {\n';
-            content += "\n    //下边为加载patch代码\n";
-            var list3 = grunt.file.expand({
-                cwd: ".tmp/compress/" + item + "/js/patch/"
-            }, "*.js");
-            list3.forEach(function (item) {
-                content += '    require("hybrid/patch/' + item.split(".")[0] + '");\n';
-            });
-            content += '\n    var core = require("./core");\n';
-            function quickend(type) {
-                content += '\n    //下边为' + type + '注册代码\n';
-                var list = grunt.file.expand({
-                    cwd: ".tmp/compress/" + item + "/js/" + type + "/"
-                }, "*.js");
-                list.forEach(function (item) {
-                    content += '    core.register("' + type + '", require("hybrid/' + type + "/" + item.split(".")[0] + '"));\n';
-                });
-            }
-
-            ["ui", "plugin"].forEach(quickend);
-
-            content += '\n    //下边为view注册代码\n';
-            var list2 = grunt.file.expand({
-                cwd: ".tmp/compress/" + item + "/js/view/"
-            }, "*/*.js");
-            list2.forEach(function (item) {
-                content += '    core.register("view", "' + item.split(".")[0] + '", require("hybrid/view/' + item.split(".")[0] + '"));\n';
-            });
-
-            content += '\n    //下边为初始化项目代码\n';
-            content += '    exports.init = require("hybrid/init")(core);\n';
-            content += '});';
-            grunt.file.write(".tmp/compress/" + item + "/js/index.js", content);
+        var config = grunt.config.get("easy-hybrid-index");
+        var src = config.path;
+        var setting = config.config;
+        //生成index.js文件
+        var content = 'define("hybrid/index", function (require, exports, module) {\n';
+        content += "\n    //下边为加载patch代码\n";
+        var list3 = grunt.file.expand({
+            cwd: src + "patch/"
+        }, "*.js");
+        list3.forEach(function (item) {
+            content += '    require("hybrid/patch/' + item.split(".")[0] + '");\n';
         });
+        content += '\n    var core = require("./core");\n';
+        content += '\n    core.util.platform = ' + JSON.stringify(setting) + ';\n';
+        function quickend(type) {
+            content += '\n    //下边为' + type + '注册代码\n';
+            var list = grunt.file.expand({
+                cwd: src + type + "/"
+            }, "*.js");
+            list.forEach(function (item) {
+                content += '    core.register("' + type + '", require("hybrid/' + type + "/" + item.split(".")[0] + '"));\n';
+            });
+        }
+
+        ["ui", "plugin"].forEach(quickend);
+
+        content += '\n    //下边为view注册代码\n';
+        var list2 = grunt.file.expand({
+            cwd: src + "/view/"
+        }, "*/*.js");
+        list2.forEach(function (item) {
+            content += '    core.register("view", "' + item.split(".")[0] + '", require("hybrid/view/' + item.split(".")[0] + '"));\n';
+        });
+
+        content += '\n    //下边为初始化项目代码\n';
+        content += '    exports.init = require("hybrid/init")(core);\n';
+        content += '});';
+        grunt.file.write(config.dest, content);
+    });
+
+    //根据配置生成index.html
+    grunt.task.registerTask("easy-hybrid-build", function () {
+        var config = grunt.config.get("easy-hybrid-build");
+        var target = config.target;
+        var src = config.path;
+        var css = config.sources.css;
+        var js = config.sources.js;
+        if (config.compress) {
+            //编译压缩处理
+            css.push("css/index.css");
+            js.push("js/index.js");
+        } else {
+            js.push("js/require.js");
+            grunt.file.expand({
+                cwd: src + ""
+            }, "css/*.css").forEach(function (item) {
+                css.push("css/" + item);
+            });
+            grunt.file.expand({
+                cwd: src + "compress/"
+            }, "**/*.js").forEach(function (item) {
+                js.push("js/" + item);
+            });
+            js.push("js/load.js");
+        }
+        var content = '<html>\n    <head>' +
+            '\n        <meta charset="utf-8"/>' +
+            '\n        <base target="_self"/>' +
+            '\n        <title>' + config.config.name + '</title>';
+        css.forEach(function (item) {
+            content += '\n        <link href="' + item + '" rel="stylesheet"/>';
+        });
+        content += '\n    </head>\n    <body>';
+        js.forEach(function (item) {
+            content += '\n         <script src="' + item + '"></script>';
+        });
+        content += '\n    </body>\n</html>'
+        grunt.file.write(target, content);
     });
 
     //用于根据配置信息对一个平台进行编译
     grunt.task.registerMultiTask("easy-hybrid-platform", "fetch each platform", function () {
         var config = this.data;
-        var dest = ".tmp/" + config.name + "/";
-        grunt.config.init({
+        var grunt_config = {
             "easy-hybrid-rescue": grunt.config.get(),//缓存现有文件
             copy: {
                 "lib-css": {
@@ -107,7 +149,7 @@ module.exports = function (grunt) {
                             expand: true,
                             cwd: item + "css/",
                             src: ["**"],
-                            dest: dest + "css/",
+                            dest: ".tmp/css/",
                             filter: lib.createFilter(config, 0, config.name)
                         };
                     })
@@ -118,7 +160,7 @@ module.exports = function (grunt) {
                             expand: true,
                             cwd: item,
                             src: ["**", "!**/css/**"],
-                            dest: dest + "js/",
+                            dest: ".tmp/js/",
                             filter: lib.createFilter(config, item.split("/").length, config.type)
                         };
                     })
@@ -131,7 +173,7 @@ module.exports = function (grunt) {
                             expand: true,
                             cwd: config.src + item + "/css/",
                             src: ["**"],
-                            dest: dest + "css/",
+                            dest: ".tmp/css/",
                             filter: lib.createFilter(config, 0, config.type)
                         };
                     })
@@ -142,125 +184,134 @@ module.exports = function (grunt) {
                             expand: true,
                             cwd: config.src,
                             src: ["*/**", "!**/css/**"],
-                            dest: dest + "js/view/",
+                            dest: ".tmp/js/view/",
+                            filter: lib.createFilter(config, 0, config.type)
+                        },
+                        {
+                            expand: true,
+                            cwd: config.src,
+                            src: ["init.js"],
+                            dest: ".tmp/js/",
                             filter: lib.createFilter(config, 0, config.type)
                         }
                     ]
                 }
             },
             "easy-hybrid-rename": {
-                path: dest + "js/",
+                path: ".tmp/js/",
                 platform: config.type,
-                target: dest + "compress/"
+                target: ".tmp/compress/"
+            },
+            "easy-hybrid-index": {
+                path: ".tmp/compress/",
+                dest: ".tmp/compress/index.js",
+                config: config.config
+            },
+            "easy-hybrid-build": {
+                path: ".tmp/",
+                target: ".tmp/index.html",
+                compress: config.compress,
+                sources: config.sources,
+                config: config.config
             },
             jshint: {
                 all: [
-                    '.tmp/*/compress/**/*.js',
+                    '.tmp/compress/**/*.js'
                 ],
                 options: {
                     jshintrc: '.jshintrc'
                 }
+            },
+            clean: {
+                tmp: [".tmp/"],
+                target: config.target
             }
-        });
-        grunt.task.run(["copy:lib-css", "copy:lib-js", "copy:source-css", "copy:source-js", "easy-hybrid-rename", "jshint", "easy-hybrid-rescue"]);
-
-        //
-        //        var tasks = ["copy:lib", "copy:source", "copy:platform", "clean:ora", "easy-hybrid-rename", "easy-hybrid-index", "copy:css", "cssmin", "copy:dev"];//任务列表
-        //            var config = {
-        //
-        //
-        //
-        //                copy: {
-        //                    lib: filterLirary(lib_path, pkg),//归并基础库
-        //                    source: {//归并项目资源文件
-        //                        files: [
-        //                            {
-        //                                expand: true,
-        //                                cwd: 'src/' + me.target + "/",
-        //                                src: ["**", "!init.js", "!package.js", "!**/css/**"],
-        //                                dest: '.tmp/ora/js/view',
-        //                                filter: createFilter(pkg, false, "")
-        //                            },
-        //                            {
-        //                                expand: true,
-        //                                cwd: 'src/' + me.target + "/",
-        //                                src: ["init.js"],
-        //                                dest: '.tmp/ora/js/',
-        //                                filter: createFilter(pkg, false, "")
-        //                            }
-        //                        ]
-        //                    },
-        //                    platform: {//提取各平台文件
-        //                        files: [
-        //                            {
-        //                                expand: true,
-        //                                cwd: '.tmp/ora/',
-        //                                src: ["**"],
-        //                                dest: '.tmp/source/dev/',
-        //                                filter: createFilter(pkg, false, "web")
-        //                            }
-        //                        ]
-        //                    },
-        //                    css: {
-        //                        files: [
-        //                            {
-        //                                expand: true,
-        //                                cwd: '.tmp/source/dev/css/',
-        //                                src: ["**"],
-        //                                dest: '.tmp/dist/dev/css/'
-        //                            }
-        //                        ]
-        //                    },
-        //                    dev: {
-        //                        files: [
-        //                            {
-        //                                expand: true,
-        //                                cwd: '.tmp/source/dev/js/',
-        //                                src: ["**"],
-        //                                dest: '.tmp/dist/dev/js/'
-        //                            }
-        //                        ]
-        //                    }
-        //                },
-        //                cssmin: {
-        //                    options: {
-        //                        keepSpecialComments: 0
-        //                    },
-        //                    css: {
-        //                        files: {
-        //                        }
-        //                    }
-        //                }
-        //            };
-        //            //归并项目资源文件
-        //            var flist = fs.readdirSync(path.join(process.cwd(), 'src', me.target));
-        //            flist.forEach(function (item) {
-        //                config.copy.source.files.push({
-        //                    expand: true,
-        //                    cwd: 'src/' + me.target + "/" + item + "/css/",
-        //                    src: ["**"],
-        //                    dest: '.tmp/ora/css/',
-        //                    filter: createFilter(pkg, false, "")
-        //                });
-        //            });
-        //            //提取各平台文件
-        //            pkg.platform.forEach(function (item) {
-        //                config.copy.platform.files.push({
-        //                    expand: true,
-        //                    cwd: '.tmp/ora/',
-        //                    src: ["**"],
-        //                    dest: '.tmp/source/' + item + "/",
-        //                    filter: createFilter(pkg, false, item)
-        //                });
-        //                config.copy.css.files.push({
-        //                    expand: true,
-        //                    cwd: '.tmp/source/' + item + '/css/',
-        //                    src: ["img/*.*"],
-        //                    dest: '.tmp/dist/' + item + '/css/'
-        //                });
-        //                config.cssmin.css.files['.tmp/dist/' + item + '/css/index.css'] = grunt.file.expand('.tmp/source/' + item + '/css/*.css');
-        //            });
-        //            grunt.config.init(config);
+        };
+        var task = ["copy:lib-css", "copy:lib-js", "copy:source-css", "copy:source-js", "easy-hybrid-rename", "easy-hybrid-index", "easy-hybrid-build", "clean:target"];
+        if (config.compress) {
+            //编译压缩处理
+            grunt_config.concat = {
+                combine: {
+                    options: {
+                        process: function (src, filepath) {
+                            return '// Source: ' + filepath.replace("./tmp/compress/", "") + '\n' + src;
+                        }
+                    },
+                    files: {
+                        ".tmp/combine.js": [".tmp/compress/**/*.js"]
+                    }
+                },
+                build: {
+                    options: {
+                        separator: '\n\n',
+                        banner: '(function(){\n',
+                        footer: '\n})();'
+                    },
+                    files: {
+                        ".tmp/all.js": [path.join(__dirname, "source", "require.js"), ".tmp/combine.js", path.join(__dirname, "source", "load.js")]
+                    }
+                }
+            };
+            task.push("concat:combine");
+            task.push("concat:build");
+            grunt_config.uglify = {
+                build: {
+                    files: {}
+                }
+            };
+            grunt_config.uglify.build.files[config.build + "js/index.js"] = [".tmp/all.js"];
+            task.push("uglify:build");
+            //直接复制文件
+            grunt_config.copy.build = {
+                files: [
+                    {
+                        expand: true,
+                        cwd: ".tmp/css/",
+                        src: ["img/**"],
+                        dest: config.build + "css/"
+                    }
+                ]
+            };
+            task.push("copy:build");
+            grunt_config.cssmin = {
+                build: {
+                    files: {}
+                }
+            };
+            grunt_config.cssmin.build.files[config.build + "css/index.css"] = ["./tmp/css/*.css"];
+            task.push("cssmin:build");
+        } else {
+            //直接复制文件
+            grunt_config.copy.build = {
+                files: [
+                    {
+                        expand: true,
+                        cwd: ".tmp/css/",
+                        src: ["**"],
+                        dest: config.build + "css/"
+                    },
+                    {
+                        expand: true,
+                        cwd: ".tmp/compress/",
+                        src: ["**"],
+                        dest: config.build + "js/"
+                    },
+                    {
+                        expand: true,
+                        cwd: ".tmp/",
+                        src: ["index.html"],
+                        dest: config.build
+                    }
+                ]
+            };
+            task.push("copy:build");
+            grunt.file.copy(path.join(__dirname, "source", "require.js"), path.join(process.cwd(), config.build, "js", "require.js"));
+            grunt.file.copy(path.join(__dirname, "source", "load.js"), path.join(process.cwd(), config.build, "js", "load.js"));
+        }
+        grunt.config.init(grunt_config);
+        task.push("clean:tmp");
+        task.push("easy-hybrid-rescue");
+        grunt.task.run(task);
     });
 
     //入口函数，用于产生新的配置文件，并对文件进行处理
@@ -269,10 +320,7 @@ module.exports = function (grunt) {
         //重新生成请求参数
         grunt.config.init({
             "easy-hybrid-rescue": grunt.config.get(),//缓存现有文件
-            "easy-hybrid-platform": lib.platformInit(me.target, me.data.lib, me.data.pkg),
-            clean: {
-                ora: [".tmp"]
-            }
+            "easy-hybrid-platform": lib.platformInit(me.target, me.data.lib, me.data.pkg)
         });
         grunt.task.run(["easy-hybrid-platform", "easy-hybrid-rescue"]);
 

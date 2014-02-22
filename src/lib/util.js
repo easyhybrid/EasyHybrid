@@ -487,6 +487,7 @@ function OS(userAgent) {
     }
 }
 exports.os = new OS(window.navigator.userAgent);
+exports.platform = {};//平台配置信息
 //endregion 系统信息
 
 //region 数据库方法

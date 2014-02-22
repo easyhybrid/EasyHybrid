@@ -172,7 +172,9 @@ function platformInit(target, lib_path, pkg) {
     pkg = pkg || {};
     pkg.cordova = !!pkg.cordova;
     pkg.platform = pkg.platform || ["dev"];
-    pkg.sources = pkg.sources || [];
+    pkg.sources = pkg.sources || {};
+    pkg.sources.css = pkg.sources.css || [];
+    pkg.sources.js = pkg.sources.js || [];
     pkg.proxy = pkg.proxy || "";
     plugins.forEach(function (item) {
         pkg[item] = pkg[item] || {};
@@ -211,7 +213,9 @@ function platformInit(target, lib_path, pkg) {
     }
     pkg.platform.forEach(function (item) {
         var result = {
-            src: "src/" + target + "/",
+            src: "src/" + target + "/",//源代码目录
+            target: target,
+            build: "build/" + target + "/" + item + "/",//目标代码目录
             lib: lib_src,//从哪里选择基础库
             cordova: pkg.cordova,//是否启用cordova
             patch: pkg.patch,//patch过滤条件

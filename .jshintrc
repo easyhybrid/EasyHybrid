@@ -8,7 +8,7 @@
     "newcap": true,   // true: 保证构造函数的首字符大写，并且在调用时添加了new `new F()`
     "noarg": true,    // true: 禁止使用 `arguments.caller` and `arguments.callee`
     "sub": true,      // true: Tolerate using `[]` notation when it can still be expressed in dot notation
-    //"undef": true,    // true: Require all non-global variables to be declared (prevents global leaks)
+//    "undef": true,    // true: Require all non-global variables to be declared (prevents global leaks)
     "boss": true,     // true: Tolerate assignments where comparisons would be expected
     "eqnull": true   // true: Tolerate use of `== null`
 }

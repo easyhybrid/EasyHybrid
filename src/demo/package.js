@@ -23,8 +23,10 @@ module.exports = {
         exclude: []
     },
     proxy: "/abc/123",//dev版本使用的HTTP请求代理地址（用于解决跨域请求问题）
-    sources: [//需要额外添加的其它CSS或者JS库，当cordova，当为true时,请在此添加cordova.js和cordova-plugin.js，cordova在创建工程时会自动将他们添加到工程中
-    ],
+    sources: {//需要额外添加的其它CSS或者JS库，当cordova，当为true时,请在此添加cordova.js和cordova-plugin.js，cordova在创建工程时会自动将他们添加到工程中
+        css: [],
+        js: []
+    },
     ui: {//系统中使用到的UI组件，请注意UIObject和UIView将会被忽略
         include: [],
         exclude: []
