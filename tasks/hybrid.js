@@ -1,58 +1,54 @@
 var fs = require("fs");
 var path = require("path");
-var tpl = require("./lib/tpl");
+var lib = require("./lib/index");
 
 module.exports = function (grunt) {
-
     grunt.task.loadNpmTasks("grunt-contrib-clean");
     grunt.task.loadNpmTasks("grunt-contrib-concat");
     grunt.task.loadNpmTasks("grunt-contrib-copy");
     grunt.task.loadNpmTasks("grunt-contrib-cssmin");
     grunt.task.loadNpmTasks("grunt-contrib-uglify");
+    grunt.task.loadNpmTasks("grunt-contrib-jshint");
 
+    //恢复已经暂存的配置信息
+    grunt.task.registerTask("easy-hybrid-rescue", "clean and rescue the old config", function () {
+        grunt.config.init(grunt.config.get("easy-hybrid-rescue"));
+    });
+    //书写文件ID，将node.js模式的代码 转化成供loader加载的代码
     grunt.task.registerTask("easy-hybrid-rename", "rename file", function () {
-        var mapping = grunt.file.expandMapping("**/js/**", ".tmp/compress/", {
-            cwd: ".tmp/source/",
+        var config = grunt.config.get("easy-hybrid-rename");
+        var deep = config.target.split("/").length;
+        var match_type = new RegExp("^(cordova-)?" + config.platform + "-(.+)$");
+        var match_url = /require *\( *['"](.+?)['"] *\)/ig;
+        var mapping = grunt.file.expandMapping("**", config.target, {
+            cwd: config.path,
             rename: function (dest, src) {
-                if (src.indexOf(".") < 0) {
-                    return  src;
-                }
-                var arr = src.split(/\/|\\/);
-                var type = arr[0];
-                var basename = arr.pop() || "";
-                var match = new RegExp("^(?:(cordova-)?" + type + "-)(.+)$");
-                arr.push(basename.replace(match, "$1$2").replace(".tpl", ".js"));
-                return arr.join("/");
+                return dest + src.split(/\/|\\/).map(function (item) {
+                    return item.replace(match_type, "$1$2").replace(".tpl", "-tpl.js");
+                }).join("/");
             }
         });
-        var match = /require *\( *['"](.+?)['"] *\)/ig;
         mapping.forEach(function (item) {
             var src = item.src[0];
-            var desc = item.dest;
-            if (desc.indexOf(".") < 0) {
-                grunt.file.mkdir(path.join(".tmp/compress", desc));
+            var dest = item.dest;
+            var arr = dest.split(/\/|\\/);
+            var basename = arr.pop();
+            if (basename.indexOf(".") < 0) {
+                grunt.file.mkdir(dest);
                 return;
             }
-            var arr = desc.split(/\/|\\/);
-            var basename = arr.pop();
-            var type = arr[0];
-            grunt.file.copy(src, path.join(".tmp/compress", desc), {
+            var id = ("hybrid/" + arr.slice(deep - 1).join("/") + "/" + basename.split(".")[0]).replace(/\/+/g, "/");
+            grunt.file.copy(src, dest, {
                 encoding: "utf8",
                 process: function (content) {
-                    var p = arr.slice(2);
-                    var bp = basename.replace(type + "-", "").replace(".js", "");
                     if (/\.tpl$/.test(src)) {
-                        bp += "-tpl";
+                        content = lib.run(content);
                     }
-                    p.push(bp);
-                    p.unshift("hybrid");
-                    if (/\.tpl$/.test(src)) {
-                        return 'define("' + p.join("/") + '", ' + tpl.run(content) + ');'
-                    } else {
-                        return 'define("' + p.join("/") + '", function (require, exports, module) {\n' + content.replace(match, function () {
-                            return "require(\"" + arguments[1].replace(type + "-", "").replace(".tpl", "-tpl") + "\")";
-                        }) + '\n});'
-                    }
+                    var lines = content.split("\n");
+                    content = "    " + lines.join("\n    ");
+                    return 'define("' + id + '", function (require, exports, module) {\n' + content.replace(match_url, function () {
+                        return "require(\"" + arguments[1].replace(config.platform + "-", "").replace(".tpl", "-tpl") + "\")";
+                    }) + '\n});'
                 }
             });
         });
@@ -98,185 +94,188 @@ module.exports = function (grunt) {
         });
     });
 
-    grunt.task.registerTask("easy-hybrid-rescue", "clean and rescue the old config", function () {
-        grunt.config.init(grunt.config.get("_back"));
-    });
-
-    grunt.task.registerMultiTask("hybrid", "an javascript development approach base on cordova-js", function () {
-        var me = this;
-        var tasks = ["copy:lib", "copy:source", "copy:platform", "clean:ora", "easy-hybrid-rename", "easy-hybrid-index"];//任务列表
-        var lib_path = me.data.lib || "merge";
-        var pkg = me.data.pkg;
-        var config = {
-            _back: grunt.config.get(),//缓存现有文件
-            clean: {
-                ora: [".tmp/ora"]
-            },
+    //用于根据配置信息对一个平台进行编译
+    grunt.task.registerMultiTask("easy-hybrid-platform", "fetch each platform", function () {
+        var config = this.data;
+        var dest = ".tmp/" + config.name + "/";
+        grunt.config.init({
+            "easy-hybrid-rescue": grunt.config.get(),//缓存现有文件
             copy: {
-                lib: filterLirary(lib_path, pkg),//归并基础库
-                source: {//归并项目资源文件
-                    files: [
-                        {
+                "lib-css": {
+                    files: config.lib.map(function (item) {
+                        return {
                             expand: true,
-                            cwd: 'src/' + me.target + "/",
-                            src: ["**", "!init.js", "!package.js", "!**/css/**"],
-                            dest: '.tmp/ora/js/view',
-                            filter: createFilter(pkg, false, "")
-                        },
-                        {
-                            expand: true,
-                            cwd: 'src/' + me.target + "/",
-                            src: ["init.js"],
-                            dest: '.tmp/ora/js/',
-                            filter: createFilter(pkg, false, "")
-                        }
-                    ]
-                },
-                platform: {//提取各平台文件
-                    files: [
-                        {
-                            expand: true,
-                            cwd: '.tmp/ora/',
+                            cwd: item + "css/",
                             src: ["**"],
-                            dest: '.tmp/source/dev/',
-                            filter: createFilter(pkg, false, "web")
+                            dest: dest + "css/",
+                            filter: lib.createFilter(config, 0, config.name)
+                        };
+                    })
+                },
+                "lib-js": {
+                    files: config.lib.map(function (item) {
+                        return {
+                            expand: true,
+                            cwd: item,
+                            src: ["**", "!**/css/**"],
+                            dest: dest + "js/",
+                            filter: lib.createFilter(config, item.split("/").length, config.type)
+                        };
+                    })
+                },
+                "source-css": {
+                    files: fs.readdirSync(config.src).filter(function (item) {
+                        return grunt.file.isDir(process.cwd(), config.src, item);
+                    }).map(function (item) {
+                        return {
+                            expand: true,
+                            cwd: config.src + item + "/css/",
+                            src: ["**"],
+                            dest: dest + "css/",
+                            filter: lib.createFilter(config, 0, config.type)
+                        };
+                    })
+                },
+                "source-js": {
+                    files: [
+                        {
+                            expand: true,
+                            cwd: config.src,
+                            src: ["*/**", "!**/css/**"],
+                            dest: dest + "js/view/",
+                            filter: lib.createFilter(config, 0, config.type)
                         }
                     ]
                 }
+            },
+            "easy-hybrid-rename": {
+                path: dest + "js/",
+                platform: config.type,
+                target: dest + "compress/"
+            },
+            jshint: {
+                all: [
+                    '.tmp/dev/compress/**/*.js',
+                    "!.tmp/dev/compress/**/*-tpl.js"
+                ],
+                options: {
+                    jshintrc: '.jshintrc'
+                }
             }
-        };
-        //归并项目资源文件
-        var flist = fs.readdirSync(path.join(process.cwd(), 'src', me.target));
-        flist.forEach(function (item) {
-            config.copy.source.files.push({
-                expand: true,
-                cwd: 'src/' + me.target + "/" + item + "/css/",
-                src: ["**"],
-                dest: '.tmp/ora/css/',
-                filter: createFilter(pkg, false, "")
-            });
         });
-        //提取各平台文件
-        pkg.platform.forEach(function (item) {
-            config.copy.platform.files.push({
-                expand: true,
-                cwd: '.tmp/ora/',
-                src: ["**"],
-                dest: '.tmp/source/' + item + "/",
-                filter: createFilter(pkg, false, item)
-            });
+        grunt.task.run(["copy:lib-css", "copy:lib-js", "copy:source-css", "copy:source-js", "easy-hybrid-rename", "jshint", "easy-hybrid-rescue"]);
+
+        //
+        //        var tasks = ["copy:lib", "copy:source", "copy:platform", "clean:ora", "easy-hybrid-rename", "easy-hybrid-index", "copy:css", "cssmin", "copy:dev"];//任务列表
+        //            var config = {
+        //
+        //
+        //
+        //                copy: {
+        //                    lib: filterLirary(lib_path, pkg),//归并基础库
+        //                    source: {//归并项目资源文件
+        //                        files: [
+        //                            {
+        //                                expand: true,
+        //                                cwd: 'src/' + me.target + "/",
+        //                                src: ["**", "!init.js", "!package.js", "!**/css/**"],
+        //                                dest: '.tmp/ora/js/view',
+        //                                filter: createFilter(pkg, false, "")
+        //                            },
+        //                            {
+        //                                expand: true,
+        //                                cwd: 'src/' + me.target + "/",
+        //                                src: ["init.js"],
+        //                                dest: '.tmp/ora/js/',
+        //                                filter: createFilter(pkg, false, "")
+        //                            }
+        //                        ]
+        //                    },
+        //                    platform: {//提取各平台文件
+        //                        files: [
+        //                            {
+        //                                expand: true,
+        //                                cwd: '.tmp/ora/',
+        //                                src: ["**"],
+        //                                dest: '.tmp/source/dev/',
+        //                                filter: createFilter(pkg, false, "web")
+        //                            }
+        //                        ]
+        //                    },
+        //                    css: {
+        //                        files: [
+        //                            {
+        //                                expand: true,
+        //                                cwd: '.tmp/source/dev/css/',
+        //                                src: ["**"],
+        //                                dest: '.tmp/dist/dev/css/'
+        //                            }
+        //                        ]
+        //                    },
+        //                    dev: {
+        //                        files: [
+        //                            {
+        //                                expand: true,
+        //                                cwd: '.tmp/source/dev/js/',
+        //                                src: ["**"],
+        //                                dest: '.tmp/dist/dev/js/'
+        //                            }
+        //                        ]
+        //                    }
+        //                },
+        //                cssmin: {
+        //                    options: {
+        //                        keepSpecialComments: 0
+        //                    },
+        //                    css: {
+        //                        files: {
+        //                        }
+        //                    }
+        //                }
+        //            };
+        //            //归并项目资源文件
+        //            var flist = fs.readdirSync(path.join(process.cwd(), 'src', me.target));
+        //            flist.forEach(function (item) {
+        //                config.copy.source.files.push({
+        //                    expand: true,
+        //                    cwd: 'src/' + me.target + "/" + item + "/css/",
+        //                    src: ["**"],
+        //                    dest: '.tmp/ora/css/',
+        //                    filter: createFilter(pkg, false, "")
+        //                });
+        //            });
+        //            //提取各平台文件
+        //            pkg.platform.forEach(function (item) {
+        //                config.copy.platform.files.push({
+        //                    expand: true,
+        //                    cwd: '.tmp/ora/',
+        //                    src: ["**"],
+        //                    dest: '.tmp/source/' + item + "/",
+        //                    filter: createFilter(pkg, false, item)
+        //                });
+        //                config.copy.css.files.push({
+        //                    expand: true,
+        //                    cwd: '.tmp/source/' + item + '/css/',
+        //                    src: ["img/*.*"],
+        //                    dest: '.tmp/dist/' + item + '/css/'
+        //                });
+        //                config.cssmin.css.files['.tmp/dist/' + item + '/css/index.css'] = grunt.file.expand('.tmp/source/' + item + '/css/*.css');
+        //            });
+        //            grunt.config.init(config);
+    });
+
+    //入口函数，用于产生新的配置文件，并对文件进行处理
+    grunt.task.registerMultiTask("hybrid", "an javascript development approach base on cordova-js", function () {
+        var me = this;
+        //重新生成请求参数
+        grunt.config.init({
+            "easy-hybrid-rescue": grunt.config.get(),//缓存现有文件
+            "easy-hybrid-platform": lib.platformInit(me.target, me.data.lib, me.data.pkg),
+            clean: {
+                ora: [".tmp"]
+            }
         });
-        grunt.config.init(config);
-        tasks.push("easy-hybrid-rescue");
-        grunt.task.run(tasks);
+        grunt.task.run(["easy-hybrid-platform", "easy-hybrid-rescue"]);
+
     });
 };
-
-/**
- * 基础库复制条件生成
- * @param lib_path 库路径类型
- * @param pkg 程序配置包
- * @returns {object} 过滤函数
- */
-function filterLirary(lib_path, pkg) {
-    var copy = {files: []};
-    var flag = false;
-    var filter = createFilter(pkg, true, "");
-    if (lib_path === "package" || lib_path === "merge") {
-        copy.files.push({
-            expand: true,
-            cwd: 'node_modules/easy-hybrid/src/lib/',
-            src: ["**", "!**/css/**"],
-            dest: '.tmp/ora/js/',
-            filter: filter
-        });
-        copy.files.push({
-            expand: true,
-            cwd: 'node_modules/easy-hybrid/src/lib/css/',
-            src: ["**"],
-            dest: '.tmp/ora/css',
-            filter: filter
-        });
-        flag = true;
-    }
-    if (lib_path === "project" || lib_path === "merge") {
-        copy.files.push({
-            expand: true,
-            cwd: 'src/lib/',
-            src: ["**", "!**/css/**"],
-            dest: '.tmp/ora/js/',
-            filter: filter
-        });
-        copy.files.push({
-            expand: true,
-            cwd: 'src/lib/css/',
-            src: ["**"],
-            dest: '.tmp/ora/css/',
-            filter: filter
-        });
-        flag = true;
-    }
-    if (!flag) {
-        copy.files.push({
-            expand: true,
-            cwd: lib_path,
-            src: ["**", "!**/css/**"],
-            dest: '.tmp/ora/js/',
-            filter: filter
-        });
-        copy.files.push({
-            expand: true,
-            cwd: lib_path + "css/",
-            src: ["**"],
-            dest: '.tmp/ora/css/',
-            filter: filter
-        });
-    }
-    return copy;
-}
-
-/**
- * 用于生成复制过滤函数
- * @param {object} pkg 程序配置包
- * @param {bool} isLib 是不是库
- * @param {string} platform 平台
- * @returns {Function} 过滤函数
- */
-function createFilter(pkg, isLib, platform) {
-    var plats = "";
-    if (pkg.cordova) {//过滤掉所有的cordova开头的文件
-        plats += "cordova-|";
-    }
-    if (platform) {
-        pkg.platform.forEach(function (item) {
-            if (item === platform) {
-                return;
-            }
-            plats += item + "-|";
-            plats += "cordova-" + item + "-|";
-        });
-    }
-    plats = plats.slice(0, -1);
-    var match = new RegExp("^(" + plats + ")");
-    if (isLib) {
-        return function (src) {
-            if (src.indexOf(".") < 0) {
-                return true;
-            }
-            var arr = src.split(/\/|\\/);
-            var basename = (arr.pop() || "").split(".")[0] || "";
-            var type = arr.pop() || "";
-            return !(type in pkg) || pkg[type].include.indexOf(basename) >= 0 || !(pkg[type].exclude.indexOf(basename) >= 0 || plats && match.test(basename));
-        }
-    }
-    else {
-        return function (src) {
-            if (src.indexOf(".") < 0) {
-                return true;
-            }
-            var arr = src.split(/\/|\\/);
-            var basename = (arr.pop() || "").split(".")[0] || "";
-            return !plats || !match.test(basename)
-        }
-    }
-}

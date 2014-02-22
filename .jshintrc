@@ -1,0 +1,13 @@
+{
+    "curly": true,    // true: 确保if while for后边都有一个{}
+    "eqeqeq": true,   // true: 确保在和系统false常量比较时使用了===
+    "immed": true,    // true: 闭包函数严格模式检查 `(function () { } ());`
+    "laxbreak": true, // true: 忽略换行检查
+    "latedef": true,  // true: 变量要在使用前被定义
+    "newcap": true,   // true: 保证构造函数的首字符大写，并且在调用时添加了new `new F()`
+    "noarg": true,    // true: 禁止使用 `arguments.caller` and `arguments.callee`
+    "sub": true,      // true: Tolerate using `[]` notation when it can still be expressed in dot notation
+    //"undef": true,    // true: Require all non-global variables to be declared (prevents global leaks)
+    "boss": true,     // true: Tolerate assignments where comparisons would be expected
+    "eqnull": true   // true: Tolerate use of `== null`
+}

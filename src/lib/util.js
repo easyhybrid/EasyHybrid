@@ -214,8 +214,12 @@ function formatString(args) {
     var str = arguments[0];
     var len = args.length;
     return str.replace(formatRegExp, function (x) {
-        if (x === '%%') return '%';
-        if (i >= len) return x;
+        if (x === '%%') {
+            return '%';
+        }
+        if (i >= len) {
+            return x;
+        }
         switch (x) {
             case '%s':
                 return String(args[i++]);
