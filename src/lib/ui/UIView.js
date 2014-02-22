@@ -25,9 +25,9 @@ function UIView(option) {
     UIObject.call(this);
     this._option = util.merge(option, defaultOption);
     this._dom = util.createDom(
-        util.formatString('<div class="absolute full-screen %s" style="z-index: %d;"></div>'
-            , this._option.reverse ? ' reverse' : ''
-        , ++zindex)
+        util.formatString('<div class="absolute full-screen %s" style="z-index: %d;"></div>',
+            this._option.reverse ? ' reverse' : '',
+            ++zindex)
     );//页面的基础元素
 }
 
@@ -40,7 +40,7 @@ UIView.prototype.hasBack = function () {
 UIView.prototype.load = function (cb) {
     var me = this;
     util.removeClass(me._dom, transformStyles);//移除已经加载的动画样式
-    if (me._option.transform != "none") {
+    if (me._option.transform !== "none") {
         //加载动画并延时执行
         util.addClass(me._dom, me._option.transform + "-in");
         setTimeout(function () {
@@ -58,7 +58,7 @@ UIView.prototype.unload = function (cb) {
     var me = this;
     me._option = null;
     util.removeClass(me._dom, transformStyles);//移除已经加载的动画样式
-    if (me._option.transform != "none") {
+    if (me._option.transform !== "none") {
         //加载动画并延时执行
         util.addClass(me._dom, me._option.transform + "-out");
         setTimeout(function () {

@@ -37,8 +37,9 @@ UIObject.prototype.attach = function (parentObject) {
  */
 UIObject.prototype.detach = function () {
     if (this._dom) {
-        var parent = this._dom.parentNode;
-        parent && parent.removeChild(this._dom);
+        if (this._dom.parentNode) {
+            parent.removeChild(this._dom);
+        }
     }
 };
 

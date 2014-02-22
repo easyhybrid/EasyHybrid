@@ -142,19 +142,19 @@ function run(data) {
     } else if (flag == 2) {
         source += ');';
     }
-    return 'module.exports = {\n'
-        + '    render: function(map) {\n'
-        + '        var p = [],\n'
-        + '            v = [];\n'
-        + '        for(var i in map) {\n'
-        + '            if (map.hasOwnProperty(i)) {\n'
-        + '                p.push(i);\n'
-        + '                v.push(map[i]);\n'
-        + '            }\n'
-        + '        }\n'
-        + '        return (new Function(p, \"var _s=[];_s.push(' + source + ' return _s;\")).apply(null, v).join("");\n'
-        + '    }\n'
-        + '};';
+    return 'module.exports = {\n' +
+        '    render: function(map) {\n' +
+        '        var p = [],\n' +
+        '            v = [];\n' +
+        '        for(var i in map) {\n' +
+        '            if (map.hasOwnProperty(i)) {\n' +
+        '                p.push(i);\n' +
+        '                v.push(map[i]);\n' +
+        '            }\n' +
+        '        }\n' +
+        '        return (new Function(p, \"var _s=[];_s.push(' + source + ' return _s;\")).apply(null, v).join("");\n' +
+        '    }\n' +
+        '};';
 }
 exports.run = run;
 

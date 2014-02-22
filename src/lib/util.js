@@ -176,7 +176,7 @@ function inherits(subClass, superClass) {
         enumerable: false,
         writable: true,
         configurable: true
-    }
+    };
 }
 
 exports.inherits = inherits;
@@ -195,7 +195,7 @@ function merge(first, second) {
         }
     } else {
         for (var key in second) {
-            if (second.hasOwnProperty(key) && second[key] != undefined) {
+            if (second.hasOwnProperty(key) && second[key] !== undefined) {
                 first[key] = second[key];
             }
         }
