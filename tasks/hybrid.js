@@ -73,7 +73,7 @@ module.exports = function (grunt) {
         list3.forEach(function (item) {
             content += '    require("hybrid/patch/' + item.split(".")[0] + '");\n';
         });
-        content += '\n    var core = require("./core");\n';
+        content += '\n    var core = require("hybrid/core");\n';
         content += '\n    core.util.platform = ' + JSON.stringify(setting) + ';\n';
         function quickend(type) {
             content += '\n    //下边为' + type + '注册代码\n';
