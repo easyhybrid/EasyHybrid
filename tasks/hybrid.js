@@ -113,7 +113,7 @@ module.exports = function (grunt) {
             grunt.file.expand({
                 cwd: src + ""
             }, "css/*.css").forEach(function (item) {
-                css.push("css/" + item);
+                css.push(item);
             });
             grunt.file.expand({
                 cwd: src + "compress/"
@@ -133,14 +133,14 @@ module.exports = function (grunt) {
         js.forEach(function (item) {
             content += '\n         <script src="' + item + '"></script>';
         });
-        content += '\n    </body>\n</html>'
+        content += '\n    </body>\n</html>';
         grunt.file.write(target, content);
     });
 
     //用于根据配置信息对一个平台进行编译
     grunt.task.registerMultiTask("easy-hybrid-platform", "fetch each platform", function () {
         var config = this.data;
-        var grunt_config = {
+        grunt.config.init({
             "easy-hybrid-rescue": grunt.config.get(),//缓存现有文件
             copy: {
                 "lib-css": {
@@ -195,6 +195,38 @@ module.exports = function (grunt) {
                             filter: lib.createFilter(config, 0, config.type)
                         }
                     ]
+                },
+                "build-uncompress": {
+                    files: [
+                        {
+                            expand: true,
+                            cwd: ".tmp/css/",
+                            src: ["**"],
+                            dest: config.build + "css/"
+                        },
+                        {
+                            expand: true,
+                            cwd: ".tmp/compress/",
+                            src: ["**"],
+                            dest: config.build + "js/"
+                        },
+                        {
+                            expand: true,
+                            cwd: ".tmp/",
+                            src: ["index.html"],
+                            dest: config.build
+                        }
+                    ]
+                },
+                "build-compress": {
+                    files: [
+                        {
+                            expand: true,
+                            cwd: ".tmp/css/",
+                            src: ["img/**"],
+                            dest: config.build + "css/"
+                        }
+                    ]
                 }
             },
             "easy-hybrid-rename": {
@@ -225,12 +257,8 @@ module.exports = function (grunt) {
             clean: {
                 tmp: [".tmp/"],
                 target: config.target
-            }
-        };
-        var task = ["copy:lib-css", "copy:lib-js", "copy:source-css", "copy:source-js", "easy-hybrid-rename", "easy-hybrid-index", "easy-hybrid-build", "clean:target"];
-        if (config.compress) {
-            //编译压缩处理
-            grunt_config.concat = {
+            },
+            concat: {
                 combine: {
                     options: {
                         process: function (src, filepath) {
@@ -251,64 +279,34 @@ module.exports = function (grunt) {
                         ".tmp/all.js": [path.join(__dirname, "source", "require.js"), ".tmp/combine.js", path.join(__dirname, "source", "load.js")]
                     }
                 }
-            };
+            },
+            uglify: {
+                build: {
+                    src: [".tmp/all.js"],
+                    dest: config.build + "js/index.js"
+                }
+            },
+            cssmin: {
+                build: {
+                    src: [".tmp/css/*.css"],
+                    dest: config.build + "css/index.css"
+
+                }
+            }
+        });
+        var task = ["copy:lib-css", "copy:lib-js", "copy:source-css", "copy:source-js", "easy-hybrid-rename", "easy-hybrid-index", "easy-hybrid-build", "clean:target"];
+        if (config.compress) {
             task.push("concat:combine");
             task.push("concat:build");
-            grunt_config.uglify = {
-                build: {
-                    files: {}
-                }
-            };
-            grunt_config.uglify.build.files[config.build + "js/index.js"] = [".tmp/all.js"];
             task.push("uglify:build");
-            //直接复制文件
-            grunt_config.copy.build = {
-                files: [
-                    {
-                        expand: true,
-                        cwd: ".tmp/css/",
-                        src: ["img/**"],
-                        dest: config.build + "css/"
-                    }
-                ]
-            };
-            task.push("copy:build");
-            grunt_config.cssmin = {
-                build: {
-                    files: {}
-                }
-            };
-            grunt_config.cssmin.build.files[config.build + "css/index.css"] = ["./tmp/css/*.css"];
+            task.push("copy:build-compress");
             task.push("cssmin:build");
         } else {
             //直接复制文件
-            grunt_config.copy.build = {
-                files: [
-                    {
-                        expand: true,
-                        cwd: ".tmp/css/",
-                        src: ["**"],
-                        dest: config.build + "css/"
-                    },
-                    {
-                        expand: true,
-                        cwd: ".tmp/compress/",
-                        src: ["**"],
-                        dest: config.build + "js/"
-                    },
-                    {
-                        expand: true,
-                        cwd: ".tmp/",
-                        src: ["index.html"],
-                        dest: config.build
-                    }
-                ]
-            };
-            task.push("copy:build");
+            task.push("copy:build-uncompress");
             grunt.file.copy(path.join(__dirname, "source", "require.js"), path.join(process.cwd(), config.build, "js", "require.js"));
             grunt.file.copy(path.join(__dirname, "source", "load.js"), path.join(process.cwd(), config.build, "js", "load.js"));
         }
-        grunt.config.init(grunt_config);
         task.push("clean:tmp");
         task.push("easy-hybrid-rescue");
         grunt.task.run(task);
