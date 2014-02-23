@@ -22,7 +22,6 @@ var util = require("./util"),//引入util工具类
     prevent = root.firstChild;//用于在页面切换过程中阻止事件的元素
 
 document.body.appendChild(root);//绑定root元素
-
 /**
  * 注册页面数据
  * @param type 注册类型（可以是视图、模板、导航条、用户工具）
