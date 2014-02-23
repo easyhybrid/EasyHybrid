@@ -26,7 +26,6 @@ module.exports = function (grunt) {
             }
         }
     });
-
     grunt.task.loadNpmTasks("grunt-contrib-watch");
     grunt.task.loadTasks("tasks");
     grunt.task.registerTask("default", [ "proxy-server:demo", "watch"]);

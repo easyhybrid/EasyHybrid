@@ -48,7 +48,11 @@ module.exports = function (grunt) {
                     var lines = content.split("\n");
                     content = "    " + lines.join("\n    ");
                     return 'define("' + id + '", function (require, exports, module) {\n' + content.replace(match_url, function () {
-                        return "require(\"" + arguments[1].replace(config.platform + "-", "").replace(".tpl", "-tpl") + "\")";
+                        var pfix = arguments[1].replace(config.platform + "-", "").replace(".tpl", "-tpl");
+                        if (pfix.charAt(0) === ".") {
+                            return "require(\"" + path.join(id, "..", pfix) + "\")";
+                        }
+                        return "require(\"" + pfix + "\")";
                     }) + '\n});'
                 }
             });
