@@ -85,7 +85,7 @@ module.exports = function (grunt) {
             });
         }
 
-        ["ui", "plugin"].forEach(quickend);
+        ["ui", "plugin", "util"].forEach(quickend);
 
         content += '\n    //下边为view注册代码\n';
         var list2 = grunt.file.expand({

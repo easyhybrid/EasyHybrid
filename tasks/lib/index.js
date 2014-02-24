@@ -1,7 +1,7 @@
 var fs = require('fs');
 var util = require("util");
 var sopport = ["dev", "ios", "android", "web"];//目前系统支持的或者即将支持的平台，以item-或者cordove-item-开头的文件或者目录名将会被系统保留
-var plugins = ["ui", "plugin", "patch"];
+var plugins = ["ui", "plugin", "patch", "util"];
 
 /**
  * 对模板数据进行编译

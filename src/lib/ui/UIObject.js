@@ -4,8 +4,8 @@
  *        赤菁风铃(liuxuanzy@qq.com)
  * UI组件基础类库
  */
-var util = require("../util");
-var EventEmitter = util.EventEmitter;
+var util = require("../util/util");
+var EventEmitter = require("../util/EventEmitter");
 
 /**
  * UI对象基类
