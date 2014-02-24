@@ -276,19 +276,18 @@ function createFilter(pkg, deep, platform) {
             if (arr.length == deep) {
                 return !(plats && match.test(arr[deep - 1]));
             }
+            for (var i = deep - 1; i < arr.length; i++) {
+                if (plats && match.test(arr[i])) {
+                    return false;
+                }
+            }
             var type = arr[deep - 1];
             if (type in plugins) {
-                deep++;
                 var basename = (arr[deep - 1] || "").split(".")[0] || "";
                 if (pkg[type].include.indexOf(basename) >= 0) {
                     return true;
                 }
                 if (pkg[type].exclude.indexOf(basename) >= 0) {
-                    return false;
-                }
-            }
-            for (var i = deep - 1; i < arr.length; i++) {
-                if (plats && match.test(arr[i])) {
                     return false;
                 }
             }

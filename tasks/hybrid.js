@@ -21,7 +21,7 @@ module.exports = function (grunt) {
         var deep = config.target.split("/").length;
         var match_type = new RegExp("^(cordova-)?" + config.platform + "-(.+)$");
         var match_url = /require *\( *['"](.+?)['"] *\)/ig;
-        var mapping = grunt.file.expandMapping("**", config.target, {
+        var mapping = grunt.file.expandMapping(["**", "!source/**"], config.target, {
             cwd: config.path,
             rename: function (dest, src) {
                 return dest + src.split(/\/|\\/).map(function (item) {
@@ -111,6 +111,7 @@ module.exports = function (grunt) {
         if (config.compress) {
             //编译压缩处理
             css.push("css/index.css");
+            js.push("js/cordova.js");
             js.push("js/index.js");
         } else {
             js.push("js/require.js");
@@ -163,7 +164,7 @@ module.exports = function (grunt) {
                         return {
                             expand: true,
                             cwd: item,
-                            src: ["**", "!**/css/**"],
+                            src: ["**", "!css/**"],
                             dest: ".tmp/js/",
                             filter: lib.createFilter(config, item.split("/").length, config.type)
                         };
@@ -216,6 +217,12 @@ module.exports = function (grunt) {
                         },
                         {
                             expand: true,
+                            cwd: ".tmp/js/source/dev/",
+                            src: ["load.js", "require.js"],
+                            dest: config.build + "js/"
+                        },
+                        {
+                            expand: true,
                             cwd: ".tmp/",
                             src: ["index.html"],
                             dest: config.build
@@ -229,6 +236,24 @@ module.exports = function (grunt) {
                             cwd: ".tmp/css/",
                             src: ["img/**"],
                             dest: config.build + "css/"
+                        },
+                        {
+                            expand: true,
+                            cwd: ".tmp/",
+                            src: ["index.html"],
+                            dest: config.build
+                        },
+                        {
+                            expand: true,
+                            cwd: ".tmp/js/source/" + config.type + "/",
+                            src: ["cordova.js"],
+                            dest: config.build + "js/"
+                        },
+                        {
+                            expand: true,
+                            cwd: ".tmp/js/source/" + (config.cordova ? "self" : "cordova"),
+                            src: ["load.js", "require.js"],
+                            dest: ".tmp/"
                         }
                     ]
                 }
@@ -239,6 +264,7 @@ module.exports = function (grunt) {
                 target: ".tmp/compress/"
             },
             "easy-hybrid-index": {
+                cordova: config.cordova,
                 path: ".tmp/compress/",
                 dest: ".tmp/compress/index.js",
                 config: config.config
@@ -280,7 +306,7 @@ module.exports = function (grunt) {
                         footer: '\n})();'
                     },
                     files: {
-                        ".tmp/all.js": [path.join(__dirname, "source", "require.js"), ".tmp/combine.js", path.join(__dirname, "source", "load.js")]
+                        ".tmp/all.js": [".tmp/require.js", ".tmp/combine.js", ".tmp/load.js"]
                     }
                 }
             },
@@ -300,16 +326,14 @@ module.exports = function (grunt) {
         });
         var task = ["copy:lib-css", "copy:lib-js", "copy:source-css", "copy:source-js", "easy-hybrid-rename", "easy-hybrid-index", "easy-hybrid-build", "clean:target"];
         if (config.compress) {
+            task.push("copy:build-compress");
             task.push("concat:combine");
             task.push("concat:build");
             task.push("uglify:build");
-            task.push("copy:build-compress");
             task.push("cssmin:build");
         } else {
             //直接复制文件
             task.push("copy:build-uncompress");
-            grunt.file.copy(path.join(__dirname, "source", "require.js"), path.join(process.cwd(), config.build, "js", "require.js"));
-            grunt.file.copy(path.join(__dirname, "source", "load.js"), path.join(process.cwd(), config.build, "js", "load.js"));
         }
         task.push("clean:tmp");
         task.push("easy-hybrid-rescue");
