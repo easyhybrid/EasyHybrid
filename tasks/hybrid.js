@@ -92,7 +92,7 @@ module.exports = function (grunt) {
             cwd: src + "/view/"
         }, "*/*.js");
         list2.forEach(function (item) {
-            content += '    core.register("view", "' + item.split(".")[0] + '", require("hybrid/view/' + item.split(".")[0] + '"));\n';
+            content += '    core.register("' + item.split(".")[0] + '", require("hybrid/view/' + item.split(".")[0] + '"));\n';
         });
 
         content += '\n    //下边为初始化项目代码\n';
