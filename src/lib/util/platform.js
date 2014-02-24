@@ -5,36 +5,34 @@
  * @note 系统信息和平台信息
  */
 
-var userAgent = 
+var userAgent = window.navigator.userAgent;
 
 /**
- * 根据userAgent对系统进行设置
- * @param userAgent 用户代理信息
- * @constructor
+ * 根据userAgent获取系统信息
  */
-function OS(userAgent) {
-    this.webkit = userAgent.match(/WebKit\/([\d.]+)/) ? true : false;
-    this.android = userAgent.match(/(Android)\s+([\d.]+)/) || userAgent.match(/Silk-Accelerated/) ? true : false;
-    this.androidICS = this.android && userAgent.match(/(Android)\s4/) ? true : false;
-    this.ipad = userAgent.match(/(iPad).*OS\s([\d_]+)/) ? true : false;
-    this.iphone = !this.ipad && userAgent.match(/(iPhone\sOS)\s([\d_]+)/) ? true : false;
-    this.webos = userAgent.match(/(webOS|hpwOS)[\s\/]([\d.]+)/) ? true : false;
-    this.touchpad = this.webos && userAgent.match(/TouchPad/) ? true : false;
-    this.ios = this.ipad || this.iphone;
-    this.playbook = userAgent.match(/PlayBook/) ? true : false;
-    this.blackberry = this.playbook || userAgent.match(/BlackBerry/) ? true : false;
-    this.blackberry10 = this.blackberry && userAgent.match(/Safari\/536/) ? true : false;
-    this.chrome = userAgent.match(/Chrome/) ? true : false;
-    this.opera = userAgent.match(/Opera/) ? true : false;
-    this.fennec = userAgent.match(/fennec/i) ? true : userAgent.match(/Firefox/) ? true : false;
-    this.ie = userAgent.match(/MSIE 10.0/i) ? true : false;
-    this.ieTouch = this.ie && userAgent.toLowerCase().match(/touch/i) ? true : false;
-    this.supportsTouch = ((window.DocumentTouch && document instanceof window.DocumentTouch) || 'ontouchstart' in window);
-    var head = document.documentElement.getElementsByTagName("head")[0];
-    this.nativeTouchScroll = typeof (head.style["-webkit-overflow-scrolling"]) !== "undefined" && this.ios;
-    if (this.android && !this.webkit) {
-        this.android = false;
-    }
+exports.os = {
+    webkit: userAgent.match(/WebKit\/([\d.]+)/) ? true : false,
+    android: userAgent.match(/(Android)\s+([\d.]+)/) || userAgent.match(/Silk-Accelerated/) ? true : false,
+    androidICS: this.android && userAgent.match(/(Android)\s4/) ? true : false,
+    ipad: userAgent.match(/(iPad).*OS\s([\d_]+)/) ? true : false,
+    iphone: !this.ipad && userAgent.match(/(iPhone\sOS)\s([\d_]+)/) ? true : false,
+    webos: userAgent.match(/(webOS|hpwOS)[\s\/]([\d.]+)/) ? true : false,
+    touchpad: this.webos && userAgent.match(/TouchPad/) ? true : false,
+    ios: this.ipad || this.iphone,
+    playbook: userAgent.match(/PlayBook/) ? true : false,
+    blackberry: this.playbook || userAgent.match(/BlackBerry/) ? true : false,
+    blackberry10: this.blackberry && userAgent.match(/Safari\/536/) ? true : false,
+    chrome: userAgent.match(/Chrome/) ? true : false,
+    opera: userAgent.match(/Opera/) ? true : false,
+    fennec: userAgent.match(/fennec/i) ? true : userAgent.match(/Firefox/) ? true : false,
+    ie: userAgent.match(/MSIE 10.0/i) ? true : false,
+    ieTouch: this.ie && userAgent.toLowerCase().match(/touch/i) ? true : false,
+    supportsTouch: 'ontouchstart' in window
+};
+
+var head = document.documentElement.getElementsByTagName("head")[0];
+exports.os.nativeTouchScroll = typeof (head.style["-webkit-overflow-scrolling"]) !== "undefined" && exports.os.ios;
+if (exports.os.android && !exports.os.webkit) {
+    exports.os.android = false;
 }
-exports.os = new OS(window.navigator.userAgent);
-exports.platform = {};//平台配置信息
+exports.platform = {};//平台配置信息，此信息会在编译时重写

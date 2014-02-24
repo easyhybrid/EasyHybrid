@@ -235,7 +235,6 @@ function formatString(args) {
 exports.formatString = formatString;
 //endregion 相关操作函数
 
-
 //region 数据库方法
 var lo = localStorage;
 

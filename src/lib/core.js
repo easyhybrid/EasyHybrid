@@ -6,12 +6,39 @@
  * @note 其它模块不要引入本文件，这是最高级文件
  */
 
-var util = require("./util"),//引入util工具类
-    plugin = {}, //引入插件工具类
-    ui = {},//UI相关工具类
-    view = {},//页面列表
-    tpl = {},//模型列表
-    nav = {},//导航条列表
+//region 插件相关
+
+var utils = {},//实用工具(零散，公用以及与WEB直接相关的工具会直接放在这里，请注意这不是硬性规定，util，ui，plugin的关系是对等的)
+    plugins = {}, //插件工具（通常和平台相关或者来源自cordova的工具会出现在这里，请注意这不是硬性规定，util，ui，plugin的关系是对等的）
+    ui = {};//UI相关工具（通常用来构成页面结构的控件会出现在UI目录中，请注意这不是硬性规定，util，ui，plugin的关系是对等的）
+
+/**
+ * 注册相关插件
+ * @param type 注册类型（可以是实用工具、插件工具或者UI相关工具）
+ * @param obj 注册的对象
+ */
+function register(type, obj) {
+    if (type === "util") {//实用工具
+        util.merge(utils, obj);
+    } else if (type === "plugin") {//注入插件工具
+        util.merge(plugins, obj);
+    } else if (type === "ui") {//注入UI相关工具
+        util.merge(ui, obj);
+    } else {
+        console.log("未知的注册类型：" + type);
+    }
+}
+exports.register = register;
+exports.util = utils;//暴露实用工具
+exports.plugin = plugins;//暴露插件工具
+exports.ui = ui;//暴露UI相关工具
+
+//endregion 插件相关
+
+//region 视图相关功能
+
+var view = {},//页面列表（只接受能生成UIView、UIView的子类以及与UIView有相同结构的对象的函数，给core.href和core.back函数使用）
+    util = require("./util/util"),//引入本对象所必须的工具信息
     backStack = [],//回退栈
     current = null,//当前页面
     root = util.createDom(''
@@ -22,33 +49,6 @@ var util = require("./util"),//引入util工具类
     prevent = root.firstChild;//用于在页面切换过程中阻止事件的元素
 
 document.body.appendChild(root);//绑定root元素
-/**
- * 注册页面数据
- * @param type 注册类型（可以是视图、模板、导航条、用户工具）
- * @param [name] 页面名称
- * @param obj 注册的对象
- */
-function register(type, name, obj) {
-    if (obj === undefined) {
-        name = "";
-        obj = name;
-    }
-    if (type === "view") {//注入视图对象
-        view[name] = obj;
-    }
-    else if (type === "nav") {//注入导航栏对象
-        nav[name] = obj;
-    } else if (type === "tpl") {//注入模板对象
-        tpl [name] = obj;
-    } else if (type === "plugin") {//注入插件（包括系统预留插件和用户自定义插件，所有用户自定义的工具都应当写在plugin里面）
-        util.merge(plugin, obj);
-    } else if (type === "ui") {//注入ui组件（包括系统预留的ui组件和用户自定义的ui组件）
-        util.merge(ui, obj);
-    } else {
-        console.log("未知的注册类型：" + type);
-    }
-}
-exports.register = register;
 
 /**
  * 导航页面到name
@@ -113,6 +113,21 @@ function back(data) {
 exports.back = back;
 
 /**
+ * 注册视图函数
+ * @param {string} name 视图名通常会是user/index这样的名字
+ * @param {function} createFunc 视图函数
+ */
+function registerView(name, createFunc) {
+    view[name] = createFunc;
+}
+exports.registerView = registerView;
+//endregion 视图相关功能
+
+//region 导航条相关
+
+var nav = {};//导航条列表（只接受UINavigation、只接受UINavigation的子类以及与只接受UINavigation有相同结构的对象的数组，给core.active函数使用）
+
+/**
  * 激活导航条
  * @param navName 导航条名称
  * @param itemName 导航条项目
@@ -128,20 +143,12 @@ function active(navName, itemName) {
 exports.active = active;
 
 /**
- * 渲染模板函数
- * @param tplName 模板名
- * @param [data] 数据
- * @returns {*} html字符串
+ * 注册导航条函数
+ * @param name 导航条名称
+ * @param obj 导航条对象
  */
-function render(tplName, data) {
-    if (tpl.hasOwnProperty(tplName) && typeof tpl[tplName].render === "function") {
-        return tpl[tplName].render(data);
-    }
-    console.log("渲染页面失败");
-    return "";
+function registerNavigation(name, obj) {
+    nav[name] = obj;
 }
-exports.render = render;
-
-exports.util = util;//暴露util接口
-exports.plugin = plugin;//暴露插件接口
-exports.ui = ui;//暴露ui组件接口
+exports.registerNavigation = registerNavigation;
+//endregion 导航条相关

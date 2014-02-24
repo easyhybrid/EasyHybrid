@@ -5,16 +5,16 @@
  * UI组件基础类库
  */
 var util = require("../util/util");
-var EventEmitter = require("../util/EventEmitter");
+var EventEmitter = require("../util/EventEmitter").EventEmitter;
 
 /**
  * UI对象基类
  * @constructor
  */
 function UIObject() {
+    EventEmitter.call(this);
     this._dom = null;
     this._eventCache = [];
-    EventEmitter.call(this);
 }
 
 util.inherits(UIObject, EventEmitter);
@@ -26,7 +26,6 @@ util.inherits(UIObject, EventEmitter);
 UIObject.prototype.attach = function (parentObject) {
     var me = this;
     var parent = getParent(parentObject);
-
     for (var i = 0; i < parent.length; i++) {
         parent[i].appendChild(me._dom);
     }
