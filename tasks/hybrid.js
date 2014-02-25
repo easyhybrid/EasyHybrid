@@ -123,6 +123,9 @@ module.exports = function (grunt) {
             }
             js.push("js/index.js");
         } else {
+            if (!config.cordova) {
+                js.push("js/cordova.js");
+            }
             js.push("js/require.js");
             grunt.file.expand({
                 cwd: src + ""
@@ -226,8 +229,8 @@ module.exports = function (grunt) {
                         },
                         {
                             expand: true,
-                            cwd: ".tmp/js/source/dev/",
-                            src: ["load.js", "require.js"],
+                            cwd: ".tmp/js/source/" + (config.cordova ? "self" : config.type) + "/",
+                            src: [config.cordova ? "" : "cordova.js", "load.js", "require.js"],
                             dest: config.build + "js/"
                         },
                         {
@@ -254,13 +257,13 @@ module.exports = function (grunt) {
                         },
                         {
                             expand: true,
-                            cwd: ".tmp/js/source/cordova/" + config.type + "/",
+                            cwd: ".tmp/js/source/" + (config.cordova ? "self" : config.type) + "/",
                             src: [config.cordova ? "" : "cordova.js"],
                             dest: config.build + "js/"
                         },
                         {
                             expand: true,
-                            cwd: ".tmp/js/source/" + (config.cordova ? "self" : "cordova"),
+                            cwd: ".tmp/js/source/" + (config.cordova ? "self" : config.type) + "/",
                             src: ["load.js", "require.js"],
                             dest: ".tmp/"
                         }

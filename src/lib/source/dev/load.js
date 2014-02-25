@@ -1,1 +1,0 @@
-require("hybrid/index").init();
