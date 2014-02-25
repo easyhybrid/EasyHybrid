@@ -7,14 +7,14 @@
  * @note 关于exports.cordova参数的说明
  * @note true 如果您设置此参数为true,您需要注意以下几点：
  *    1、通过将cordova相关插件放在cordova_plugin中的方式来使用他们，
- *    2、将cordova.js和cordova_plugin.js添加到sources.js中
+ *    2、将cordova.js和cordova_plugin.js添加到sources选项中
  *    3、将cordova.js和cordova_plugin.js以及相关插件目录添加到实际部署的项目中
  *    4、为您提供一个不带有cordova.js的dev版本以方便调试，但是不保证在dev版本中可以使用cordova提供的功能，可能需要在真机上进行测试
  *    5、自动排除所有以cordova-开头的ui、plugin和patch，即使手动将他们添加到include中
  *    6、提供一个require.js来加载模块，代码会与cordova完全分离并以保证自己的使用方式
  *
  * @note false 如果您设置此参数为false ,您需要注意以下几点：
- *    1、为所支持的版本提供相应的cordova.js，但是可能没有cordova_plugin.js
+ *    1、系统会自动提供相应的cordova.js，但是没有cordova_plugin.js
  *    2、部分功能可能暂时没有对应的插件支持
  *    3、为所有的web和dev版本提供proxy插件（一般放在patch中），以保证在web版本的cordova中使用cordova的部分功能，但是它可能只是一个简单的提示
  *    4、使用cordova.define和cordova.require来加载模块

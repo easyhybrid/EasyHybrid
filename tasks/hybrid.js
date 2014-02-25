@@ -117,7 +117,9 @@ module.exports = function (grunt) {
         if (config.compress) {
             //编译压缩处理
             css.push("css/index.css");
-            js.push("js/cordova.js");
+            if (!config.cordova) {
+                js.push("js/cordova.js");
+            }
             js.push("js/index.js");
         } else {
             js.push("js/require.js");
@@ -251,8 +253,8 @@ module.exports = function (grunt) {
                         },
                         {
                             expand: true,
-                            cwd: ".tmp/js/source/" + config.type + "/",
-                            src: ["cordova.js"],
+                            cwd: ".tmp/js/source/cordova/" + config.type + "/",
+                            src: [config.cordova ? "" : "cordova.js"],
                             dest: config.build + "js/"
                         },
                         {
@@ -276,6 +278,7 @@ module.exports = function (grunt) {
                 config: config.config
             },
             "easy-hybrid-build": {
+                cordova: config.cordova,
                 path: ".tmp/",
                 target: ".tmp/index.html",
                 compress: config.compress,
