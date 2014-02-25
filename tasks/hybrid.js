@@ -64,6 +64,7 @@ module.exports = function (grunt) {
         var config = grunt.config.get("easy-hybrid-index");
         var src = config.path;
         var setting = config.config;
+        setting.cordova = config.cordova;
         //生成index.js文件
         var content = 'define("hybrid/index", function (require, exports, module) {\n';
         content += "\n    //下边为加载patch代码\n";
