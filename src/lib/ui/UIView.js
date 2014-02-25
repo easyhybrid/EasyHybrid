@@ -25,7 +25,7 @@
  *     true      ：horizontal和vertical的特效会反方向，比较适合电子书或者阿拉伯语地区的网页
  */
 
-var util = require("../util"),//引入工具类
+var util = require("../util/util"),//引入工具类
     UIObject = require('./UIObject').UIObject,//引入UIObject基类
     zindex = 10000,//基础z-index
     transformStyles = ["horizontal-in", "vertical-in", "pop-in", "fade-in", "horizontal-out", "vertical-out", "pop-out", "fade-out"].join(" "),//所有需要在重新加载时移除的样式

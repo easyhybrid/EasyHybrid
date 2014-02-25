@@ -6,7 +6,7 @@
  * @note 用户自己定义的插件和系统定义的插件均可注入到这个对象内
  * @note 可以在plugin内使用util，但是不推荐使用ui对象
  */
-var mime = require("./mime");
+var mime = require("../util/mime");
 
 function upload(uri, target, params, callBack) {
     var options = new FileUploadOptions();
