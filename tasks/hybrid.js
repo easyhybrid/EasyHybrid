@@ -92,7 +92,13 @@ module.exports = function (grunt) {
             cwd: src + "/view/"
         }, "*/*.js");
         list2.forEach(function (item) {
-            content += '    core.register("' + item.split(".")[0] + '", require("hybrid/view/' + item.split(".")[0] + '"));\n';
+            var id = item.split(".")[0];
+            var tags = id.split("/");
+            if (tags[0] === "navigation") {
+                content += '    core.registerNavigation("' + tags[1] + '", require("hybrid/view/' + item.split(".")[0] + '"));\n';
+            } else {
+                content += '    core.registerView("' + item.split(".")[0] + '", require("hybrid/view/' + item.split(".")[0] + '"));\n';
+            }
         });
 
         content += '\n    //下边为初始化项目代码\n';

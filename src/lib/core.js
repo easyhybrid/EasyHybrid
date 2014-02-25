@@ -38,6 +38,7 @@ exports.ui = ui;//暴露UI相关工具
 //region 视图相关功能
 
 var view = {},//页面列表（只接受能生成UIView、UIView的子类以及与UIView有相同结构的对象的函数，给core.href和core.back函数使用）
+    nav = {},//导航条列表（只接受UINavigation、只接受UINavigation的子类以及与只接受UINavigation有相同结构的对象的数组，给core.active函数使用）
     util = require("./util/util"),//引入本对象所必须的工具信息
     backStack = [],//回退栈
     current = null,//当前页面
@@ -69,19 +70,30 @@ function href(name, data) {
     try {
         util.removeClass(prevent, "hidden");//打开阻止层
         createFunc(exports, data, function (item) {
+            var style = item.style();//页面样式
+            var navigation = item.navigation().split(".");//导航条样式
             item.load(root, function () {
+                active.apply(undefined, navigation);
+                //从dom树上摘除当前页
+                if (style !== "frame" && current) {
+                    current.detach();
+                }
+                if (style === "switch" && current && current.style() === "switch") {
+                    current.destroy(true);
+                    current = null;
+                }
                 if (current) {
                     backStack.push(current);//缓存当前页
-                    current.detach();//从dom树上摘除当前页
                 }
-                util.addClass(prevent, "hidden");//关闭阻止层
                 current = item;//重新指定当前页
-                if (!item.hasBack()) {//检查回退标识并释放资源
+                //检查回退标识并释放资源
+                if (style === "none") {
                     for (var i = 0; i < backStack.length; i++) {
                         backStack[i].destroy(true);
                     }
                     backStack = [];
                 }
+                util.addClass(prevent, "hidden");//关闭阻止层
             });//激活当前页
         });//构造页面（这一步可能出现异常）
     } catch (e) {
@@ -103,7 +115,9 @@ function back(data) {
     var item = current;
     util.removeClass(prevent, "hidden");//打开阻止层
     current = backStack.pop();//获取上一页面
-    current.attach(root);//恢复当前页
+    if (item.style() !== "frame") {
+        current.attach(root);//恢复当前页
+    }
     current.emit("back", data);//触发回退页面的back事件
     item.unload(function () {
         item.destroy(true);//销毁页面元素，并清理元素内部的事件，释放内存
@@ -121,18 +135,22 @@ function registerView(name, createFunc) {
     view[name] = createFunc;
 }
 exports.registerView = registerView;
-//endregion 视图相关功能
-
-//region 导航条相关
-
-var nav = {};//导航条列表（只接受UINavigation、只接受UINavigation的子类以及与只接受UINavigation有相同结构的对象的数组，给core.active函数使用）
 
 /**
  * 激活导航条
- * @param navName 导航条名称
- * @param itemName 导航条项目
+ * @param [navName] 导航条名称
+ * @param [itemName] 导航条项目
  */
 function active(navName, itemName) {
+    if (navName === "common") {
+        return;
+    }
+    nav.forEach(function (item) {
+        item.hide();
+    });
+    if (navName === "hide") {
+        return;
+    }
     if (!(navName in nav)) {
         console.log("所加载的导航条不存在");
         return;
@@ -151,4 +169,4 @@ function registerNavigation(name, obj) {
     nav[name] = obj;
 }
 exports.registerNavigation = registerNavigation;
-//endregion 导航条相关
+//endregion 视图相关功能
