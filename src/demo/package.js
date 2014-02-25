@@ -14,12 +14,9 @@
  *    6、提供一个require.js来加载模块，代码会与cordova完全分离并以保证自己的使用方式
  *
  * @note false 如果您设置此参数为false ,您需要注意以下几点：
- *    1、系统会自动提供相应的cordova.js，但是没有cordova_plugin.js
- *    2、部分功能可能暂时没有对应的插件支持
- *    3、为所有的web和dev版本提供proxy插件（一般放在patch/cordova-web-fix中），以保证在web版本的cordova中使用cordova的部分功能，但是它可能只是一个简单的提示
- *    4、使用cordova.define和cordova.require来加载模块
- *    5、监视channel.onNativeReady事件而非document的deviceready事件，以加快加载速度
- *    6、提供更多的插件支持
+ *    1、系统会自己实现与cordova客户端的通信，不需要引用cordova.js
+ *    2、部分功能可能暂时没有对应的插件支持，但是可能会支持很多新的插件
+ *    3、在EasyHybrid 1.0版本上线之前，我们更推荐您使用cordova自身
  */
 
 module.exports = {

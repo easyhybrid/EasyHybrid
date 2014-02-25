@@ -1,4 +1,2 @@
-document.addEventListener("deviceready", function () {
-    require("hybrid/index").init();
-}, false);
+require("hybrid/index").init();
 
