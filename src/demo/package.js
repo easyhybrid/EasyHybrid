@@ -43,7 +43,7 @@ module.exports = {
         include: [],
         exclude: []
     },
-    sources: {//需要额外添加的其它CSS或者JS库，当cordova，当为true时,请在此添加cordova-plugin.js，cordova在创建工程时会自动将他们添加到工程中,cordova.js会自动添加
+    sources: {//需要额外添加的其它CSS或者JS库，当cordova，当为true时,请在此添加cordova.js和cordova_plugin.js
         css: [],
         js: []
     }
