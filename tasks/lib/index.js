@@ -152,7 +152,7 @@ function run(data) {
         '                v.push(map[i]);\n' +
         '            }\n' +
         '        }\n' +
-        '        /*jshint evil: true */' +
+        '        /*jshint evil: true */\n' +
         '        return (new Function(p, \"var _s=[];_s.push(' + source + ' return _s;\")).apply(null, v).join("");\n' +
         '    }\n' +
         '};';
@@ -170,7 +170,7 @@ function platformInit(target, lib_path, pkg) {
     //对相关参数进行规范化
     lib_path = lib_path || "merge";
     pkg = pkg || {};
-    pkg.cordova = !!pkg.cordova;
+    pkg.cordova = !!pkg.useCordova;
     pkg.platform = pkg.platform || ["dev"];
     pkg.sources = pkg.sources || {};
     pkg.sources.css = pkg.sources.css || [];

@@ -20,7 +20,7 @@
  */
 
 module.exports = {
-    cordova: false,//是否使用cordova
+    useCordova: false,//是否使用cordova提供的引用路径和插件，为false时，系统会使用easyhybrid提供的插件
     platform: ["android", "web", "ios"],//部署时的目标平台，要注意的是，系统会自动生成一个名为dev的平台来提供调试，使用的配置与web相同
     proxy: "/",//dev版本使用的HTTP请求代理地址（用于解决跨域请求问题），默认为/（供proxy-server使用）
     "package": {//项目的简介，本项目中的内容会出现在core.config中

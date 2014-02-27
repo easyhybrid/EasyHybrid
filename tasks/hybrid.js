@@ -50,7 +50,7 @@ module.exports = function (grunt) {
                     return 'define("' + id + '", function (require, exports, module) {\n' + content.replace(match_url, function () {
                         var pfix = arguments[1].replace(config.platform + "-", "").replace(".tpl", "-tpl");
                         if (pfix.charAt(0) === ".") {
-                            return "require(\"" + path.join(id, "..", pfix) + "\")";
+                            return ("require(\"" +path.join(id, "..", pfix).replace(/\\/g, "/") + "\")").replace("\\", "/");
                         }
                         return "require(\"" + pfix + "\")";
                     }) + '\n});'
