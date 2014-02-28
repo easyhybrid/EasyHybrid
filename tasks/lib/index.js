@@ -1,6 +1,8 @@
 var fs = require('fs');
 var util = require("util");
-var sopport = ["dev", "ios", "android", "web"];//目前系统支持的或者即将支持的平台，以item-或者cordove-item-开头的文件或者目录名将会被系统保留
+var support = ["ios", "android", "web"];
+var native = ["ios", "android"];//目前系统支持的通过phonegap原生代码交互来实现的平台，系统会加载一个简易版的cordova核心用来和
+var proxy = ["dev", "web" ];//phonegap通过代理方式实现的平台，系统将会在useCordova = false时，忽略加载cordova，而是将exec函数转接到一个在patch中加载的工具库中
 var plugins = ["ui", "plugin", "patch", "util"];
 
 /**
@@ -162,87 +164,111 @@ exports.run = run;
 /**
  * 初始化各平台信息，并对缺失的参数进行补充
  * @param target 源文件所在位置
- * @param lib_path 配置文件中给出的配置路径信息
  * @param pkg 配置包信息
  * @returns {Array|*}
  */
-function platformInit(target, lib_path, pkg) {
+function platformInit(target, pkg) {
     //对相关参数进行规范化
-    lib_path = lib_path || "merge";
-    pkg = pkg || {};
-    pkg.cordova = !!pkg.useCordova;
-    pkg.platform = pkg.platform || ["dev"];
-    pkg.sources = pkg.sources || {};
-    pkg.sources.css = pkg.sources.css || [];
-    pkg.sources.js = pkg.sources.js || [];
-    pkg.proxy = pkg.proxy || "";
-    plugins.forEach(function (item) {
-        pkg[item] = pkg[item] || {};
-        pkg[item].include = pkg[item].include || [];
-        pkg[item].exclude = pkg[item].include || [];
+    pkg.cordova = !!pkg.cordova;//是否使用cordova
+    pkg.lib = pkg.lib || "src/lib/";//库文件路径
+    pkg.name = pkg.name || "";//项目名称
+    pkg.platforms = pkg.platforms || ["web"];//目标平台
+    pkg.sources = pkg.sources || {};//额外资源路径
+    pkg.sources.css = pkg.sources.css || [];//额外css资源路径
+    pkg.sources.js = pkg.sources.js || [];//额外js资源路径
+    var source = {
+        css: [
+            "css/index.css"
+        ],
+        js: [
+            "js/index.js"
+        ]
+    };
+    pkg.sources.css.forEach(function (item) {
+        if (source.css.indexOf(item) < 0) {
+            source.css.push(item);
+
+        }
     });
-    //处理文件路径
-    var lib_src = [];
-    var flag = false;
-    if (lib_path === "package" || lib_path === "merge") {
-        lib_src.push("node_modules/easy-hybrid/src/lib/");
-        flag = true;
-    }
-    if (lib_path === "project" || lib_path === "merge") {
-        lib_src.push("src/lib/");
-        flag = true;
-    }
-    if (!flag) {
-        if (Array.isArray(lib_path)) {
-            lib_src = lib_path;
+    pkg.sources.js.forEach(function (item) {
+        if (source.js.indexOf(item) < 0) {
+            source.js.push(item);
+
         }
-        else {
-            lib_src.push(lib_path);
-        }
-    }
-    lib_src = lib_src.map(function (item) {
-        if (item[item.length - 1] !== "/") {
-            return item + "/";
-        }
-        return item;
     });
+    pkg.plugin = pkg.plugin || [];//plugin插件
+    pkg.util = pkg.util || [];//util插件
+    pkg.patch = pkg.patch || [];//patch插件
+    pkg.ui = pkg.ui || [];//ui插件
     //生成platform参数
     var platform = {};
-    if (pkg.platform.indexOf("dev") < 0) {
-        pkg.platform.push("dev");
-    }
-    pkg.platform.forEach(function (item) {
-        var result = {
-            src: "src/" + target + "/",//源代码目录
-            target: target,
-            build: "build/" + target + "/" + item + "/",//目标代码目录
-            lib: lib_src,//从哪里选择基础库
+    pkg.platforms.forEach(function (item) {
+        platform[item] = {
             cordova: pkg.cordova,//是否启用cordova
-            patch: pkg.patch,//patch过滤条件
-            plugin: pkg.plugin,//plugin过滤条件
-            ui: pkg.ui,//ui过滤条件
-            sources: pkg.sources,//要引入index.html的资源
-            config: util._extend({}, pkg.package)//平台配置信息（会被注入到util.config对象中）
+            build: "build/" + target + "/" + item + "/",//目标代码目录
+            target: target,//工程名称
+            platform: item,//平台的名称
+            name: pkg.name,
+            src: "src/" + target + "/",//源代码目录
+            lib: pkg.lib,//从哪里选择基础库
+            filter: {
+                lib: createFilter(pkg, pkg.lib.split("/").length, item),//库文件过滤函数
+                source: createFilter(pkg, 0, item)//一般文件过滤函数
+            },
+            sources: source//要引入index.html的资源
         };
-        if (item === "dev") {
-            result.name = "dev";//名称
-            result.type = "web";//过滤前缀
-            result.compress = false;//是否压缩
-            result.config.platform = "dev";//为配置添加平台名称
-            result.config.proxy = pkg.proxy;//为配置添加代理路径
-        } else {
-            result.name = item;//名称
-            result.type = item;//过滤前缀
-            result.compress = true;//是否压缩
-            result.config.platform = item;//为配置添加平台名称
-            result.config.proxy = "";//为配置添加代理路径
-        }
-        platform[item] = result;
     });
     return platform;
 }
 
 exports.platformInit = platformInit;
+
+
+/**
+ * 初始化开发包信息
+ * @param target 源文件所在位置
+ * @param pkg 配置包信息
+ * @returns {*}
+ */
+function developInit(target, pkg) {
+    if (!pkg.develop || !pkg.develop.enable) {
+        return false
+    }
+    var source = {
+        css: [
+        ],
+        js: [
+        ]
+    };
+    pkg.sources.css.forEach(function (item) {
+        if (source.css.indexOf(item) < 0) {
+            source.css.push(item);
+
+        }
+    });
+    pkg.sources.js.forEach(function (item) {
+        if (source.js.indexOf(item) < 0) {
+            source.js.push(item);
+
+        }
+    });
+    return {
+        proxy: pkg.develop.proxy || false,//代理信息
+        cordova: pkg.cordova,//是否启用cordova
+        build: "build/" + target + "/dev/",//目标代码目录
+        target: target,//工程名称
+        src: "src/" + target + "/",//源代码目录
+        name: pkg.name,
+        lib: pkg.lib,//从哪里选择基础库
+        filter: {
+            lib: createFilter(pkg, pkg.lib.split("/").length, "web"),//库文件过滤函数
+            source: createFilter(pkg, 0, "web")//一般文件过滤函数
+        },
+        sources: source//要引入index.html的资源
+    };
+}
+
+exports.developInit = developInit;
 
 /**
  * 用于生成复制过滤函数
@@ -257,7 +283,7 @@ function createFilter(pkg, deep, platform) {
         plats += "cordova-|";
     }
     if (platform) {
-        sopport.forEach(function (item) {
+        support.forEach(function (item) {
             if (item === platform) {
                 return;
             }

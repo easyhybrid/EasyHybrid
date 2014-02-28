@@ -50,7 +50,7 @@ module.exports = function (grunt) {
                     return 'define("' + id + '", function (require, exports, module) {\n' + content.replace(match_url, function () {
                         var pfix = arguments[1].replace(config.platform + "-", "").replace(".tpl", "-tpl");
                         if (pfix.charAt(0) === ".") {
-                            return ("require(\"" +path.join(id, "..", pfix).replace(/\\/g, "/") + "\")").replace("\\", "/");
+                            return ("require(\"" + path.join(id, "..", pfix).replace(/\\/g, "/") + "\")").replace("\\", "/");
                         }
                         return "require(\"" + pfix + "\")";
                     }) + '\n});'
@@ -63,8 +63,6 @@ module.exports = function (grunt) {
     grunt.task.registerTask("easy-hybrid-index", function () {
         var config = grunt.config.get("easy-hybrid-index");
         var src = config.path;
-        var setting = config.config;
-        setting.cordova = config.cordova;
         //生成index.js文件
         var content = 'define("hybrid/index", function (require, exports, module) {\n';
         content += "\n    //下边为加载patch代码\n";
@@ -75,7 +73,9 @@ module.exports = function (grunt) {
             content += '    require("hybrid/patch/' + item.split(".")[0] + '");\n';
         });
         content += '\n    var core = require("hybrid/core");\n';
-        content += '\n    core.util.platform = ' + JSON.stringify(setting) + ';\n';
+        if (config.proxy) {
+            content += '\n    core.util.proxy = ' + config.proxy + ';\n';
+        }
         function quickend(type) {
             content += '\n    //下边为' + type + '注册代码\n';
             var list = grunt.file.expand({
@@ -86,20 +86,26 @@ module.exports = function (grunt) {
             });
         }
 
-        ["ui", "plugin", "util"].forEach(quickend);
+        [ "util", "plugin", "ui"].forEach(quickend);
+
+        content += '\n    //下边为config注册代码\n';
+        content += '\n    core.config = require("hybrid/config");\n';
+
+        content += '\n    //下边为navigation注册代码\n';
+        var list4 = grunt.file.expand({
+            cwd: src + "/navigation/"
+        }, "*.js");
+        list4.forEach(function (item) {
+            var id = item.split(".")[0];
+            content += '    core.registerNavigation("' + id + '", require("hybrid/navigation/' + item.split(".")[0] + '"));\n';
+        });
 
         content += '\n    //下边为view注册代码\n';
         var list2 = grunt.file.expand({
             cwd: src + "/view/"
         }, "*/*.js");
         list2.forEach(function (item) {
-            var id = item.split(".")[0];
-            var tags = id.split("/");
-            if (tags[0] === "navigation") {
-                content += '    core.registerNavigation("' + tags[1] + '", require("hybrid/view/' + item.split(".")[0] + '"));\n';
-            } else {
-                content += '    core.registerView("' + item.split(".")[0] + '", require("hybrid/view/' + item.split(".")[0] + '"));\n';
-            }
+            content += '    core.registerView("' + item.split(".")[0] + '", require("hybrid/view/' + item.split(".")[0] + '"));\n';
         });
 
         content += '\n    //下边为初始化项目代码\n';
@@ -111,32 +117,49 @@ module.exports = function (grunt) {
     //根据配置生成index.html
     grunt.task.registerTask("easy-hybrid-build", function () {
         var config = grunt.config.get("easy-hybrid-build");
+        console.log(config);
         var target = config.target;
         var src = config.path;
         var css = config.sources.css;
         var js = config.sources.js;
-        if (config.compress) {
-            //编译压缩处理
-            css.push("css/index.css");
-            js.push("js/index.js");
-        } else {
-            js.push("js/require.js");
-            grunt.file.expand({
-                cwd: src + ""
-            }, "css/*.css").forEach(function (item) {
-                css.push(item);
-            });
-            grunt.file.expand({
-                cwd: src + "compress/"
-            }, "**/*.js").forEach(function (item) {
-                js.push("js/" + item);
-            });
-            js.push("js/load.js");
-        }
         var content = '<html>\n    <head>' +
             '\n        <meta charset="utf-8"/>' +
             '\n        <base target="_self"/>' +
-            '\n        <title>' + config.config.name + '</title>';
+            '\n        <title>' + config.name + '</title>';
+        css.forEach(function (item) {
+            content += '\n        <link href="' + item + '" rel="stylesheet"/>';
+        });
+        content += '\n    </head>\n    <body>';
+        js.forEach(function (item) {
+            content += '\n         <script src="' + item + '"></script>';
+        });
+        content += '\n    </body>\n</html>';
+        grunt.file.write(target, content);
+    });
+
+    //修复easy-hybrid-build在开发版本时的错误
+    grunt.task.registerTask("easy-hybrid-fix", function () {
+        var config = grunt.config.get("easy-hybrid-build");
+        var target = config.target;
+        var src = config.path;
+        var css = config.sources.css;
+        var js = config.sources.js;
+        js.push("js/require.js");
+        grunt.file.expand({
+            cwd: src + ""
+        }, "css/*.css").forEach(function (item) {
+            css.push(item);
+        });
+        grunt.file.expand({
+            cwd: src + "compress/"
+        }, "**/*.js").forEach(function (item) {
+            js.push("js/" + item);
+        });
+        js.push("js/load.js");
+        var content = '<html>\n    <head>' +
+            '\n        <meta charset="utf-8"/>' +
+            '\n        <base target="_self"/>' +
+            '\n        <title>' + config.name + '</title>';
         css.forEach(function (item) {
             content += '\n        <link href="' + item + '" rel="stylesheet"/>';
         });
@@ -155,26 +178,26 @@ module.exports = function (grunt) {
             "easy-hybrid-rescue": grunt.config.get(),//缓存现有文件
             copy: {
                 "lib-css": {
-                    files: config.lib.map(function (item) {
-                        return {
+                    files: [
+                        {
                             expand: true,
-                            cwd: item + "css/",
+                            cwd: config.lib + "css/",
                             src: ["**"],
                             dest: ".tmp/css/",
-                            filter: lib.createFilter(config, 0, config.name)
-                        };
-                    })
+                            filter: config.filter.lib
+                        }
+                    ]
                 },
                 "lib-js": {
-                    files: config.lib.map(function (item) {
-                        return {
+                    files: [
+                        {
                             expand: true,
-                            cwd: item,
+                            cwd: config.lib,
                             src: ["**", "!css/**"],
                             dest: ".tmp/js/",
-                            filter: lib.createFilter(config, item.split("/").length, config.type)
-                        };
-                    })
+                            filter: config.filter.lib
+                        }
+                    ]
                 },
                 "source-css": {
                     files: fs.readdirSync(config.src).filter(function (item) {
@@ -185,7 +208,7 @@ module.exports = function (grunt) {
                             cwd: config.src + item + "/css/",
                             src: ["**"],
                             dest: ".tmp/css/",
-                            filter: lib.createFilter(config, 0, config.type)
+                            filter: config.filter.source
                         };
                     })
                 },
@@ -194,20 +217,165 @@ module.exports = function (grunt) {
                         {
                             expand: true,
                             cwd: config.src,
-                            src: ["*/**", "!**/css/**"],
-                            dest: ".tmp/js/view/",
-                            filter: lib.createFilter(config, 0, config.type)
-                        },
-                        {
-                            expand: true,
-                            cwd: config.src,
-                            src: ["init.js"],
+                            src: ["**", "!**/css/**"],
                             dest: ".tmp/js/",
-                            filter: lib.createFilter(config, 0, config.type)
+                            filter: config.filter.source
                         }
                     ]
                 },
-                "build-uncompress": {
+                "build": {
+                    files: [
+                        {
+                            expand: true,
+                            cwd: ".tmp/css/",
+                            src: ["img/**"],
+                            dest: config.build + "css/"
+                        },
+                        {
+                            expand: true,
+                            cwd: ".tmp/",
+                            src: ["index.html"],
+                            dest: config.build
+                        },
+                        {
+                            expand: true,
+                            cwd: ".tmp/js/source/" + (config.cordova ? "cordova" : "self") + "/",
+                            src: ["load.js", "require.js"],
+                            dest: ".tmp/"
+                        }
+                    ]
+                }
+            },
+            "easy-hybrid-rename": {
+                path: ".tmp/js/",
+                platform: config.platform,
+                target: ".tmp/compress/"
+            },
+            "easy-hybrid-index": {
+                proxy: "",
+                path: ".tmp/compress/",
+                dest: ".tmp/compress/index.js"
+            },
+            "easy-hybrid-build": {
+                path: ".tmp/",
+                target: ".tmp/index.html",
+                sources: config.sources,
+                name: config.name
+            },
+            jshint: {
+                all: [
+                    '.tmp/compress/**/*.js'
+                ],
+                options: {
+                    jshintrc: '.jshintrc'
+                }
+            },
+            clean: {
+                tmp: [".tmp/"],
+                target: config.target
+            },
+            concat: {
+                build: {
+                    options: {
+                        separator: '\n\n',
+                        banner: '(function(){\n',
+                        footer: '\n})();',
+                        process: function (src, filepath) {
+                            return '// Source: ' + filepath.replace("./tmp/compress/", "") + '\n' + src;
+                        }
+                    },
+                    files: {
+                        ".tmp/all.js": [".tmp/require.js", ".tmp/compress/**/*.js", ".tmp/load.js"]
+                    }
+                }
+            },
+            uglify: {
+                build: {
+                    src: [".tmp/all.js"],
+                    dest: config.build + "js/index.js"
+                }
+            },
+            cssmin: {
+                build: {
+                    src: [".tmp/css/*.css"],
+                    dest: config.build + "css/index.css"
+
+                }
+            }
+        });
+        var task = [
+            "copy:lib-css",
+            "copy:lib-js",
+            "copy:source-css",
+            "copy:source-js",
+            "easy-hybrid-rename",
+            "easy-hybrid-index",
+            "easy-hybrid-build",
+            "clean:target",
+            "jshint",
+            "copy:build",
+            "concat",
+            "uglify",
+            "cssmin",
+            "clean:tmp",
+            "easy-hybrid-rescue"
+        ];
+        grunt.task.run(task);
+    });
+
+    //用于根据信息生成编译信息
+    grunt.task.registerMultiTask("easy-hybrid-dev", "fetch each platform", function () {
+        var config = this.data;
+        grunt.config.init({
+            "easy-hybrid-rescue": grunt.config.get(),//缓存现有文件
+            copy: {
+                "lib-css": {
+                    files: [
+                        {
+                            expand: true,
+                            cwd: config.lib + "css/",
+                            src: ["**"],
+                            dest: ".tmp/css/",
+                            filter: config.filter.lib
+                        }
+                    ]
+                },
+                "lib-js": {
+                    files: [
+                        {
+                            expand: true,
+                            cwd: config.lib,
+                            src: ["**", "!css/**"],
+                            dest: ".tmp/js/",
+                            filter: config.filter.lib
+                        }
+                    ]
+                },
+                "source-css": {
+                    files: fs.readdirSync(config.src).filter(function (item) {
+                        return grunt.file.isDir(process.cwd(), config.src, item);
+                    }).map(function (item) {
+                        return {
+                            expand: true,
+                            cwd: config.src + item + "/css/",
+                            src: ["**"],
+                            dest: ".tmp/css/",
+                            filter: config.filter.source
+                        };
+                    })
+                },
+                "source-js": {
+                    files: [
+                        {
+                            expand: true,
+                            cwd: config.src,
+                            src: ["**", "!**/css/**"],
+                            dest: ".tmp/js/",
+                            filter: config.filter.source
+                        }
+                    ]
+                },
+                "build": {
                     files: [
                         {
                             expand: true,
@@ -234,48 +402,23 @@ module.exports = function (grunt) {
                             dest: config.build
                         }
                     ]
-                },
-                "build-compress": {
-                    files: [
-                        {
-                            expand: true,
-                            cwd: ".tmp/css/",
-                            src: ["img/**"],
-                            dest: config.build + "css/"
-                        },
-                        {
-                            expand: true,
-                            cwd: ".tmp/",
-                            src: ["index.html"],
-                            dest: config.build
-                        },
-                        {
-                            expand: true,
-                            cwd: ".tmp/js/source/" + (config.cordova ? "cordova" : "self") + "/",
-                            src: ["load.js", "require.js"],
-                            dest: ".tmp/"
-                        }
-                    ]
                 }
             },
             "easy-hybrid-rename": {
                 path: ".tmp/js/",
-                platform: config.type,
+                platform: config.platform,
                 target: ".tmp/compress/"
             },
             "easy-hybrid-index": {
-                cordova: config.cordova,
+                proxy: "",
                 path: ".tmp/compress/",
-                dest: ".tmp/compress/index.js",
-                config: config.config
+                dest: ".tmp/compress/index.js"
             },
             "easy-hybrid-build": {
-                cordova: config.cordova,
                 path: ".tmp/",
                 target: ".tmp/index.html",
-                compress: config.compress,
                 sources: config.sources,
-                config: config.config
+                name: config.name
             },
             jshint: {
                 all: [
@@ -288,56 +431,22 @@ module.exports = function (grunt) {
             clean: {
                 tmp: [".tmp/"],
                 target: config.target
-            },
-            concat: {
-                combine: {
-                    options: {
-                        process: function (src, filepath) {
-                            return '// Source: ' + filepath.replace("./tmp/compress/", "") + '\n' + src;
-                        }
-                    },
-                    files: {
-                        ".tmp/combine.js": [".tmp/compress/**/*.js"]
-                    }
-                },
-                build: {
-                    options: {
-                        separator: '\n\n',
-                        banner: '(function(){\n',
-                        footer: '\n})();'
-                    },
-                    files: {
-                        ".tmp/all.js": [".tmp/require.js", ".tmp/combine.js", ".tmp/load.js"]
-                    }
-                }
-            },
-            uglify: {
-                build: {
-                    src: [".tmp/all.js"],
-                    dest: config.build + "js/index.js"
-                }
-            },
-            cssmin: {
-                build: {
-                    src: [".tmp/css/*.css"],
-                    dest: config.build + "css/index.css"
-
-                }
             }
         });
-        var task = ["copy:lib-css", "copy:lib-js", "copy:source-css", "copy:source-js", "easy-hybrid-rename", "easy-hybrid-index", "easy-hybrid-build", "clean:target"];
-        if (config.compress) {
-            task.push("copy:build-compress");
-            task.push("concat:combine");
-            task.push("concat:build");
-            task.push("uglify:build");
-            task.push("cssmin:build");
-        } else {
-            //直接复制文件
-            task.push("copy:build-uncompress");
-        }
-        task.push("clean:tmp");
-        task.push("easy-hybrid-rescue");
+        var task = [
+            "copy:lib-css",
+            "copy:lib-js",
+            "copy:source-css",
+            "copy:source-js",
+            "easy-hybrid-rename",
+            "easy-hybrid-index",
+            "easy-hybrid-fix",
+            "clean:target",
+            "jshint",
+            "copy:build",
+            "clean:tmp",
+            "easy-hybrid-rescue"
+        ];
         grunt.task.run(task);
     });
 
@@ -347,9 +456,12 @@ module.exports = function (grunt) {
         //重新生成请求参数
         grunt.config.init({
             "easy-hybrid-rescue": grunt.config.get(),//缓存现有文件
-            "easy-hybrid-platform": lib.platformInit(me.target, me.data.lib, me.data.pkg)
+            "easy-hybrid-platform": lib.platformInit(me.target, me.data),
+            "easy-hybrid-dev": {
+                "dev": lib.developInit(me.target, me.data)
+            }
         });
-        grunt.task.run(["easy-hybrid-platform", "easy-hybrid-rescue"]);
+        grunt.task.run(["easy-hybrid-platform", "easy-hybrid-dev", "easy-hybrid-rescue"]);
 
     });
 };
