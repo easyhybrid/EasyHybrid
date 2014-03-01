@@ -30,9 +30,9 @@ exports.os = {
     supportsTouch: 'ontouchstart' in window
 };
 
+//修复部分不能使用常规判断得到的属性
 var head = document.documentElement.getElementsByTagName("head")[0];
 exports.os.nativeTouchScroll = typeof (head.style["-webkit-overflow-scrolling"]) !== "undefined" && exports.os.ios;
 if (exports.os.android && !exports.os.webkit) {
     exports.os.android = false;
 }
-exports.platform = {};//平台配置信息，此信息会在编译时重写

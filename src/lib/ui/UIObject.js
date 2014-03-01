@@ -17,7 +17,7 @@ function UIObject() {
     this._eventCache = [];
 }
 
-util.inherits(UIObject, EventEmitter);
+base.inherits(UIObject, EventEmitter);
 
 /**
  * 挂接对象到dom树
@@ -48,7 +48,7 @@ UIObject.prototype.detach = function () {
  * @returns {*}
  */
 UIObject.prototype.find = function (selector) {
-    return util.find(selector, this._dom);
+    return base.find(selector, this._dom);
 };
 
 /**
@@ -60,7 +60,7 @@ UIObject.prototype.find = function (selector) {
 UIObject.prototype.bind = function (target, type, listener) {
     var me = this;
     var item;
-    if (!util.isArray(target)) {
+    if (!base.isArray(target)) {
         target = me.find(target);
     }
     for (var i = 0; i < target.length; i++) {
@@ -112,7 +112,7 @@ function getParent(parentObject) {
         //判断是dom还是UIObject
         return parentObject instanceof UIObject
             ? [parentObject._dom]
-            : util.find(parentObject);
+            : base.find(parentObject);
     }
     return [];
 }

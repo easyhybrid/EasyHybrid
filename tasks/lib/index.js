@@ -261,8 +261,8 @@ function developInit(target, pkg) {
         name: pkg.name,
         lib: pkg.lib,//从哪里选择基础库
         filter: {
-            lib: createFilter(pkg, pkg.lib.split("/").length, "web"),//库文件过滤函数
-            source: createFilter(pkg, 0, "web")//一般文件过滤函数
+            lib: createFilter(pkg, pkg.lib.split("/").length, "android"),//库文件过滤函数
+            source: createFilter(pkg, 0, "android")//一般文件过滤函数
         },
         sources: source//要引入index.html的资源
     };

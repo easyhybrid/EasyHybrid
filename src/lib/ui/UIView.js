@@ -44,15 +44,15 @@ var util = require("../util/util"),//引入工具类
  */
 function UIView(option) {
     UIObject.call(this);
-    this._option = util.merge(option, defaultOption);
-    this._dom = util.createDom(
-        util.formatString('<div class="absolute full-screen %s" style="z-index: %d;"></div>',
+    this._option = base.merge(option, defaultOption);
+    this._dom = base.createDom(
+        base.formatString('<div class="absolute full-screen %s" style="z-index: %d;"></div>',
             this._option.reverse ? ' reverse' : '',
             ++zindex)
     );//页面的基础元素
 }
 
-util.inherits(UIView, UIObject);
+base.inherits(UIView, UIObject);
 
 /**
  * 获取页面样式
@@ -73,10 +73,10 @@ UIView.prototype.navigation = function () {
 
 UIView.prototype.load = function (cb) {
     var me = this;
-    util.removeClass(me._dom, transformStyles);//移除已经加载的动画样式
+    base.removeClass(me._dom, transformStyles);//移除已经加载的动画样式
     if (me._option.transform !== "none") {
         //加载动画并延时执行
-        util.addClass(me._dom, me._option.transform + "-in");
+        base.addClass(me._dom, me._option.transform + "-in");
         setTimeout(function () {
             cb();
             me.emit("load");
@@ -91,10 +91,10 @@ UIView.prototype.load = function (cb) {
 UIView.prototype.unload = function (cb) {
     var me = this;
     me._option = null;
-    util.removeClass(me._dom, transformStyles);//移除已经加载的动画样式
+    base.removeClass(me._dom, transformStyles);//移除已经加载的动画样式
     if (me._option.transform !== "none") {
         //加载动画并延时执行
-        util.addClass(me._dom, me._option.transform + "-out");
+        base.addClass(me._dom, me._option.transform + "-out");
         setTimeout(function () {
             cb();
             me.emit("unload");
