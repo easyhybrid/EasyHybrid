@@ -26,6 +26,7 @@
  */
 
 var util = require("../util/util"),//引入工具类
+    dom = require("../util/dom"),//DOM操作类
     UIObject = require('./UIObject').UIObject,//引入UIObject基类
     zindex = 10000,//基础z-index
     transformStyles = ["horizontal-in", "vertical-in", "pop-in", "fade-in", "horizontal-out", "vertical-out", "pop-out", "fade-out"].join(" "),//所有需要在重新加载时移除的样式
@@ -44,15 +45,15 @@ var util = require("../util/util"),//引入工具类
  */
 function UIView(option) {
     UIObject.call(this);
-    this._option = base.merge(option, defaultOption);
-    this._dom = base.createDom(
-        base.formatString('<div class="absolute full-screen %s" style="z-index: %d;"></div>',
+    this._option = util.merge(option, defaultOption);
+    this._dom = dom.createDom(
+        util.formatString('<div class="absolute full-screen %s" style="z-index: %d;"></div>',
             this._option.reverse ? ' reverse' : '',
             ++zindex)
     );//页面的基础元素
 }
 
-base.inherits(UIView, UIObject);
+util.inherits(UIView, UIObject);
 
 /**
  * 获取页面样式
@@ -73,10 +74,10 @@ UIView.prototype.navigation = function () {
 
 UIView.prototype.load = function (cb) {
     var me = this;
-    base.removeClass(me._dom, transformStyles);//移除已经加载的动画样式
+    dom.removeClass(me._dom, transformStyles);//移除已经加载的动画样式
     if (me._option.transform !== "none") {
         //加载动画并延时执行
-        base.addClass(me._dom, me._option.transform + "-in");
+        dom.addClass(me._dom, me._option.transform + "-in");
         setTimeout(function () {
             cb();
             me.emit("load");
@@ -91,10 +92,10 @@ UIView.prototype.load = function (cb) {
 UIView.prototype.unload = function (cb) {
     var me = this;
     me._option = null;
-    base.removeClass(me._dom, transformStyles);//移除已经加载的动画样式
+    dom.removeClass(me._dom, transformStyles);//移除已经加载的动画样式
     if (me._option.transform !== "none") {
         //加载动画并延时执行
-        base.addClass(me._dom, me._option.transform + "-out");
+        dom.addClass(me._dom, me._option.transform + "-out");
         setTimeout(function () {
             cb();
             me.emit("unload");

@@ -5,6 +5,7 @@
  * UI组件基础类库
  */
 var util = require("../util/util");
+var dom = require("../util/dom");
 var EventEmitter = require("../util/EventEmitter").EventEmitter;
 
 /**
@@ -17,7 +18,7 @@ function UIObject() {
     this._eventCache = [];
 }
 
-base.inherits(UIObject, EventEmitter);
+util.inherits(UIObject, EventEmitter);
 
 /**
  * 挂接对象到dom树
@@ -48,7 +49,7 @@ UIObject.prototype.detach = function () {
  * @returns {*}
  */
 UIObject.prototype.find = function (selector) {
-    return base.find(selector, this._dom);
+    return dom.find(selector, this._dom);
 };
 
 /**
@@ -60,7 +61,7 @@ UIObject.prototype.find = function (selector) {
 UIObject.prototype.bind = function (target, type, listener) {
     var me = this;
     var item;
-    if (!base.isArray(target)) {
+    if (!util.isArray(target)) {
         target = me.find(target);
     }
     for (var i = 0; i < target.length; i++) {
@@ -112,7 +113,7 @@ function getParent(parentObject) {
         //判断是dom还是UIObject
         return parentObject instanceof UIObject
             ? [parentObject._dom]
-            : base.find(parentObject);
+            : dom.find(parentObject);
     }
     return [];
 }
