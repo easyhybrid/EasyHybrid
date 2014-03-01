@@ -178,7 +178,7 @@ function create_uuid_part(length) {
     var uuidpart = "";
     for (var i = 0; i < length; i++) {
         var uuidchar = parseInt((Math.random() * 256), 10).toString(16);
-        if (uuidchar.length == 1) {
+        if (uuidchar.length === 1) {
             uuidchar = "0" + uuidchar;
         }
         uuidpart += uuidchar;
@@ -194,7 +194,7 @@ function create_uuid_part(length) {
  * @returns {Function}函数闭包
  */
 function close(context, func, params) {
-    if (typeof params == 'undefined') {
+    if (typeof params === 'undefined') {
         return function () {
             return func.apply(context, arguments);
         };
@@ -203,4 +203,55 @@ function close(context, func, params) {
             return func.apply(context, params);
         };
     }
+}
+
+/**
+ * 将arrayBuffer转化成base64字符串
+ * @param arrayBuffer
+ * @returns {*}
+ */
+function fromArrayBuffer(arrayBuffer) {
+    var array = new Uint8Array(arrayBuffer);
+    return uint8ToBase64(array);
+}
+
+exports.fromArrayBuffer = fromArrayBuffer;
+
+var b64_6bit = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+var b64_12bit;
+
+var b64_12bitTable = function () {
+    b64_12bit = [];
+    for (var i = 0; i < 64; i++) {
+        for (var j = 0; j < 64; j++) {
+            b64_12bit[i * 64 + j] = b64_6bit[i] + b64_6bit[j];
+        }
+    }
+    b64_12bitTable = function () {
+        return b64_12bit;
+    };
+    return b64_12bit;
+};
+
+function uint8ToBase64(rawData) {
+    var numBytes = rawData.byteLength;
+    var output = "";
+    var segment;
+    var table = b64_12bitTable();
+    for (var i = 0; i < numBytes - 2; i += 3) {
+        segment = (rawData[i] << 16) + (rawData[i + 1] << 8) + rawData[i + 2];
+        output += table[segment >> 12];
+        output += table[segment & 0xfff];
+    }
+    if (numBytes - i === 2) {
+        segment = (rawData[i] << 16) + (rawData[i + 1] << 8);
+        output += table[segment >> 12];
+        output += b64_6bit[(segment & 0xfff) >> 6];
+        output += '=';
+    } else if (numBytes - i === 1) {
+        segment = (rawData[i] << 16);
+        output += table[segment >> 12];
+        output += '==';
+    }
+    return output;
 }
