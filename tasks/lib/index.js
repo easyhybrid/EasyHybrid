@@ -2,7 +2,6 @@ var fs = require('fs');
 var util = require("util");
 var support = ["ios", "android", "web"];
 var native = ["ios", "android"];//目前系统支持的通过phonegap原生代码交互来实现的平台，系统会加载一个简易版的cordova核心用来和
-var proxy = ["dev", "web" ];//phonegap通过代理方式实现的平台，系统将会在useCordova = false时，忽略加载cordova，而是将exec函数转接到一个在patch中加载的工具库中
 var plugins = ["ui", "plugin", "patch", "util"];
 
 /**
@@ -205,6 +204,7 @@ function platformInit(target, pkg) {
     pkg.platforms.forEach(function (item) {
         platform[item] = {
             cordova: pkg.cordova,//是否启用cordova
+            native: native.indexOf(item) >= 0,//是否有原生桥
             build: "build/" + target + "/" + item + "/",//目标代码目录
             target: target,//工程名称
             platform: item,//平台的名称
@@ -254,6 +254,7 @@ function developInit(target, pkg) {
     });
     return {
         proxy: pkg.develop.proxy || false,//代理信息
+        native: false,//是否有原生桥
         cordova: pkg.cordova,//是否启用cordova
         build: "build/" + target + "/dev/",//目标代码目录
         target: target,//工程名称
@@ -261,8 +262,8 @@ function developInit(target, pkg) {
         name: pkg.name,
         lib: pkg.lib,//从哪里选择基础库
         filter: {
-            lib: createFilter(pkg, pkg.lib.split("/").length, "android"),//库文件过滤函数
-            source: createFilter(pkg, 0, "android")//一般文件过滤函数
+            lib: createFilter(pkg, pkg.lib.split("/").length, "web"),//库文件过滤函数
+            source: createFilter(pkg, 0, "web")//一般文件过滤函数
         },
         sources: source//要引入index.html的资源
     };

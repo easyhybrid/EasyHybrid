@@ -33,7 +33,7 @@ module.exports = function (grunt) {
                     }//跨域请求代理，仅供开发时使用请注意端口与
                 },
                 name: "EasyHybrid演示项目",
-                platforms: [ "web"],//需要的目标平台，目前支持"android", "web", "ios"，以后会陆续添加
+                platforms: [ "ios"],//需要的目标平台，目前支持"android", "web", "ios"，以后会陆续添加
                 patch: [],//用于屏蔽用不到的patch插件，请注意平台不匹配的插件已经自动屏蔽
                 util: [],//用于屏蔽用不到的util插件，请注意平台不匹配的插件已经自动屏蔽
                 plugin: [],//用于屏蔽用不到的plugin插件，请注意平台不匹配的插件已经自动屏蔽

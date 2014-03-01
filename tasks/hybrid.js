@@ -109,6 +109,10 @@ module.exports = function (grunt) {
         });
 
         content += '\n    //下边为初始化项目代码\n';
+        if (config.native) {
+            content += '    window.cordova = require("cordova");\n';
+            content += '    require("cordova/exec");\n';
+        }
         content += '    exports.init = require("hybrid/init")(core);\n';
         content += '});';
         grunt.file.write(config.dest, content);
@@ -117,7 +121,6 @@ module.exports = function (grunt) {
     //根据配置生成index.html
     grunt.task.registerTask("easy-hybrid-build", function () {
         var config = grunt.config.get("easy-hybrid-build");
-        console.log(config);
         var target = config.target;
         var src = config.path;
         var css = config.sources.css;
@@ -240,7 +243,7 @@ module.exports = function (grunt) {
                         {
                             expand: true,
                             cwd: ".tmp/js/source/" + (config.cordova ? "cordova" : "self") + "/",
-                            src: ["load.js", "require.js"],
+                            src: config.native ? ["load.js", "require.js", "channel.js" , "cordova.js" , config.platform + "-exec.js" ] : ["load.js", "require.js"],
                             dest: ".tmp/"
                         }
                     ]
@@ -252,6 +255,8 @@ module.exports = function (grunt) {
                 target: ".tmp/compress/"
             },
             "easy-hybrid-index": {
+                platform: config.platform,
+                native: config.native,
                 proxy: "",
                 path: ".tmp/compress/",
                 dest: ".tmp/compress/index.js"
@@ -285,7 +290,7 @@ module.exports = function (grunt) {
                         }
                     },
                     files: {
-                        ".tmp/all.js": [".tmp/require.js", ".tmp/compress/**/*.js", ".tmp/load.js"]
+                        ".tmp/all.js": [".tmp/require.js", ".tmp/cordova.js", ".tmp/channel.js", ".tmp/" + config.platform + "-exec.js", ".tmp/compress/**/*.js", ".tmp/load.js"]
                     }
                 }
             },
@@ -326,6 +331,9 @@ module.exports = function (grunt) {
     //用于根据信息生成编译信息
     grunt.task.registerMultiTask("easy-hybrid-dev", "fetch each platform", function () {
         var config = this.data;
+        if (config === false) {
+            return;
+        }
         grunt.config.init({
             "easy-hybrid-rescue": grunt.config.get(),//缓存现有文件
             copy: {
@@ -410,6 +418,8 @@ module.exports = function (grunt) {
                 target: ".tmp/compress/"
             },
             "easy-hybrid-index": {
+                platform: config.platform,
+                native: config.native,
                 proxy: "",
                 path: ".tmp/compress/",
                 dest: ".tmp/compress/index.js"
