@@ -9,13 +9,10 @@ module.exports = function (grunt) {
     //入口函数，使用connect新建一个server 可以用来在开发时对远程数据进行请求
     grunt.task.registerMultiTask("proxy-server", "an javascript proxy server by connect", function () {
         var port = this.data.port;//监听的端口
+        var server = this.data.server || "localhost";//监听的端口
         var project = this.target;//项目名称
         //请求的使用的代理服务器
         var proxy = httpProxy.createProxyServer({
-            //            target: this.data.target,
-            //            headers: {
-            //                host: this.data.host
-            //            }
         });
         //绑定请求错误
         proxy.on('error', function (err, req, res) {
@@ -31,14 +28,16 @@ module.exports = function (grunt) {
         app.use(connect.static(path.join(process.cwd(), 'build', project, "dev")));//启用静态文件模块
         app.use(connect.favicon());//当网站不指定icon时，返回一个icon
         app.use(function (req, res) {//对请求进行代理
+            var host = req.headers["Host"];
+            delete req.headers["Host"];
             proxy.web(req, res, {
-                target: req.url
-//                header: {
-//                    host: url.parse(req.url).hostname
-//                }
+                target: host,
+                headers: {
+                    "Host": host
+                }
             });
         });
-        http.createServer(app).listen(port || 3000, function () {
+        http.createServer(app).listen(port || 3000, server, function () {
             console.log("proxy server for " + project + " is running on port " + port);
             done();
         });

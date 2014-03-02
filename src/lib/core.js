@@ -9,6 +9,7 @@
 //region 插件相关
 
 var utils = {},//实用工具(零散，公用以及与WEB直接相关的工具会直接放在这里，请注意这不是硬性规定，util，ui，plugin的关系是对等的)
+    util = require("./util/util"),//引入本对象所必须的工具信息
     plugins = {}, //插件工具（通常和平台相关或者来源自cordova的工具会出现在这里，请注意这不是硬性规定，util，ui，plugin的关系是对等的）
     ui = {};//UI相关工具（通常用来构成页面结构的控件会出现在UI目录中，请注意这不是硬性规定，util，ui，plugin的关系是对等的）
 
@@ -19,11 +20,11 @@ var utils = {},//实用工具(零散，公用以及与WEB直接相关的工具�
  */
 function register(type, obj) {
     if (type === "util") {//实用工具
-        base.merge(utils, obj);
+        util.merge(utils, obj);
     } else if (type === "plugin") {//注入插件工具
-        base.merge(plugins, obj);
+        util.merge(plugins, obj);
     } else if (type === "ui") {//注入UI相关工具
-        base.merge(ui, obj);
+        util.merge(ui, obj);
     } else {
         console.log("未知的注册类型：" + type);
     }
@@ -39,10 +40,10 @@ exports.ui = ui;//暴露UI相关工具
 
 var view = {},//页面列表（只接受能生成UIView、UIView的子类以及与UIView有相同结构的对象的函数，给core.href和core.back函数使用）
     nav = {},//导航条列表（只接受UINavigation、只接受UINavigation的子类以及与只接受UINavigation有相同结构的对象的数组，给core.active函数使用）
-    util = require("./util/util"),//引入本对象所必须的工具信息
+    dom = require("./util/dom"),//DOM操作工具
     backStack = [],//回退栈
     current = null,//当前页面
-    root = base.createDom(''
+    root = dom.createDom(''
         + '<div class="absolute full-screen" style="z-index: 10000;">'
         + '    <div class="absolute full-screen hidden" style="z-index: 40000"></div>'
         + '</div>'
@@ -68,7 +69,7 @@ function href(name, data) {
         return;
     }
     try {
-        base.removeClass(prevent, "hidden");//打开阻止层
+        dom.removeClass(prevent, "hidden");//打开阻止层
         createFunc(exports, data, function (item) {
             var style = item.style();//页面样式
             var navigation = item.navigation().split(".");//导航条样式
@@ -93,11 +94,11 @@ function href(name, data) {
                     }
                     backStack = [];
                 }
-                base.addClass(prevent, "hidden");//关闭阻止层
+                dom.addClass(prevent, "hidden");//关闭阻止层
             });//激活当前页
         });//构造页面（这一步可能出现异常）
     } catch (e) {
-        base.addClass(prevent, "hidden");//关闭阻止层
+        dom.addClass(prevent, "hidden");//关闭阻止层
         console.log("创建页面时出错：" + e.message);
     }
 }
@@ -113,7 +114,7 @@ function back(data) {
         return;
     }
     var item = current;
-    base.removeClass(prevent, "hidden");//打开阻止层
+    dom.removeClass(prevent, "hidden");//打开阻止层
     current = backStack.pop();//获取上一页面
     if (item.style() !== "frame") {
         current.attach(root);//恢复当前页
@@ -121,7 +122,7 @@ function back(data) {
     current.emit("back", data);//触发回退页面的back事件
     item.unload(function () {
         item.destroy(true);//销毁页面元素，并清理元素内部的事件，释放内存
-        base.addClass(prevent, "hidden");//关闭阻止层
+        dom.addClass(prevent, "hidden");//关闭阻止层
     });//删除上一页
 }
 exports.back = back;

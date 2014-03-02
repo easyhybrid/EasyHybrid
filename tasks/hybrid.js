@@ -1,6 +1,6 @@
 var fs = require("fs");
-var path = require("path");
 var lib = require("./lib/index");
+var path = require('path');
 
 module.exports = function (grunt) {
     grunt.task.loadNpmTasks("grunt-contrib-clean");
@@ -74,7 +74,7 @@ module.exports = function (grunt) {
         });
         content += '\n    var core = require("hybrid/core");\n';
         if (config.proxy) {
-            content += '\n    core.util.proxy = ' + config.proxy + ';\n';
+            content += '\n    core.util.proxy = ' + JSON.stringify(config.proxy) + ';\n';
         }
         function quickend(type) {
             content += '\n    //下边为' + type + '注册代码\n';
@@ -420,7 +420,7 @@ module.exports = function (grunt) {
             "easy-hybrid-index": {
                 platform: config.platform,
                 native: config.native,
-                proxy: "",
+                proxy: config.proxy,
                 path: ".tmp/compress/",
                 dest: ".tmp/compress/index.js"
             },
@@ -466,12 +466,17 @@ module.exports = function (grunt) {
         //重新生成请求参数
         grunt.config.init({
             "easy-hybrid-rescue": grunt.config.get(),//缓存现有文件
-            "easy-hybrid-platform": lib.platformInit(me.target, me.data),
-            "easy-hybrid-dev": {
-                "dev": lib.developInit(me.target, me.data)
-            }
+            "easy-hybrid-platform": lib.platformInit(me.target, me.data)
         });
-        grunt.task.run(["easy-hybrid-platform", "easy-hybrid-dev", "easy-hybrid-rescue"]);
-
+        var task = ["easy-hybrid-platform"];
+        var dev = lib.developInit(me.target, me.data);
+        if (dev) {
+            grunt.config.set("easy-hybrid-dev", {
+                dev: dev
+            });
+            task.push("easy-hybrid-dev");
+        }
+        task.push("easy-hybrid-rescue");
+        grunt.task.run(task);
     });
 };

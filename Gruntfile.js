@@ -53,9 +53,15 @@ module.exports = function (grunt) {
                 files: ['src/demo/**'],
                 tasks: ['hybrid:demo']
             }
+        },
+        "proxy-server": {
+            demo: {
+                server: "localhost",//server名称，一般是localhost，如果需要通过反向代理部署调试版本可修改此参数
+                port: 3000//用于监听的端口，如果build/demo/dev中存在访问的文件，则会返回对应的文件，否则使用代理获取远程数据（除非必要，请不要使用代理下载文件）
+            }
         }
     });
     grunt.task.loadNpmTasks("grunt-contrib-watch");
     grunt.task.loadTasks("tasks");
-    grunt.task.registerTask("default", [ "hybrid:demo", "watch"]);
+    grunt.task.registerTask("default", [ "hybrid:demo", "proxy-server:demo", "watch"]);
 };
