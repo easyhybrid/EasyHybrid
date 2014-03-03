@@ -40,7 +40,7 @@ Channel.prototype.subscribe = function (f, c) {
     var func = f,
         guid = f.observer_guid;
     if (typeof c === "object") {
-        func = util.close(c, f);
+        func = close(c, f);
     }
     if (!guid) {
         guid = '' + nextGuid++;
@@ -115,48 +115,22 @@ function forceFunction(f) {
     }
 }
 
+
 /**
- * 联合触发函数，当C中的全部频道都触发时，执行h回调
- * @param h 回调
- * @param c 频道列表
+ * 生成一个函数闭包
+ * @param context 上下文对象
+ * @param func 封包函数
+ * @param [params] 封包参数（如果为空，则会动态反射闭包的参数）
+ * @returns {Function}函数闭包
  */
-exports.join = function (h, c) {
-    var len = c.length,
-        i = len,
-        f = function () {
-            if (!(--i)) {
-                h();
-            }
+function close(context, func, params) {
+    if (typeof params === 'undefined') {
+        return function () {
+            return func.apply(context, arguments);
         };
-    for (var j = 0; j < len; j++) {
-        if (c[j].state === 0) {
-            throw new Error('Can only use join with sticky channels.');
-        }
-        c[j].subscribe(f);
+    } else {
+        return function () {
+            return func.apply(context, params);
+        };
     }
-    if (!len) {
-        h();
-    }
-};
-
-var channels = {};
-
-/**
- * 产生一般频道（并）
- * @param type
- * @returns {Channel}
- */
-exports.create = function (type) {
-    return channels[type] = new Channel(type, false);
-};
-
-/**
- * 产生单次执行频道（用于join等函数）
- * @param type
- * @returns {Channel}
- */
-exports.createSticky = function (type) {
-    return channels[type] = new Channel(type, true);
-};
-
-exports.channels = channels;
+}

@@ -186,24 +186,6 @@ function create_uuid_part(length) {
     return uuidpart;
 }
 
-/**
- * 生成一个函数闭包
- * @param context 上下文对象
- * @param func 封包函数
- * @param params 封包参数（如果为空，则会动态反射闭包的参数）
- * @returns {Function}函数闭包
- */
-function close(context, func, params) {
-    if (typeof params === 'undefined') {
-        return function () {
-            return func.apply(context, arguments);
-        };
-    } else {
-        return function () {
-            return func.apply(context, params);
-        };
-    }
-}
 
 /**
  * 将arrayBuffer转化成base64字符串
