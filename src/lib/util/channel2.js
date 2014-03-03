@@ -32,14 +32,14 @@ exports.Channel = Channel;
  */
 Channel.prototype.subscribe = function (f, c) {
     forceFunction(f);
-    if (this.state == 2) {//如果频道已经打开，直接执行回调函数
+    if (this.state === 2) {//如果频道已经打开，直接执行回调函数
         f.apply(c || this, this.fireArgs);
         return;
     }
 
     var func = f,
         guid = f.observer_guid;
-    if (typeof c == "object") {
+    if (typeof c === "object") {
         func = util.close(c, f);
     }
     if (!guid) {
@@ -52,8 +52,8 @@ Channel.prototype.subscribe = function (f, c) {
     if (!this.handlers[guid]) {
         this.handlers[guid] = func;
         this.numHandlers++;
-        if (this.numHandlers == 1) {
-            this.onHasSubscribersChange && this.onHasSubscribersChange();
+        if (this.numHandlers === 1 && this.onHasSubscribersChange) {
+            this.onHasSubscribersChange();
         }
     }
 };
@@ -69,8 +69,8 @@ Channel.prototype.unsubscribe = function (f) {
     if (handler) {
         delete this.handlers[guid];
         this.numHandlers--;
-        if (this.numHandlers === 0) {
-            this.onHasSubscribersChange && this.onHasSubscribersChange();
+        if (this.numHandlers === 0 && this.onHasSubscribersChange) {
+            this.onHasSubscribersChange();
         }
     }
 };
@@ -81,7 +81,7 @@ Channel.prototype.unsubscribe = function (f) {
  */
 Channel.prototype.fire = function (e) {
     var fireArgs = Array.prototype.slice.call(arguments);
-    if (this.state == 1) {
+    if (this.state === 1) {
         this.state = 2;
         this.fireArgs = fireArgs;
     }
@@ -95,10 +95,12 @@ Channel.prototype.fire = function (e) {
         for (var i = 0; i < toCall.length; ++i) {
             toCall[i].apply(this, fireArgs);
         }
-        if (this.state == 2 && this.numHandlers) {
+        if (this.state === 2 && this.numHandlers) {
             this.numHandlers = 0;
             this.handlers = {};
-            this.onHasSubscribersChange && this.onHasSubscribersChange();
+            if (this.onHasSubscribersChange) {
+                this.onHasSubscribersChange();
+            }
         }
     }
 };
@@ -108,7 +110,9 @@ Channel.prototype.fire = function (e) {
  * @param f 检查类型
  */
 function forceFunction(f) {
-    if (typeof f != 'function') throw "Function required as first argument!";
+    if (typeof f !== 'function') {
+        throw new Error("Function required as first argument!");
+    }
 }
 
 /**
@@ -120,15 +124,19 @@ exports.join = function (h, c) {
     var len = c.length,
         i = len,
         f = function () {
-            if (!(--i)) h();
+            if (!(--i)) {
+                h();
+            }
         };
     for (var j = 0; j < len; j++) {
         if (c[j].state === 0) {
-            throw Error('Can only use join with sticky channels.');
+            throw new Error('Can only use join with sticky channels.');
         }
         c[j].subscribe(f);
     }
-    if (!len) h();
+    if (!len) {
+        h();
+    }
 };
 
 var channels = {};
