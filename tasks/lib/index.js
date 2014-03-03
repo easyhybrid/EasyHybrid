@@ -309,8 +309,8 @@ function createFilter(pkg, deep, platform) {
                 }
             }
             var type = arr[deep - 1];
-            if (type in plugins) {
-                var basename = (arr[deep - 1] || "").split(".")[0] || "";
+            if (plugins.indexOf(type) >= 0) {
+                var basename = (arr[deep] || "").split(".")[0] || "";
                 if (pkg[type].indexOf(basename) >= 0) {
                     return false;
                 }
