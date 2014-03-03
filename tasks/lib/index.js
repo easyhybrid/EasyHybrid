@@ -312,7 +312,7 @@ function createFilter(pkg, deep, platform) {
             if (type in plugins) {
                 var basename = (arr[deep - 1] || "").split(".")[0] || "";
                 if (pkg[type].indexOf(basename) >= 0) {
-                    return true;
+                    return false;
                 }
             }
             return true;
