@@ -6,7 +6,7 @@
  */
 
 var nextGuid = 1;
-var util = require("util");
+var util = require("./util");
 
 /**
  * 频道信息类
