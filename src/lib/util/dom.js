@@ -34,7 +34,7 @@ exports.find = find;
 
 /**
  * 将nodeList转成数组
- * @param nodeList
+ * @param nodeList 节点对象
  * @returns {Array}
  */
 function nodeToArray(nodeList) {
@@ -89,8 +89,8 @@ exports.addClass = addClass;
 
 /**
  * 为元素移除样式
- * @param dom
- * @param classname
+ * @param dom DOM元素或者数组
+ * @param classname 类名
  */
 function removeClass(dom, classname) {
     if (!util.isArray(dom)) {

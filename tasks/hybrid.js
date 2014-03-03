@@ -73,9 +73,7 @@ module.exports = function (grunt) {
             content += '    require("hybrid/patch/' + item.split(".")[0] + '");\n';
         });
         content += '\n    var core = require("hybrid/core");\n';
-        if (config.proxy) {
-            content += '\n    core.util.proxy = ' + JSON.stringify(config.proxy) + ';\n';
-        }
+
         function quickend(type) {
             content += '\n    //下边为' + type + '注册代码\n';
             var list = grunt.file.expand({
@@ -109,6 +107,9 @@ module.exports = function (grunt) {
         });
 
         content += '\n    //下边为初始化项目代码\n';
+        if (config.proxy) {
+            content += '\n    core.util.setProxy(' + JSON.stringify(config.proxy) + ');\n';
+        }
         if (config.native) {
             content += '    window.cordova = require("cordova");\n';
             content += '    require("cordova/exec");\n';

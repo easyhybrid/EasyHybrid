@@ -1,4 +1,7 @@
-module.exports.mime = {
+/**
+ * mime类型数组
+ */
+var mime = {
     '123': 'application/vnd.lotus-1-2-3',
     ez: 'application/andrew-inset',
     aw: 'application/applixware',
@@ -998,3 +1001,5 @@ module.exports.mime = {
     ini: 'text/plain',
     mdp: 'application/dash+xml'
 };
+
+exports.mime = mime;

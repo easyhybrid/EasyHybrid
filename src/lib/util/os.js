@@ -2,7 +2,7 @@
  * Created by 赤菁风铃 on 14-2-24.
  * @author 清月_荷雾(441984145@qq.com)
  *         赤菁风铃(liuxuanzy@qq.com)
- * @note 系统信息和平台信息
+ * @note 系统信息
  */
 
 var userAgent = window.navigator.userAgent;
@@ -10,7 +10,7 @@ var userAgent = window.navigator.userAgent;
 /**
  * 根据userAgent获取系统信息
  */
-exports.os = {
+var os = {
     webkit: userAgent.match(/WebKit\/([\d.]+)/) ? true : false,
     android: userAgent.match(/(Android)\s+([\d.]+)/) || userAgent.match(/Silk-Accelerated/) ? true : false,
     androidICS: this.android && userAgent.match(/(Android)\s4/) ? true : false,
@@ -32,7 +32,10 @@ exports.os = {
 
 //修复部分不能使用常规判断得到的属性
 var head = document.documentElement.getElementsByTagName("head")[0];
-exports.os.nativeTouchScroll = typeof (head.style["-webkit-overflow-scrolling"]) !== "undefined" && exports.os.ios;
-if (exports.os.android && !exports.os.webkit) {
-    exports.os.android = false;
+os.nativeTouchScroll = typeof (head.style["-webkit-overflow-scrolling"]) !== "undefined" && os.ios;
+//去除所有标记为android但不是用webkit核心的浏览器
+if (os.android && !os.webkit) {
+    os.android = false;
 }
+
+exports.os = os;

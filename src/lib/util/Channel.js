@@ -6,7 +6,6 @@
  */
 
 var nextGuid = 1;
-var util = require("./util");
 
 /**
  * 频道信息类
@@ -15,12 +14,12 @@ var util = require("./util");
  * @constructor
  */
 function Channel(type, sticky) {
-    this.type = type;//频道名
-    this.handlers = {};//回调参数
-    this.state = sticky ? 1 : 0;//状态
-    this.fireArgs = null;//回调参数
-    this.numHandlers = 0;//回调数量
-    this.onHasSubscribersChange = null;//频道开始或者结束回调
+    this.type = type;
+    this.handlers = {};
+    this.state = sticky ? 1 : 0;
+    this.fireArgs = null;
+    this.numHandlers = 0;
+    this.onHasSubscribersChange = null;
 }
 
 exports.Channel = Channel;
@@ -32,7 +31,7 @@ exports.Channel = Channel;
  */
 Channel.prototype.subscribe = function (f, c) {
     forceFunction(f);
-    if (this.state === 2) {//如果频道已经打开，直接执行回调函数
+    if (this.state === 2) {
         f.apply(c || this, this.fireArgs);
         return;
     }
@@ -48,7 +47,6 @@ Channel.prototype.subscribe = function (f, c) {
     func.observer_guid = guid;
     f.observer_guid = guid;
 
-    //避免重复绑定
     if (!this.handlers[guid]) {
         this.handlers[guid] = func;
         this.numHandlers++;
@@ -60,7 +58,7 @@ Channel.prototype.subscribe = function (f, c) {
 
 /**
  * 从频道移除已有的回调
- * @param f
+ * @param f 回调函数
  */
 Channel.prototype.unsubscribe = function (f) {
     forceFunction(f);

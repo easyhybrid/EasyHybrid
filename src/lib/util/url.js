@@ -2,10 +2,9 @@
  * Created by 清月_荷雾 on 14-3-3.
  * @author 清月_荷雾(441984145@qq.com)
  *         赤菁风铃(liuxuanzy@qq.com)
- * @note 网络相关操作
+ * @note URL和QS的相关处理函数
  */
 
-//region 工具函数
 var protocolPattern = /^([a-z0-9.+-]+:)/i,
     portPattern = /:[0-9]*$/,
     delims = ['<', '>', '"', '`', ' ', '\r', '\n', '\t'],
@@ -109,29 +108,13 @@ function decode(qs, sep, eq) {
     }
     return obj;
 }
-
 exports.decodeQueryString = encode;
 
-function stringifyPrimitive(v) {
-    switch (typeof v) {
-        case 'string':
-            return v;
-
-        case 'boolean':
-            return v ? 'true' : 'false';
-
-        case 'number':
-            return isFinite(v) ? v : '';
-
-        default:
-            return '';
-    }
-}
 
 /**
  * 将url转换成对象
  * @param url
- * @returns {parse}
+ * @returns {*}
  */
 function parse(url) {
     if (typeof url !== 'string') {
@@ -297,12 +280,19 @@ function parse(url) {
     if (result.pathname || result.search) {
         result.path = (result.pathname || '') + ( result.search || '');
     }
-
     result.href = format(result);
+    result.format = function () {
+        format(this);
+    };
     return result;
 }
 exports.parseUrl = parse;
 
+/**
+ * 从更正后的url对象中
+ * @param result
+ * @returns {*}
+ */
 function format(result) {
     var auth = result.auth || '';
     if (auth) {
@@ -359,68 +349,24 @@ function format(result) {
 
     return protocol + host + pathname + search + hash;
 }
-exports.formatUrl = format;
-//endregion 工具函数
-
-//region url和protocol处理
-var proxy = null,//代理服务器
-    util = require("./util"),//工具类
-    protocol = {};//自定义特殊的协议，以简化书写
-
 
 /**
- * 添加代理服务器
- * @param url
+ * 对部分系统定义类型进行转换
+ * @param v 数据
+ * @returns {*}
  */
-function setProxy(url) {
-    proxy = url;
-}
-exports.setProxy = setProxy;
+function stringifyPrimitive(v) {
+    switch (typeof v) {
+        case 'string':
+            return v;
 
-/**
- * 添加特殊的协议
- * @note 如定义baidu = http://www.baidu.com，则baidu://a/b为会替换为http://www.baidu.com/a/b
- * @param type {string|*} 类型
- * @param [target]
- */
-exports.setProtocol = function (type, target) {
-    if (typeof  type !== "string") {
-        util.merge(protocol, type);
+        case 'boolean':
+            return v ? 'true' : 'false';
+
+        case 'number':
+            return isFinite(v) ? v : '';
+
+        default:
+            return '';
     }
-    else {
-        protocol[type] = target;
-    }
-};
-
-/**
- * 对url进行处理，并返回适当的访问连接和host
- * @param url 要处理的url
- */
-function getUrl(url) {
 }
-//endregion url和protocol处理
-
-////region 数据请求
-///**
-// * @param [url] {string} 要访问的路径
-// * @param options 配置参数
-// */
-//function ajax(url, options) {
-//    url = options.url || host;
-//    var success = options.success;
-//    var headers = options.headers;
-//    var error = options.error || function (msg) {
-//        console.log(msg);
-//    };
-//    if (!url) {
-//        error("url不能为空");
-//        return;
-//    }
-//
-//}
-//
-//exports.ajax = ajax;
-//
-////endregion 数据请求
-
-

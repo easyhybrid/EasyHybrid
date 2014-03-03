@@ -13,26 +13,34 @@ function EventEmitter() {
     this._events = this._events || {};
     this._maxListeners = this._maxListeners || 10;
 }
-
+/**
+ * 设置最大监听数量
+ * @param n  数量
+ */
 EventEmitter.prototype.setMaxListeners = function (n) {
     if (typeof n !== 'number' || n < 0) {
-        throw new TypeError('n must be a positive number');
+        throw new TypeError('参数n必须大于0');
     }
     this._maxListeners = n;
 };
+
+/**
+ * 触发事件
+ * @param type 事件名
+ * @returns {boolean}
+ */
 EventEmitter.prototype.emit = function (type) {
     var er, handler, len, args, i, listeners;
     if (!this._events) {
         this._events = {};
     }
-    // If there is no 'error' event listener then throw.
     if (type === 'error') {
         if (!this._events.error || (typeof this._events.error === 'object' && !this._events.error.length)) {
             er = arguments[1];
             if (er instanceof Error) {
-                throw er; // Unhandled 'error' event
+                throw er;
             } else {
-                throw new TypeError('Uncaught, unspecified "error" event.');
+                throw new TypeError('发现没捕获的未知异常');
             }
         }
     }
@@ -42,7 +50,6 @@ EventEmitter.prototype.emit = function (type) {
         return false;
     }
     if (typeof handler === 'function') {
-        // if argument is less than 3,user fast case
         switch (arguments.length) {
             case 1:
                 handler.call(this);
@@ -53,7 +60,7 @@ EventEmitter.prototype.emit = function (type) {
             case 3:
                 handler.call(this, arguments[1], arguments[2]);
                 break;
-            default://the slower one
+            default:
                 len = arguments.length;
                 args = new Array(len - 1);
                 for (i = 1; i < len; i++) {
@@ -75,6 +82,13 @@ EventEmitter.prototype.emit = function (type) {
     }
     return true;
 };
+
+/**
+ * 添加监听
+ * @param type 事件名
+ * @param listener 监听函数
+ * @returns {EventEmitter}
+ */
 EventEmitter.prototype.addListener = function (type, listener) {
     var m;
     if (typeof listener !== 'function') {
@@ -104,7 +118,15 @@ EventEmitter.prototype.addListener = function (type, listener) {
     }
     return this;
 };
+
 EventEmitter.prototype.on = EventEmitter.prototype.addListener;
+
+/**
+ * 添加单次监听
+ * @param type 事件名
+ * @param listener 监听函数
+ * @returns {EventEmitter}
+ */
 EventEmitter.prototype.once = function (type, listener) {
     if (typeof listener !== 'function') {
         throw new TypeError('listener must be a function');
@@ -120,7 +142,13 @@ EventEmitter.prototype.once = function (type, listener) {
     this.on(type, g);
     return this;
 };
-// emits a 'removeListener' event iff the listener was removed
+
+/**
+ * 移除监听函数
+ * @param type 事件名
+ * @param listener 函数
+ * @returns {EventEmitter}
+ */
 EventEmitter.prototype.removeListener = function (type, listener) {
     var list, position, length, i;
     if (typeof listener !== 'function') {
@@ -159,12 +187,17 @@ EventEmitter.prototype.removeListener = function (type, listener) {
     }
     return this;
 };
+
+/**
+ * 清空所有事件
+ * @param [type] 事件名
+ * @returns {EventEmitter}
+ */
 EventEmitter.prototype.removeAllListeners = function (type) {
     var key, listeners;
     if (!this._events) {
         return this;
     }
-    // not listening for removeListener, no need to emit
     if (!this._events.removeListener) {
         if (arguments.length === 0) {
             this._events = {};
@@ -173,7 +206,7 @@ EventEmitter.prototype.removeAllListeners = function (type) {
         }
         return this;
     }
-    // emit removeListener for all listeners on all events
+
     if (arguments.length === 0) {
         for (key in this._events) {
             if (key === 'removeListener') {
@@ -198,6 +231,12 @@ EventEmitter.prototype.removeAllListeners = function (type) {
     delete this._events[type];
     return this;
 };
+
+/**
+ * 获取全部监听函数
+ * @param type 事件名
+ * @returns {*}
+ */
 EventEmitter.prototype.listeners = function (type) {
     var ret;
     if (!this._events || !this._events[type]) {
@@ -206,17 +245,6 @@ EventEmitter.prototype.listeners = function (type) {
         ret = [this._events[type]];
     } else {
         ret = this._events[type].slice();
-    }
-    return ret;
-};
-EventEmitter.listenerCount = function (emitter, type) {
-    var ret;
-    if (!emitter._events || !emitter._events[type]) {
-        ret = 0;
-    } else if (typeof emitter._events[type] === 'function') {
-        ret = 1;
-    } else {
-        ret = emitter._events[type].length;
     }
     return ret;
 };
