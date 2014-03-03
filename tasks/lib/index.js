@@ -311,11 +311,8 @@ function createFilter(pkg, deep, platform) {
             var type = arr[deep - 1];
             if (type in plugins) {
                 var basename = (arr[deep - 1] || "").split(".")[0] || "";
-                if (pkg[type].include.indexOf(basename) >= 0) {
+                if (pkg[type].indexOf(basename) >= 0) {
                     return true;
-                }
-                if (pkg[type].exclude.indexOf(basename) >= 0) {
-                    return false;
                 }
             }
             return true;
