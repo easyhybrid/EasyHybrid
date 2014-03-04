@@ -51,7 +51,7 @@ var view = {},//页面列表（只接受能生成UIView、UIView的子类以及�
     prevent = root.firstChild;//用于在页面切换过程中阻止事件的元素
 
 document.body.appendChild(root);//绑定root元素
-
+exports.root = root;//根元素
 /**
  * 导航页面到name
  * @param name 页面的名称，为back时回退页面
@@ -162,12 +162,22 @@ function active(navName, itemName) {
 exports.active = active;
 
 /**
+ * 获取一个导航条
+ * @param name 导航条名称
+ */
+function getNav(name) {
+    return nav[name] || null;
+}
+exports.getNavigation = getNav;
+
+/**
  * 注册导航条函数
  * @param name 导航条名称
  * @param obj 导航条对象
  */
 function registerNavigation(name, obj) {
     nav[name] = obj;
+    obj.attach(document.body);
 }
 exports.registerNavigation = registerNavigation;
 //endregion 视图相关功能

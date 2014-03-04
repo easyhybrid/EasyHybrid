@@ -13,14 +13,16 @@ var util = require("../util/util"),//引入工具类
 /**
  * 导航条基类
  * @param style 基础css（此样式会附加到_dom这个DIV上，请注意导航条会强制使用绝对定位）
+ * @param root 页面的根元素（这个是所有页面的根元素）
  * @param [html] 内部的html（可以传递也可以不传递通过其它方式更新内部html）
  * @constructor
  */
-function UINavigation(style, html) {
+function UINavigation(style, root, html) {
     UIObject.call(this);
+    this._root = root;
     html = html || "";
     this._dom = dom.createDom(
-        util.formatString('<div class="absolute %s" style="z-index: %d;">%s</div>',
+        util.formatString('<div class="absolute hidden %s" style="z-index: %d;">%s</div>',
             style,
             ++zindex,
             html
