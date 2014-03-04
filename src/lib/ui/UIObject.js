@@ -77,10 +77,14 @@ UIObject.prototype.remove = function (ele) {
     if (!(ele instanceof UIObject)) {
         throw  new Error("只能移除UIObject元素");
     }
+    var index = -1;
     for (var i = 0; i < this._children.length; i++) {
         if (this._children[i] === ele) {
-            delete this._children[i];
+            index = i;
         }
+    }
+    if (index >= 0) {
+        this._children.splice(index, 1);
     }
     ele.detach();
     if (this._dom === ele._dom) {
@@ -148,7 +152,6 @@ UIObject.prototype.unbind = function (target, type, listener) {
  * @param isSelf
  */
 UIObject.prototype.destroy = function (isSelf) {
-
     this.emit('destroy');
     for (var i = 0; i < this._children.length; i++) {
         this._children[i].destroy(false);
