@@ -95,7 +95,7 @@ module.exports = function (grunt) {
         }, "*.js");
         list4.forEach(function (item) {
             var id = item.split(".")[0];
-            content += '    core.registerNavigation("' + id + '", require("hybrid/navigation/' + item.split(".")[0] + '"));\n';
+            content += '    core.registerNavigation("' + id + '", require("hybrid/navigation/' + item.split(".")[0] + '")(core));\n';
         });
 
         content += '\n    //下边为view注册代码\n';
