@@ -2,27 +2,7 @@
  * Created by 清月_荷雾 on 14-2-10.
  * author 清月_荷雾(441984145@qq.com)
  *        赤菁风铃(liuxuanzy@qq.com)
- * UI页面基础类
- * @note defaultOption.style
- *     none      ：表示页面是初始页面，系统清空回退栈，隐藏背景页面
- *     frame     ：浮出页面，不隐藏背景页面
- *     switch    ：导航到当前页面，如果正在显示的页面也是switch，释放正在显示的页面，隐藏背景页面。switch适合于子菜单导航。
- *     back      ：压栈正在显示的页面，隐藏背景页面。
- *
- * @note defaultOption.navigation
- *     hide      ：表示不显示任何导航条
- *     common    ：不切换导航条保持当前状态
- *     bar.item   ：导航到bar导航条的item项目
- *
- * @note defaultOption.transform
- *     none      ：无切换特效
- *     horizontal：水平切换进入和退出（默认从右到左进入）
- *     vertical  ：竖直切换进入和退出（默认从上到上进入）
- *     pop       ：弹出（从中心放大之后出现）
- *     fade      ：浮出（透明度从0到1）
- * @note defaultOption.reverse
- *     false     ：表示正常显示特效
- *     true      ：horizontal和vertical的特效会反方向，比较适合电子书或者阿拉伯语地区的网页
+ * 导航条类（导航条）
  */
 
 var util = require("../util/util"),//引入工具类
@@ -32,71 +12,45 @@ var util = require("../util/util"),//引入工具类
 
 /**
  * 导航条基类
- * @param style 基础css
- * @param html
+ * @param style 基础css（此样式会附加到_dom这个DIV上，请注意导航条会强制使用绝对定位）
+ * @param [html] 内部的html（可以传递也可以不传递通过其它方式更新内部html）
  * @constructor
  */
-function UINavigation(style, innerHtml) {
+function UINavigation(style, html) {
     UIObject.call(this);
+    html = html || "";
     this._dom = dom.createDom(
-        util.formatString('<div class="absolute full-screen %s" style="z-index: %d;"></div>',
-            this._option.reverse ? ' reverse' : '',
-            ++zindex)
+        util.formatString('<div class="absolute %s" style="z-index: %d;">%s</div>',
+            style,
+            ++zindex,
+            html
+        )
     );//页面的基础元素
 }
 
 util.inherits(UINavigation, UIObject);
 
 /**
- * 获取页面样式
- * @returns {string}
+ * 隐藏导航条
  */
-UIView.prototype.style = function () {
-    return this._option.style;
+UINavigation.prototype.hide = function () {
+    dom.addClass(this._dom, "hidden");
 };
 
 /**
- * 获取导航条信息
- * @returns {string}
+ * 显示导航条
  */
-UIView.prototype.navigation = function () {
-    return this._option.navigation;
+UINavigation.prototype.show = function () {
+    dom.removeClass(this._dom, "hidden");
+};
+
+/**
+ * 显示导航项目，需要重写（可以使用继承或者直接重写的方式来实现）
+ * @param name {string} 项目的名字
+ */
+UINavigation.prototype.active = function (name) {
+
 };
 
 
-UIView.prototype.load = function (cb) {
-    var me = this;
-    dom.removeClass(me._dom, transformStyles);//移除已经加载的动画样式
-    if (me._option.transform !== "none") {
-        //加载动画并延时执行
-        dom.addClass(me._dom, me._option.transform + "-in");
-        setTimeout(function () {
-            cb();
-            me.emit("load");
-        }, safeTimeout);
-    } else {
-        //直接加载完毕
-        cb();
-        me.emit("load");
-    }
-};
-
-UIView.prototype.unload = function (cb) {
-    var me = this;
-    me._option = null;
-    dom.removeClass(me._dom, transformStyles);//移除已经加载的动画样式
-    if (me._option.transform !== "none") {
-        //加载动画并延时执行
-        dom.addClass(me._dom, me._option.transform + "-out");
-        setTimeout(function () {
-            cb();
-            me.emit("unload");
-        }, safeTimeout);
-    } else {
-        //直接加载完毕
-        cb();
-        me.emit("unload");
-    }
-};
-
-exports.UIView = UIView;
+exports.UINavigation = UINavigation;
