@@ -42,26 +42,37 @@ exports.setHost = setHost;
  * @param [target]
  */
 exports.setProtocol = function (type, target) {
-    if (typeof  type !== "string") {
-        for (var x in type) {
-            if (type.hasOwnProperty(x)) {
-                if (x.indexOf(":") < 0) {
-                    protocol[x.toLowerCase() + ":"] = target;
-                }
-                else {
-                    protocol[x.toLowerCase()] = target;
-                }
+    type = typeof type !== 'string' ? type : {type: target};
+    for (var x in type) {
+        if (type.hasOwnProperty(x)) {
+            if (x.indexOf(":") < 0) {
+                protocol[x.toLowerCase() + ":"] = target;
+            }
+            else {
+                protocol[x.toLowerCase()] = target;
             }
         }
     }
-    else {
-        if (type.indexOf(":") < 0) {
-            protocol[type.toLowerCase() + ":"] = target;
-        }
-        else {
-            protocol[type.toLowerCase()] = target;
-        }
-    }
+//    if (typeof  type !== "string") {
+//        for (var x in type) {
+//            if (type.hasOwnProperty(x)) {
+//                if (x.indexOf(":") < 0) {
+//                    protocol[x.toLowerCase() + ":"] = target;
+//                }
+//                else {
+//                    protocol[x.toLowerCase()] = target;
+//                }
+//            }
+//        }
+//    }
+//    else {
+//        if (type.indexOf(":") < 0) {
+//            protocol[type.toLowerCase() + ":"] = target;
+//        }
+//        else {
+//            protocol[type.toLowerCase()] = target;
+//        }
+//    }
 };
 
 
