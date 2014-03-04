@@ -70,34 +70,51 @@ exports.setProtocol = function (type, target) {
  * @param options 配置参数
  */
 function ajax(options) {
+    var ajax_options = {};
     options = options || {};
+    ajax_options.type = (options.type || "GET").toUpperCase();
+    var type = ajax_options.requestType = options.requestType || "xhr";
+    var data = ajax_options.data = options.data || {};
     var url = reformat_url(options.url);
     if (!url) {
         throw  new Error("Url不能为空");
     }
     url = url_tool.parseUrl(url);
-    var target_host = url.host;
-    var target_url = url.href;
+    if (url.search) {
+        delete  url.search;
+    }
+    url.query = url.query || {};
     if (url.hash) {
         delete  url.hash;
     }
+    if (type === "xhr") {
+        ajax_options.async = options.async || true;
+        ajax_options.username = options.username || null;
+        ajax_options.password = options.password || null;
+        ajax_options.headers = options.headers || {};
+        ajax_options.timeout = options.timeout || 0;
+        ajax_options.responseType = options.responseType || "text";
+    } else if (type === "script") {
+        ajax_options.async = true;
+    } else if (type === "jsonp") {
+        ajax_options.async = true;
+        var uuid = "callback" + util.uuid().replace("-", "");
+        var cbf = options.callback || "callback";
+        url.query[cbf] = uuid;
+        ajax_options.callback = uuid;
+    } else {
+        throw  new Error("未知的请求类型");
+    }
+    if (type === "GET") {
+        util.merge(url.query, data);
+        ajax_options.data = null;
+    }
+    var target_host = url.host;
     if (proxy) {
         url.host = proxy.server + ":" + proxy.port;
-        target_url = url.format();
-    } else {
-        target_url = url.format();
     }
-    var ajax_options = {};
-    ajax_options.type = options.type || "";
-    ajax_options.url = target_url;
-    ajax_options.async = options.async || true;
-    ajax_options.username = options.username || null;
-    ajax_options.password = options.password || null;
-    ajax_options.headers = options.headers || {};
+    ajax_options.url = url.format();
     ajax_options.headers.host = target_host;
-    ajax_options.timeout = options.timeout || 0;
-    ajax_options.responseType = options.responseType || "text";
-
     var error = options.error || function (code, msg) {
         console.log(code + "：" + msg);
     };
@@ -109,25 +126,25 @@ function ajax(options) {
             error(code, message);
             return;
         }
-        success(content, headers.split(/\r?\n/g));
+        success(content, (headers || "").split(/\r?\n/g));
     }
 
     switch (options.requestType) {
-        case "jsonp":
+        case "script":
+            script_request(ajax_options, ajax_complate);
             break;
-        case "scripts":
+        case "jsonp":
+            script_request(ajax_options, ajax_complate);
             break;
         case "xhr":
             xhr_request(ajax_options, ajax_complate);
             break;
-        default :
-            xhr_request(ajax_options, ajax_complate);
     }
 }
+
 exports.ajax = ajax;
 
 var protocolPattern = /^([a-z0-9.+-]+:)/i;
-
 
 /**
  * 对url进行处理，并返回适当的访问连接和host
@@ -223,4 +240,35 @@ function xhr_request(options, complete) {
     } catch (e) {
         complete("error", xhr.status || 404, xhr.statusText);
     }
+}
+
+function script_request(options, complete) {
+    var script = document.createElement("script");
+    script.src = options.url;
+    script.async = options.async;
+    script.charset = "utf-8";
+    var cb = options.callback;
+    if (cb) {
+        script.onload = function () {
+            document.head.removeChild(script);
+            if (cb in window) {
+                delete window[cb];
+                complete("error", 500, "错误的jsonp格式");
+            }
+        };
+        window[cb] = function (data) {
+            delete window[cb];
+            complete("success", 200, "成功", data, null);
+        };
+    } else {
+        script.onload = function () {
+            document.head.removeChild(script);
+            complete("success", 200, "成功", null, null);
+        };
+    }
+    script.onerror = function (evt) {
+        document.head.removeChild(script);
+        complete("error", evt.type === "error" ? 404 : 200, evt.type);
+    };
+    document.head.appendChild(script);
 }
