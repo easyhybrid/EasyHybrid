@@ -1,13 +1,19 @@
 /**
- * 初始化函数
- * @param core 加载完成的核心库
+ * Created by 清月_荷雾 on 14-3-4.
+ * @author 清月_荷雾(441984145@qq.com)
+ *        赤菁风铃(liuxuanzy@qq.com)
+ * 项目的入口函数（index会在core加载完毕时获取此函数）
+ */
+
+/**
+ * 项目初始化代码
+ * @param core 核心工具类
+ * @returns {Function}返回函数会在项目加载完成时被回调，所以请不要在代码里面使用异步调用
  */
 module.exports = function (core) {
     return function () {
-        var result = core.util.parseUrl("http://221.176.1.140:8080/wlan/index.php?wlanacname=1066.0731.731.00&wlanuserip=10.11.48.12&ssid=CMCC#1da");
-        console.log(result);
-        console.log(result.format());
-        //系统会在cordova加载完成后调用这个函数
-        alert("成功加载EasyHybrid");
+        core.getNavigation("default").show();
+        alert(core.config.name);
+        // core.href("welcome/index", {hideSplash: true});//如果没有什么特别的定制，这里可以只是单独的导航到某一个功能
     };
 };

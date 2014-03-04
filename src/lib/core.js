@@ -55,7 +55,7 @@ exports.root = root;//根元素
 /**
  * 导航页面到name
  * @param name 页面的名称，为back时回退页面
- * @param data 导航数据
+ * @param [data] 导航数据
  */
 function href(name, data) {
     if (name === "back") {//回退快捷方式
@@ -70,7 +70,7 @@ function href(name, data) {
     }
     try {
         dom.removeClass(prevent, "hidden");//打开阻止层
-        createFunc(exports, data, function (item) {
+        createFunc(exports, data || null, function (item) {
             var style = item.style();//页面样式
             var navigation = item.navigation().split(".");//导航条样式
             item.load(root, function () {

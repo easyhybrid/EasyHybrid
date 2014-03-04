@@ -118,12 +118,11 @@ exports.merge = merge;
 var formatRegExp = /%[sdj%]/g;
 /**
  * 格式化字符串
- * @param {...*} [args] 要格式化的字符串
+ * @param {...|string} [str] 要格式化的字符串
  */
-function formatString(args) {
+function formatString(str) {
     var i = 1;
-    args = arguments;
-    var str = arguments[0];
+    var args = arguments;
     var len = args.length;
     return str.replace(formatRegExp, function (x) {
         if (x === '%%') {

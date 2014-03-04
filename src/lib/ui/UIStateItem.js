@@ -13,20 +13,25 @@ var util = require("../util/util"),//引入工具类
  * 导航项目
  * @param style 激活时添加的样式
  * @param html 内部的html
- * @param disabled 当按钮处于passive状态时，是否触发点击事件
+ * @param data 数据
+ * @param [disabled] 当按钮处于passive状态时，是否触发点击事件
  * @constructor
  */
-function UIStateItem(style, html, disabled) {
+function UIStateItem(style, html, data, disabled) {
     UIObject.call(this);
+    if (data === false || data === true) {
+        disabled = data;
+        data = {};
+    }
     this._disabled = disabled;
     this._active = false;
     this._style = style;
     this._dom = dom.createDom(html);//页面的基础元素
     this.bind(this._dom, "click", function () {
-        if (this._disabled && this._active) {
+        if (this._disabled && !this._active) {
             return false;
         }
-        this.emit("click", this._dom, this._active);
+        this.emit("click", this._dom, data);
         return true;
     });
 }

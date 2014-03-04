@@ -6,7 +6,8 @@
  */
 
 var util = require("../util/util"),//引入工具类
-    UINavigation = require('./UINavigation').UINavigation;//引入UINavigation基类
+    UINavigation = require('./UINavigation').UINavigation, //引入UINavigation基类
+    UIObject = require("./UIObject").UIObject;
 
 /**
  * 一个只有添加项目的简单导航条
@@ -17,13 +18,6 @@ var util = require("../util/util"),//引入工具类
 function UISimpleNavigation(style, root) {
     UINavigation.call(this, style, root);
     this._items = {};
-    this.on("destroy", function () {
-        for (var x in  this._items) {
-            if (this._items.hasOwnProperty(x)) {
-                this._items[x].destroy(false);
-            }
-        }
-    });
 }
 
 util.inherits(UISimpleNavigation, UINavigation);
@@ -52,22 +46,23 @@ UISimpleNavigation.prototype.active = function (name) {
  * @param name 导航项目名字
  * @param item UIStateItem类型
  */
-UISimpleNavigation.prototype.add = function (name, item) {
+UISimpleNavigation.prototype.append = function (name, item) {
     if (name in this._items) {
-        item.attach(this._dom);
-        this._items[name].destroy(true);
+        throw  new Error("您已经绑定此对象");
     }
     this._items[name] = item;
+    UIObject.prototype.append.call(this, item);
 };
 
 /**
- * 删除一个导航项目
+ * 删除一个导航项目（请注意如果）
  * @param name 导航项目名字
  */
 UISimpleNavigation.prototype.remove = function (name) {
     if (name in this._items) {
-        this._items[name].destroy(true);
+        var item = this._items[name];
         delete  this._items[name];
+        UIObject.prototype.remove.call(this, item);
     }
 };
 exports.UISimpleNavigation = UISimpleNavigation;

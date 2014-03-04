@@ -72,20 +72,23 @@ UIView.prototype.navigation = function () {
 };
 
 
-UIView.prototype.load = function (cb) {
+UIView.prototype.load = function (root, cb) {
     var me = this;
     dom.removeClass(me._dom, transformStyles);//移除已经加载的动画样式
     if (me._option.transform !== "none") {
         //加载动画并延时执行
         dom.addClass(me._dom, me._option.transform + "-in");
         setTimeout(function () {
-            cb();
             me.emit("load");
+            cb();
         }, safeTimeout);
+        me.attach(root);
     } else {
         //直接加载完毕
-        cb();
+        me.attach(root);
         me.emit("load");
+        cb();
+
     }
 };
 
@@ -97,13 +100,13 @@ UIView.prototype.unload = function (cb) {
         //加载动画并延时执行
         dom.addClass(me._dom, me._option.transform + "-out");
         setTimeout(function () {
-            cb();
             me.emit("unload");
+            cb();
         }, safeTimeout);
     } else {
         //直接加载完毕
-        cb();
         me.emit("unload");
+        cb();
     }
 };
 
