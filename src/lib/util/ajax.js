@@ -53,26 +53,6 @@ exports.setProtocol = function (type, target) {
             }
         }
     }
-//    if (typeof  type !== "string") {
-//        for (var x in type) {
-//            if (type.hasOwnProperty(x)) {
-//                if (x.indexOf(":") < 0) {
-//                    protocol[x.toLowerCase() + ":"] = target;
-//                }
-//                else {
-//                    protocol[x.toLowerCase()] = target;
-//                }
-//            }
-//        }
-//    }
-//    else {
-//        if (type.indexOf(":") < 0) {
-//            protocol[type.toLowerCase() + ":"] = target;
-//        }
-//        else {
-//            protocol[type.toLowerCase()] = target;
-//        }
-//    }
 };
 
 
@@ -81,15 +61,11 @@ exports.setProtocol = function (type, target) {
  * @param options 配置参数
  */
 function ajax(options) {
-    var ajax_options = {};
-    options = options || {};
+    var ajax_options = reformat_option(options);//根据快捷方式对options进行初步配置
     ajax_options.type = (options.type || "GET").toUpperCase();
     var type = ajax_options.requestType = options.requestType || "xhr";
     var data = ajax_options.data = options.data || {};
-    var url = reformat_url(options.url);
-    if (!url) {
-        throw  new Error("Url不能为空");
-    }
+    var url = ajax_options.url;
     url = url_tool.parseUrl(url);
     if (url.search) {
         delete  url.search;
@@ -158,23 +134,27 @@ exports.ajax = ajax;
 var protocolPattern = /^([a-z0-9.+-]+:)/i;
 
 /**
- * 对url进行处理，并返回适当的访问连接和host
- * @param url 要处理的url
+ * 对option进行处理，并返回适当的访问连接和host
+ * @param option 要处理的url
  */
-function reformat_url(url) {
+function reformat_option(option) {
+    option = option || {};
+    var roption = null;
+    var url = option.url;
     var rest = url.trim();
+    var flag = false;
     var proto = protocolPattern.exec(rest);
     if (proto) {
         proto = proto[0].toLowerCase();
         rest = rest.substr(proto.length);
     } else {
         if (!rest) {
-            return host + "/";
+            url = host + "/";
         }
         else if (rest[0] === "/") {
-            return host + rest;
+            url = host + rest;
         } else {
-            return host + "/" + rest;
+            url = host + "/" + rest;
         }
     }
     var slashes = rest.substr(0, 2) === '//';
@@ -183,12 +163,13 @@ function reformat_url(url) {
     }
     for (var x in protocol) {
         if (protocol.hasOwnProperty(x) && x === proto) {
+            flag = true;
             var result = "";
             var target = protocol[x];
             if (target[target.length - 1] === "/") {
-                result += target.slice(0, -1);
+                result += target.url.slice(0, -1);
             } else {
-                result += target;
+                result += target.url;
             }
             result += "/";
             if (rest[0] === "/") {
@@ -196,10 +177,16 @@ function reformat_url(url) {
             } else {
                 result += rest;
             }
-            return result;
+            url = result;
+            roption = util.merge({}, target, true);
         }
     }
-    return url.trim();
+    if (!flag) {
+        url = url.trim();
+        roption = {};
+    }
+    roption.url = url;
+    return roption;
 }
 
 //以下代码为处理xhr请求

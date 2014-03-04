@@ -81,21 +81,37 @@ exports.inherits = inherits;
  * 如果是数组则进行追加合并，如果是对象则进行归并
  * @param first     目标对象
  * @param second    待合并对象
+ * @param [deep]      是否深度合并
  * @returns {*}
  */
-function merge(first, second) {
+function merge(first, second, deep) {
+    if (!second || typeof second === 'function' || isDate(second) || typeof second !== 'object') {
+        first = second;
+        return first;
+    }
     //对数组进行push操作
     if (isArray(first) && isArray(second)) {
         for (var i = 0; i < second.length; i++) {
-            first.push(second[i]);
+            if (deep) {
+                first.push(clone(second[i]));
+            } else {
+                first.push(second[i]);
+            }
         }
     } else {
         for (var key in second) {
             if (second.hasOwnProperty(key) && second[key] !== undefined) {
-                first[key] = second[key];
+                if (!deep || !second[key] || typeof second[key] === 'function' || isDate(second[key]) || typeof second[key] !== 'object') {
+                    first[key] = second[key];
+                } else if (isArray(second[key])) {
+                    first[key] = merge(first[key] || [], second[key], true);
+                } else {
+                    first[key] = merge(first[key] || {}, second[key], true);
+                }
             }
         }
     }
+    return first;
 }
 exports.merge = merge;
 
