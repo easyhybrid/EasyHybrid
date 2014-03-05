@@ -12,17 +12,20 @@ module.exports = function (core) {
     var items = core.config.navigation;
     var nav = new UISimpleNavigation("ui-nav-default", core.root);
     var onclick = function (dom, item) {
-        core.href(item.name);
+        core.href(item.view);
     };
     for (var x in items) {
         if (items.hasOwnProperty(x)) {
             var item = items[x];
-            var state = new UIStateItem("active",
-                util.formatString('<div class="ui-nav-default-item %s">%s</div>', item.style, item.text),
+            item.view = item.view || x;
+            var state = new UIStateItem(
+                "active",
+                util.formatString('<div class="ui-nav-default-item"><a class="%s">%s</a></div>', item.style, item.text),
                 item,
                 false
             );
             state.on("click", onclick);
+            nav.append(x, state);
         }
     }
     return nav;

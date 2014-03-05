@@ -1,0 +1,40 @@
+.ui-nav-default {
+    background-color: #203854;
+    bottom: 0;
+    height: 50px;
+    width: 100%;
+    display: table;
+}
+
+.ui-nav-default-item {
+    display: table-cell;
+    overflow: hidden;
+    text-align: center;
+}
+
+.ui-nav-default-item a {
+    cursor: pointer;
+    display: inline-block;
+    height: 50px;
+    width: 64px;
+    color: #49AAEE;
+    background-image: url(img/icon.png);
+    background-repeat: no-repeat;
+    line-height: 80px;
+}
+
+.ui-nav-default-introduce {
+    background-position: 18px 8px;
+}
+
+.ui-nav-default-util {
+    background-position: 17px -42px;
+}
+
+.ui-nav-default-plugin {
+    background-position: 16px -90px;
+}
+
+.ui-nav-default-more {
+    background-position: 17px -192px;
+}

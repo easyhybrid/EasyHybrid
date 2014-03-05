@@ -57,9 +57,9 @@ UIObject.prototype.detach = function () {
  */
 UIObject.prototype.append = function (ele) {
     if (!(ele instanceof UIObject)) {
-        if (this._dom) {
-            this._dom.appendChild(ele);
-        } else {
+        if (this._dom && ele._dom) {
+            this._dom.appendChild(ele._dom);
+        } else if (ele._dom) {
             this._dom = ele;
         }
         return;

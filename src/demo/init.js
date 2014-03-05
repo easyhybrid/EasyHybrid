@@ -13,7 +13,7 @@
 module.exports = function (core) {
     return function () {
         core.getNavigation("default").show();
-        alert(core.config.name);
+//        alert(core.config.name);
         // core.href("welcome/index", {hideSplash: true});//如果没有什么特别的定制，这里可以只是单独的导航到某一个功能
     };
 };
