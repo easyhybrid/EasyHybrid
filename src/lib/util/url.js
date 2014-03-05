@@ -282,7 +282,7 @@ function parse(url) {
     }
     result.href = format(result);
     result.format = function () {
-        format(this);
+        return format(this);
     };
     return result;
 }

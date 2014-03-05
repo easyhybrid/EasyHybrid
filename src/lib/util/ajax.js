@@ -92,7 +92,7 @@ function ajax(options) {
     } else {
         throw  new Error("未知的请求类型");
     }
-    if (type === "GET") {
+    if (ajax_options.type === "GET") {
         util.merge(url.query, data);
         ajax_options.data = null;
     }
@@ -116,7 +116,7 @@ function ajax(options) {
         success(content, (headers || "").split(/\r?\n/g));
     }
 
-    switch (options.requestType) {
+    switch (ajax_options.requestType) {
         case "script":
             script_request(ajax_options, ajax_complate);
             break;
@@ -125,6 +125,8 @@ function ajax(options) {
             break;
         case "xhr":
             xhr_request(ajax_options, ajax_complate);
+            break;
+        default :
             break;
     }
 }
@@ -218,8 +220,8 @@ function xhr_request(options, complete) {
     xhr.onload = function () {
         complete(
             "success",
-            xhr.statusText,
             xhrSuccessStatus[ xhr.status ] || xhr.status,
+            xhr.statusText,
             options.responseType === "text" ? xhr.responseText : xhr.response,
             xhr.getAllResponseHeaders()
         );

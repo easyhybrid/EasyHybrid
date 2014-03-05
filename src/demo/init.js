@@ -12,8 +12,17 @@
  */
 module.exports = function (core) {
     return function () {
+        core.util.ajax({
+            url: "http://www.baidu.com",
+            success: function () {
+                console.log(arguments);
+            },
+            error: function () {
+                console.log(arguments);
+            }
+        });
+
+        core.href("more/index");//如果没有什么特别的定制，这里可以只是单独的导航到某一个功能
         core.getNavigation("default").show();
-//        alert(core.config.name);
-        // core.href("welcome/index", {hideSplash: true});//如果没有什么特别的定制，这里可以只是单独的导航到某一个功能
     };
 };
