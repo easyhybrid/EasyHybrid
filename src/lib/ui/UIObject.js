@@ -28,10 +28,12 @@ util.inherits(UIObject, EventEmitter);
  */
 UIObject.prototype.attach = function (parentObject) {
     var me = this;
+    var parent = dom.find(parentObject);
+
     if (parentObject instanceof UIObject) {
         parentObject.append(me);
     }
-    var parent = dom.find(parentObject);
+
     for (var i = 0; i < parent.length; i++) {
         parent[i].appendChild(me._dom);
     }
