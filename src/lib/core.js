@@ -110,7 +110,7 @@ exports.href = href;
  */
 function back(data) {
     data = data || {};
-    if (backStack.length === 0 || !current || !current.hasBack()) {//已经回退完毕
+    if (backStack.length === 0 || !current || current.style() === "none") {//已经回退完毕
         return;
     }
     var item = current;
@@ -146,17 +146,19 @@ function active(navName, itemName) {
     if (navName === "common") {
         return;
     }
-    nav.forEach(function (item) {
-        item.hide();
-    });
-    if (navName === "hide") {
-        return;
+    for (var x in nav) {
+        if (nav.hasOwnProperty(x)) {
+            if (x === navName && navName !== "hide") {
+                nav[x].show();
+            } else {
+                nav[x].hide();
+            }
+        }
     }
     if (!(navName in nav)) {
-        console.log("所加载的导航条不存在");
+        console.log("所加载的导航条项目不存在");
         return;
     }
-    nav[navName].show();
     nav[navName].active(itemName);
 }
 exports.active = active;

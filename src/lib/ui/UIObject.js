@@ -56,25 +56,28 @@ UIObject.prototype.detach = function () {
  * @param ele 要追加的元素
  */
 UIObject.prototype.append = function (ele) {
+    if (typeof ele === "string") {
+        ele = dom.createDom(ele);
+    }
+    if (!this._dom) {
+        this._dom = dom.createDom("<div></div>");
+    }
     if (!(ele instanceof UIObject)) {
-        if (this._dom && ele._dom) {
-            this._dom.appendChild(ele._dom);
-        } else if (ele._dom) {
-            this._dom = ele;
+        if (!util.isArray(ele)) {
+            ele = [ele];
+        }
+        for (var i = 0; i < ele.length; i++) {
+            this._dom.appendChild(ele[i]);
         }
         return;
     }
     this._children.push(ele);
     ele._parent = this;
-    if (!this._dom) {
-        this._dom = ele._dom;
-        return;
-    }
     this._dom.appendChild(ele._dom);
 };
 
 /**
- * 在本对象删除UIObject元素（请注意如果当前元素在添加时没有_dom，则可能不会把元素从DOM树上移除，请不要把一个元素挂接到多处）
+ * 在本对象删除UIObject元素
  * @param ele 要删除的元素
  */
 UIObject.prototype.remove = function (ele) {
@@ -91,11 +94,7 @@ UIObject.prototype.remove = function (ele) {
         this._children.splice(index, 1);
     }
     ele._parent = null;
-    if (this._dom === ele._dom) {
-        this._dom = null;
-    } else {
-        ele._dom.parent.removeChild(ele._dom);
-    }
+    ele._dom.parent.removeChild(ele._dom);
 };
 
 /**

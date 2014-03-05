@@ -19,19 +19,20 @@ var util = require("../util/util"),//引入工具类
  */
 function UIStateItem(style, html, data, disabled) {
     UIObject.call(this);
+    var me = this;
     if (data === false || data === true) {
         disabled = data;
         data = {};
     }
-    this._disabled = disabled;
-    this._active = false;
-    this._style = style;
-    this._dom = dom.createDom(html);//页面的基础元素
-    this.bind(this._dom, "click", function () {
-        if (this._disabled && !this._active) {
+    me._disabled = disabled;
+    me._active = false;
+    me._style = style;
+    me._dom = dom.createDom(html);//页面的基础元素
+    me.bind(me._dom, "click", function () {
+        if (me._disabled && !me._active) {
             return false;
         }
-        this.emit("click", this._dom, data);
+        me.emit("click", me._dom, data);
         return true;
     });
 }

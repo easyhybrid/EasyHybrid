@@ -45,9 +45,9 @@ var util = require("../util/util"),//引入工具类
  */
 function UIView(option) {
     UIObject.call(this);
-    this._option = util.merge(option, defaultOption);
+    this._option = util.merge(util.clone(defaultOption), option);
     this._dom = dom.createDom(
-        util.formatString('<div class="absolute full-screen %s" style="z-index: %d;"></div>',
+        util.formatString('<div class="absolute full-screen %s" style="z-index: %d;background: #ffffff"></div>',
             this._option.reverse ? ' reverse' : '',
             ++zindex)
     );//页面的基础元素
@@ -94,7 +94,6 @@ UIView.prototype.load = function (root, cb) {
 
 UIView.prototype.unload = function (cb) {
     var me = this;
-    me._option = null;
     dom.removeClass(me._dom, transformStyles);//移除已经加载的动画样式
     if (me._option.transform !== "none") {
         //加载动画并延时执行
