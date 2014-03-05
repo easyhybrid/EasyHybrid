@@ -13,7 +13,7 @@
 module.exports = function (core) {
     return function () {
         core.util.ajax({
-            url: "http://www.baidu.com",
+            url: "http://soft.hnu.edu.cn/nxzdxt/",
             success: function () {
                 console.log(arguments);
             },

@@ -16,6 +16,7 @@ module.exports = function (grunt) {
         });
         //绑定请求错误
         proxy.on('error', function (err, req, res) {
+            console.log(req.url);
             res.writeHead(500, {
                 'Content-Type': 'text/plain'
             });
@@ -24,19 +25,24 @@ module.exports = function (grunt) {
         var done = this.async();//异步完成函数
         var app = connect();//生成connect对象
         app.use(connect.logger("dev"));//用户访问记录
-        app.use(connect.compress({level: 9}));//启用返回值gzip压缩（由于文件下载比较大）
-        app.use(connect.static(path.join(process.cwd(), 'build', project, "dev")));//启用静态文件模块
-        app.use(connect.favicon());//当网站不指定icon时，返回一个icon
-        app.use(function (req, res) {//对请求进行代理
-            var host = req.headers["Host"];
-            delete req.headers["Host"];
+        app.use(function (req, res, next) {//对请求进行代理
+            var host = req.headers["x-forwarded-for"];
+            if (!host) {
+                next();
+                return;
+            }
+            delete req.headers["x-forwarded-for"];
             proxy.web(req, res, {
                 target: host,
                 headers: {
-                    "Host": host
+                    "Host": url.parse(host).host
                 }
             });
         });
+        app.use(connect.compress({level: 9}));//启用返回值gzip压缩（由于文件下载比较大）
+        app.use(connect.static(path.join(process.cwd(), 'build', project, "dev")));//启用静态文件模块
+        app.use(connect.favicon());//当网站不指定icon时，返回一个icon
+
         http.createServer(app).listen(port || 3000, server, function () {
             console.log("proxy server for " + project + " is running on port " + port);
             done();
