@@ -96,12 +96,12 @@ function ajax(options) {
         util.merge(url.query, data);
         ajax_options.data = null;
     }
-    var target_host = url.host;
     if (proxy) {
-        url.host = proxy.server + ":" + proxy.port;
+        ajax_options.url = "http://" + proxy.server + ":" + proxy.port + "/";
+        ajax_options.headers["X-Forwarded-For"] = url.format();
+    } else {
+        ajax_options.url = url.format();
     }
-    ajax_options.url = url.format();
-    ajax_options.headers.host = target_host;
     var error = options.error || function (code, msg) {
         console.log(code + "：" + msg);
     };
