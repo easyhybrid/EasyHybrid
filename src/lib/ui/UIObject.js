@@ -30,7 +30,6 @@ UIObject.prototype.attach = function (parentObject) {
     var me = this;
     if (parentObject instanceof UIObject) {
         parentObject.append(me);
-        this._parent = parentObject;
     }
     var parent = dom.find(parentObject);
     for (var i = 0; i < parent.length; i++) {
@@ -45,7 +44,6 @@ UIObject.prototype.detach = function () {
     var me = this;
     if (me._parent) {
         me._parent.remove(me);
-        me._parent = null;
         return;
     }
     if (this._dom && this._dom.parentNode) {
@@ -54,14 +52,20 @@ UIObject.prototype.detach = function () {
 };
 
 /**
- * 在本对象中UIObject追加元素
+ * 在本对象中追加元素（可以对DOM元素进行追加，但是无法使用remove函数对追加的元素进行移除）
  * @param ele 要追加的元素
  */
 UIObject.prototype.append = function (ele) {
     if (!(ele instanceof UIObject)) {
-        throw  new Error("只能添加UIObject元素");
+        if (this._dom) {
+            this._dom.appendChild(ele);
+        } else {
+            this._dom = ele;
+        }
+        return;
     }
     this._children.push(ele);
+    ele._parent = this;
     if (!this._dom) {
         this._dom = ele._dom;
         return;
@@ -70,7 +74,7 @@ UIObject.prototype.append = function (ele) {
 };
 
 /**
- * 在本对象删除UIObject元素
+ * 在本对象删除UIObject元素（请注意如果当前元素在添加时没有_dom，则可能不会把元素从DOM树上移除，请不要把一个元素挂接到多处）
  * @param ele 要删除的元素
  */
 UIObject.prototype.remove = function (ele) {
@@ -86,9 +90,11 @@ UIObject.prototype.remove = function (ele) {
     if (index >= 0) {
         this._children.splice(index, 1);
     }
-    ele.detach();
+    ele._parent = null;
     if (this._dom === ele._dom) {
         this._dom = null;
+    } else {
+        ele._dom.parent.removeChild(ele._dom);
     }
 };
 
