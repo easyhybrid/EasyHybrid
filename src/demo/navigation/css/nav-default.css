@@ -38,3 +38,19 @@
 .ui-nav-default-more {
     background-position: 17px -192px;
 }
+
+.active .ui-nav-default-introduce {
+    background-position:  -53px 8px;
+}
+
+.active .ui-nav-default-util {
+    background-position: -53px -42px;
+}
+
+.active .ui-nav-default-plugin {
+    background-position: -53px -90px;
+}
+
+.active .ui-nav-default-more {
+    background-position: -53px -192px;
+}

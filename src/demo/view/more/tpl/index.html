@@ -1,0 +1,16 @@
+<ul class="more-group">
+    <li class="more-item" id="more-user">
+        <img class="more-img {{if(!islogin)}}hidden{{endif}}" src="{{yhxx.YHXX_TP}}"/>
+        <span>{{if(islogin)}}{{yhxx.YHXX_XM}}{{else}}用户登录{{endif}}</span>
+    </li>
+    <li class="more-line"></li>
+    <li class="more-item" id="more-note">操作说明</li>
+</ul>
+<ul class="more-group">
+    <li class="more-item" id="more-suggest">意见反馈</li>
+    <li class="more-line"></li>
+    <li class="more-item" id="more-new">检查更新</li>
+    <li class="more-line"></li>
+    <li class="more-item" id="more-about">关于我们</li>
+</ul>
+<div class="more-logout {{if(!islogin)}}none{{endif}}" id="more-logout">退出登录</div>

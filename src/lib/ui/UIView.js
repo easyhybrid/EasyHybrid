@@ -6,7 +6,7 @@
  * @note defaultOption.style
  *     none      ：表示页面是初始页面，系统清空回退栈，隐藏背景页面
  *     frame     ：浮出页面，不隐藏背景页面
- *     switch    ：导航到当前页面，如果正在显示的页面也是switch，释放正在显示的页面，隐藏背景页面。switch适合于子菜单导航。
+ *     switch    ：导航到页面，并且回退页面到最近的一个switch,如果没有switch则进行一次普通back导航
  *     back      ：压栈正在显示的页面，隐藏背景页面。
  *
  * @note defaultOption.navigation

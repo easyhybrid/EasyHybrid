@@ -25,7 +25,7 @@ module.exports = function (grunt) {
             cwd: config.path,
             rename: function (dest, src) {
                 return dest + src.split(/\/|\\/).map(function (item) {
-                    return item.replace(match_type, "$1$2").replace(".tpl", "-tpl.js");
+                    return item.replace(match_type, "$1$2").replace(".html", "-tpl.js");
                 }).join("/");
             }
         });
@@ -42,13 +42,13 @@ module.exports = function (grunt) {
             grunt.file.copy(src, dest, {
                 encoding: "utf8",
                 process: function (content) {
-                    if (/\.tpl$/.test(src)) {
+                    if (/\.html$/.test(src)) {
                         content = lib.run(content);
                     }
                     var lines = content.split("\n");
                     content = "    " + lines.join("\n    ");
                     return 'define("' + id + '", function (require, exports, module) {\n' + content.replace(match_url, function () {
-                        var pfix = arguments[1].replace(config.platform + "-", "").replace(".tpl", "-tpl");
+                        var pfix = arguments[1].replace(config.platform + "-", "").replace(".html", "-tpl");
                         if (pfix.charAt(0) === ".") {
                             return ("require(\"" + path.join(id, "..", pfix).replace(/\\/g, "/") + "\")").replace("\\", "/");
                         }

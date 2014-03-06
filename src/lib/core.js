@@ -69,6 +69,7 @@ function href(name, data) {
         return;
     }
     try {
+        var i = 0;
         dom.removeClass(prevent, "hidden");//打开阻止层
         createFunc(exports, data || null, function (item) {
             var style = item.style();//页面样式
@@ -82,6 +83,18 @@ function href(name, data) {
                 if (style === "switch" && current && current.style() === "switch") {
                     current.destroy(true);
                     current = null;
+                } else if (style === "switch") {
+                    for (i = backStack.length - 1; i >= 0; i++) {
+                        if (backStack[i].style() === "switch") {
+                            var arr = backStack.splice(i, backStack.length - i);
+                            for (var j = 0; j < arr.length; j++) {
+                                arr[j].destroy(true);
+                            }
+                            current.destroy(true);
+                            current = null;
+                            break;
+                        }
+                    }
                 }
                 if (current) {
                     backStack.push(current);//缓存当前页
@@ -89,7 +102,7 @@ function href(name, data) {
                 current = item;//重新指定当前页
                 //检查回退标识并释放资源
                 if (style === "none") {
-                    for (var i = 0; i < backStack.length; i++) {
+                    for (i = 0; i < backStack.length; i++) {
                         backStack[i].destroy(true);
                     }
                     backStack = [];
