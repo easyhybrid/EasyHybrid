@@ -201,7 +201,6 @@ function create_uuid_part(length) {
     return uuidpart;
 }
 
-
 /**
  * 将arrayBuffer转化成base64字符串
  * @param arrayBuffer
@@ -252,3 +251,11 @@ function uint8ToBase64(rawData) {
     }
     return output;
 }
+
+/**
+ * 获取当前时间
+ * @type {Function|getTime}
+ */
+exports.getTime = Date.now || function getTime() {
+    return new Date().getTime();
+};

@@ -113,3 +113,25 @@ function removeClass(dom, classname) {
 }
 exports.removeClass = removeClass;
 
+/**
+ * 计算元素在window中的偏移位置
+ * @param el
+ * @returns {{left: number, top: number}}
+ */
+function offset(el) {
+    var left = -el.offsetLeft,
+        top = -el.offsetTop;
+
+    // jshint -W084
+    while (el = el.offsetParent) {
+        left -= el.offsetLeft;
+        top -= el.offsetTop;
+    }
+    // jshint +W084
+
+    return {
+        left: left,
+        top: top
+    };
+}
+exports.offset = offset;

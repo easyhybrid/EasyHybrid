@@ -147,6 +147,7 @@ function run(data) {
         '    render: function(map) {\n' +
         '        var p = [],\n' +
         '            v = [];\n' +
+        '        map = map || {};' +
         '        for(var i in map) {\n' +
         '            if (map.hasOwnProperty(i)) {\n' +
         '                p.push(i);\n' +
