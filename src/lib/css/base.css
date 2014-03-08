@@ -94,12 +94,12 @@ input {
 
 /*控制元素消失与可见*/
 .hidden {
-    display: none;
+    display: none !important;
 }
 
 /*控制元素隐藏与可见*/
 .none {
-    visibility: collapse;
+    visibility: collapse !important;
 }
 
 /*反向控制动画*/

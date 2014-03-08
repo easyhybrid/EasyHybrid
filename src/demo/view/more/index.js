@@ -21,7 +21,7 @@ module.exports = function (core, data, cb) {
         transform: "none",
         reverse: false
     });
-    view.append(tpl.render());
+    //view.append(tpl.render());
     view.append('<div id="more-click" style="margin-top: 10px;cursor: pointer;">点击我</div>');
     view.bind("#more-click", "click", function () {
         core.href("more/more-test");
