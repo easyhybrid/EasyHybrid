@@ -14,6 +14,7 @@
  */
 module.exports = function (core, data, cb) {
     var UIView = core.ui.UIView;
+    var UIScroll = core.ui.UIScroll;
     var tpl = require("./tpl/index.html");
     var view = new UIView({
         style: "none",
@@ -21,8 +22,9 @@ module.exports = function (core, data, cb) {
         transform: "none",
         reverse: false
     });
-    //view.append(tpl.render());
-    view.append('<div id="more-click" style="margin-top: 10px;cursor: pointer;">点击我</div>');
+    var tran = new UIScroll("full-screen", false, "both", false);
+    tran.append(tpl.render());
+    view.append(tran);
     view.bind("#more-click", "click", function () {
         core.href("more/more-test");
     });

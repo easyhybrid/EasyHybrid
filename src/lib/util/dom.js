@@ -114,6 +114,43 @@ function removeClass(dom, classname) {
 exports.removeClass = removeClass;
 
 /**
+ * 获取或者设置element.style
+ * @param dom
+ * @param style
+ * @param value
+ */
+function css(dom, style, value) {
+    if (!util.isArray(dom)) {
+        dom = [dom];
+    }
+    for (var i = 0; i < dom.length; i++) {
+
+    }
+}
+
+function _style() {
+
+}
+
+function _css() {
+
+}
+
+var rmsPrefix = /^-ms-/,
+    rdashAlpha = /-([\da-z])/gi,
+    fcamelCase = function (all, letter) {
+        return letter.toUpperCase();
+    };
+
+function _camelCase(str) {
+    return str.replace(rmsPrefix, "ms-").replace(rdashAlpha, fcamelCase);
+}
+
+
+exports.css = css;
+
+
+/**
  * 计算元素在window中的偏移位置
  * @param el
  * @returns {{left: number, top: number}}

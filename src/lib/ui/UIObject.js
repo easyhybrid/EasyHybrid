@@ -120,6 +120,9 @@ UIObject.prototype.bind = function (target, type, listener) {
     if (!util.isArray(target)) {
         target = me.find(target);
     }
+    if (!target) {
+        return;
+    }
     for (var i = 0; i < target.length; i++) {
         item = target[i];
         item.addEventListener(type, listener, false);
@@ -153,6 +156,19 @@ UIObject.prototype.unbind = function (target, type, listener) {
         }
     }
 };
+
+/**
+ * 对此对象和其所有的子级对象触发事件
+ */
+function emitAll() {
+    for (var i = 0; i < this._children.length; i++) {
+        emitAll.apply(this._children[i], arguments);
+    }
+    EventEmitter.prototype.emit.apply(this, arguments);
+}
+
+UIObject.prototype.emitAll = emitAll;
+
 
 /**
  * 销毁方法（销毁对象上绑定的所有事件）

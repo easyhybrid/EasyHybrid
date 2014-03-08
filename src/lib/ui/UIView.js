@@ -79,16 +79,15 @@ UIView.prototype.load = function (root, cb) {
         //加载动画并延时执行
         dom.addClass(me._dom, me._option.transform + "-in");
         setTimeout(function () {
-            me.emit("load");
+            me.emitAll("load");
             cb();
         }, safeTimeout);
         me.attach(root);
     } else {
         //直接加载完毕
         me.attach(root);
-        me.emit("load");
+        me.emitAll("load");
         cb();
-
     }
 };
 
@@ -99,14 +98,15 @@ UIView.prototype.unload = function (cb) {
         //加载动画并延时执行
         dom.addClass(me._dom, me._option.transform + "-out");
         setTimeout(function () {
-            me.emit("unload");
+            me.emitAll("unload");
             cb();
         }, safeTimeout);
     } else {
         //直接加载完毕
-        me.emit("unload");
+        me.emitAll("unload");
         cb();
     }
 };
 
 exports.UIView = UIView;
+

@@ -254,8 +254,8 @@ function uint8ToBase64(rawData) {
 
 /**
  * 获取当前时间
- * @type {Function|getTime}
+ * @type {Function}
  */
-exports.getTime = Date.now || function getTime() {
+exports.getTime = Date.now || function () {
     return new Date().getTime();
 };
