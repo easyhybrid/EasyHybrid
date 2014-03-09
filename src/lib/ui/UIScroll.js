@@ -9,11 +9,11 @@ var util = require("../util/util"),
     dom = require("../util/dom"),
     os = require("../util/os"),
     UIObject = require('./UIObject').UIObject,
-    _transform = os.prefixStyle('transform'),
+    _transform = dom.prefixStyle('transform'),
     _transition = {
-        transitionTimingFunction: os.prefixStyle('transitionTimingFunction'),
-        transitionDuration: os.prefixStyle('transitionDuration'),
-        transitionDelay: os.prefixStyle('transitionDelay')
+        transitionTimingFunction: dom.prefixStyle('transitionTimingFunction'),
+        transitionDuration: dom.prefixStyle('transitionDuration'),
+        transitionDelay: dom.prefixStyle('transitionDelay')
     };
 
 /**
@@ -40,7 +40,7 @@ function UIScroll(style, event, type, move) {
         this._vertical = true;
     }
     this._dom = this.wrapper = dom.createDom(util.format('<div class="%s" style="position: relative;"></div>', style || ""));
-    this.freeScroll = !event && os.nativeTouchScroll;
+    this.freeScroll = !event && os.os.nativeTouchScroll;
     this.emitEvent = event;
     this.emitMove = event && move;
     if (this.freeScroll) {
