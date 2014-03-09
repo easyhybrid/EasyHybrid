@@ -21,6 +21,7 @@ var util = require("../util/util"),
  */
 /**
  * 内部元素可以自由移动的UIObject类
+ * @param [html] innerHTML
  * @param [style] 添加在wrapper上的样式
  * @param [event] 是否触发滚动事件，为free时，将会忽略元素的准确位置
  * @param [type] 滚动类型
@@ -28,7 +29,7 @@ var util = require("../util/util"),
  * move事件
  * @constructor
  */
-function UIScroll(style, event, type, move) {
+function UIScroll(html, style, event, type, move) {
     UIObject.call(this);
     type = type || "vertical";
     this._horizontal = false;
@@ -39,7 +40,7 @@ function UIScroll(style, event, type, move) {
     if (type === "vertical" || type === "both") {
         this._vertical = true;
     }
-    this._dom = this.wrapper = dom.createDom(util.format('<div class="%s" style="position: relative;"></div>', style || ""));
+    this._dom = this.wrapper = dom.createDom(util.format('<div class="%s" style="position: relative;overflow: hidden;"></div>', style || ""));
     this.freeScroll = !event && os.os.nativeTouchScroll;
     this.emitEvent = event;
     this.emitMove = event && move;
@@ -47,10 +48,16 @@ function UIScroll(style, event, type, move) {
         this.wrapper.style.overflowY = this._horizontal ? "scroll" : "hidden";
         this.wrapper.style.overflowX = this._vertical ? "scroll" : "hidden";
         this.wrapper.style.webkitOverflowScrolling = "touch";
+        if (html) {
+            this.wrapper.innerHTML = html || "";
+        }
         return;
     }
-    this.scroller = dom.createDom('<div class="absolute" style="width: 100%;"></div>');
+    this.scroller = dom.createDom(util.format('<div class="absolute" style="width: 100%;padding: %s 0;"></div>', this._vertical ? "10px" : "0"));
     this.wrapper.appendChild(this.scroller);
+    if (html) {
+        this.scroller.innerHTML = html || "";
+    }
     this.x = 0;//水平滚动位置
     this.y = 0;//竖直滚动位置
     this._inited = false;

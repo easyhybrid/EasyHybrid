@@ -12,9 +12,9 @@ var EventEmitter = require("../util/EventEmitter").EventEmitter;
  * UI对象基类
  * @constructor
  */
-function UIObject(dom) {
+function UIObject(str) {
     EventEmitter.call(this);
-    this._dom = dom || null;
+    this._dom = dom.createDom(str) || null;
     this._parent = null;
     this._children = [];
     this._eventCache = [];

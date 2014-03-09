@@ -47,9 +47,10 @@ function UIView(option) {
     UIObject.call(this);
     this._option = util.merge(util.clone(defaultOption), option);
     this._dom = dom.createDom(
-        util.format('<div class="absolute full-screen %s" style="z-index: %d;background: #ffffff"></div>',
+        util.format('<div class="absolute full-screen %s" style="z-index: %d;background: %s"></div>',
             this._option.reverse ? ' reverse' : '',
-            ++zindex)
+            ++zindex,
+            this._option.style === "frame" ? "" : "#fffffff")
     );//页面的基础元素
 }
 
@@ -71,7 +72,11 @@ UIView.prototype.navigation = function () {
     return this._option.navigation;
 };
 
-
+/**
+ * 加载页面
+ * @param root
+ * @param cb
+ */
 UIView.prototype.load = function (root, cb) {
     var me = this;
     dom.removeClass(me._dom, transformStyles);//移除已经加载的动画样式
@@ -91,6 +96,10 @@ UIView.prototype.load = function (root, cb) {
     }
 };
 
+/**
+ * 删除页面
+ * @param cb
+ */
 UIView.prototype.unload = function (cb) {
     var me = this;
     dom.removeClass(me._dom, transformStyles);//移除已经加载的动画样式
