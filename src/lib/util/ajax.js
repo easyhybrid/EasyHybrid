@@ -59,9 +59,9 @@ function ajax(options) {
     }
     if (proxy) {
         ajax_options.url = "http://" + proxy.server + ":" + proxy.port + "/";
-        ajax_options.headers["X-Forwarded-For"] = url.format();
+        ajax_options.headers["X-Forwarded-For"] = url_tool.formatUrl(url);
     } else {
-        ajax_options.url = url.format();
+        ajax_options.url = url_tool.formatUrl(url);
     }
     var error = options.error || function (code, msg) {
         console.log(code + "：" + msg);

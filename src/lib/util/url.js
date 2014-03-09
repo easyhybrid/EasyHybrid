@@ -281,9 +281,6 @@ function parse(url) {
         result.path = (result.pathname || '') + ( result.search || '');
     }
     result.href = format(result);
-    result.format = function () {
-        return format(this);
-    };
     return result;
 }
 exports.parseUrl = parse;
@@ -349,6 +346,8 @@ function format(result) {
 
     return protocol + host + pathname + search + hash;
 }
+
+exports.formatUrl = format;
 
 /**
  * 对部分系统定义类型进行转换
