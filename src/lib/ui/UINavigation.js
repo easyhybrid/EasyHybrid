@@ -22,7 +22,7 @@ function UINavigation(style, root, html) {
     this._root = root;
     html = html || "";
     this._dom = dom.createDom(
-        util.formatString('<div class="absolute %s hidden" style="z-index: %d;">%s</div>',
+        util.format('<div class="absolute %s hidden" style="z-index: %d;">%s</div>',
             style,
             ++zindex,
             html

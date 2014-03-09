@@ -143,7 +143,7 @@ function formatString(str) {
         }
     });
 }
-exports.formatString = formatString;
+exports.format = formatString;
 
 /**
  * 递归复制对象（非循环引用安全版）
@@ -202,60 +202,45 @@ function create_uuid_part(length) {
 }
 
 /**
- * 将arrayBuffer转化成base64字符串
- * @param arrayBuffer
- * @returns {*}
- */
-function fromArrayBuffer(arrayBuffer) {
-    var array = new Uint8Array(arrayBuffer);
-    return uint8ToBase64(array);
-}
-
-exports.fromArrayBuffer = fromArrayBuffer;
-
-var b64_6bit = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
-var b64_12bit;
-
-var b64_12bitTable = function () {
-    b64_12bit = [];
-    for (var i = 0; i < 64; i++) {
-        for (var j = 0; j < 64; j++) {
-            b64_12bit[i * 64 + j] = b64_6bit[i] + b64_6bit[j];
-        }
-    }
-    b64_12bitTable = function () {
-        return b64_12bit;
-    };
-    return b64_12bit;
-};
-
-function uint8ToBase64(rawData) {
-    var numBytes = rawData.byteLength;
-    var output = "";
-    var segment;
-    var table = b64_12bitTable();
-    for (var i = 0; i < numBytes - 2; i += 3) {
-        segment = (rawData[i] << 16) + (rawData[i + 1] << 8) + rawData[i + 2];
-        output += table[segment >> 12];
-        output += table[segment & 0xfff];
-    }
-    if (numBytes - i === 2) {
-        segment = (rawData[i] << 16) + (rawData[i + 1] << 8);
-        output += table[segment >> 12];
-        output += b64_6bit[(segment & 0xfff) >> 6];
-        output += '=';
-    } else if (numBytes - i === 1) {
-        segment = (rawData[i] << 16);
-        output += table[segment >> 12];
-        output += '==';
-    }
-    return output;
-}
-
-/**
  * 获取当前时间
  * @type {Function}
  */
-exports.getTime = Date.now || function () {
+exports.now = Date.now || function () {
     return new Date().getTime();
+};
+
+
+var lo = window.localStorage;
+
+/**
+ * 保存数据（请注意本地存储只能存储少于2.5M的数据）
+ * @param key 项目名称
+ * @param item 数据项目
+ */
+function save(key, item) {
+    lo.setItem(key, JSON.stringify({
+        content: item
+    }));
+}
+exports.save = save;
+
+/**
+ * 读取数据（请注意本地存储只能存储少于2.5M的数据）
+ * @param key 要获取的键
+ * @returns {*}
+ */
+function load(key) {
+    var data = lo.getItem(key);
+    if (!data) {
+        return null;
+    }
+    return JSON.parse(data).content;
+}
+exports.load = load;
+
+/**
+ * 清理本地缓存
+ */
+exports.clear = function () {
+    lo.clear();
 };

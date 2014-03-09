@@ -108,7 +108,7 @@ module.exports = function (grunt) {
 
         content += '\n    //下边为初始化项目代码\n';
         if (config.proxy) {
-            content += '\n    core.util.setProxy(' + JSON.stringify(config.proxy) + ');\n';
+            content += '\n    core.util.ajax.setProxy(' + JSON.stringify(config.proxy) + ');\n';
         }
         if (config.native) {
             content += '    window.cordova = require("cordova");\n';
@@ -310,6 +310,7 @@ module.exports = function (grunt) {
             }
         });
         var task = [
+            "clean",
             "copy:lib-css",
             "copy:lib-js",
             "copy:source-css",

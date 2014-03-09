@@ -22,7 +22,6 @@ function Channel(type, sticky) {
     this.onHasSubscribersChange = null;
 }
 
-exports.Channel = Channel;
 
 /**
  * 将函数添加到频道
@@ -102,6 +101,8 @@ Channel.prototype.fire = function (e) {
         }
     }
 };
+
+exports.Channel = Channel;
 
 /**
  * 确保参数是函数

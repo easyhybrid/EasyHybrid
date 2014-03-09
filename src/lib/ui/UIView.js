@@ -47,7 +47,7 @@ function UIView(option) {
     UIObject.call(this);
     this._option = util.merge(util.clone(defaultOption), option);
     this._dom = dom.createDom(
-        util.formatString('<div class="absolute full-screen %s" style="z-index: %d;background: #ffffff"></div>',
+        util.format('<div class="absolute full-screen %s" style="z-index: %d;background: #ffffff"></div>',
             this._option.reverse ? ' reverse' : '',
             ++zindex)
     );//页面的基础元素

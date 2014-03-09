@@ -9,51 +9,12 @@ var proxy = null,//代理服务器
     host = null,//主域名
     util = require("./util"),
     url_tool = require("./url"),
-    protocol = {};//自定义特殊的协议，以简化书写
-
-
-/**
- * 添加代理服务器
- * @param url
- */
-function setProxy(url) {
-    proxy = url;
-}
-exports.setProxy = setProxy;
-
-/**
- * 添加主域名
- * @param h
- */
-function setHost(h) {
-    if (h[h.length] === "/") {
-        host = h.slice(1);
-    } else {
-        host = h;
-    }
-}
-exports.setHost = setHost;
-
-
-/**
- * 添加特殊的协议
- * @note 如定义baidu = http://www.baidu.com，则baidu://a/b为会替换为http://www.baidu.com/a/b
- * @param type {string|*} 类型
- * @param [target]
- */
-exports.setProtocol = function (type, target) {
-    type = typeof type !== 'string' ? type : {type: target};
-    for (var x in type) {
-        if (type.hasOwnProperty(x)) {
-            if (x.indexOf(":") < 0) {
-                protocol[x.toLowerCase() + ":"] = target;
-            }
-            else {
-                protocol[x.toLowerCase()] = target;
-            }
-        }
-    }
-};
+    protocol = {},//自定义特殊的协议，以简化书写
+    xhrSuccessStatus = {
+        0: 200,
+        1223: 204
+    },
+    protocolPattern = /^([a-z0-9.+-]+:)/i;
 
 
 /**
@@ -133,7 +94,86 @@ function ajax(options) {
 
 exports.ajax = ajax;
 
-var protocolPattern = /^([a-z0-9.+-]+:)/i;
+/**
+ * 通过get请求获取数据
+ * @param url {string} 要请求的URL
+ * @param [data] {{}} 请求的数据
+ * @param [success] 成功回调
+ * @param [error] 失败回调
+ */
+exports.get = function (url, data, success, error) {
+    if (typeof data === "function") {
+        error = success;
+        success = data;
+        data = null;
+    }
+    ajax({
+        url: url,
+        data: data,
+        success: success,
+        error: error,
+        requestType: "xhr",
+        responseType: "text",
+        type: "GET"
+    });
+};
+
+/**
+ * 通过POST方式获取数据
+ * @param url {string} 要请求的URL
+ * @param [data] {{}} 请求的数据（请注意此方式可以添加FormData类型数据）
+ * @param [success] 成功回调
+ * @param [error] 失败回调
+ */
+exports.post = function (url, data, success, error) {
+    ajax({
+        url: url,
+        data: data,
+        success: success,
+        error: error,
+        requestType: "xhr",
+        responseType: "text",
+        type: "POST"
+    });
+};
+
+/**
+ * 获取文件
+ * @param url {string} 要请求的URL
+ * @param [data] {{}} 请求的数据
+ * @param [success] 成功回调
+ * @param [error] 失败回调
+ */
+exports.getFile = function (url, data, success, error) {
+    ajax({
+        url: url,
+        data: data,
+        success: success,
+        error: error,
+        requestType: "blob",
+        responseType: "array",
+        type: "GET"
+    });
+};
+
+/**
+ * 通过jsomp方式获取数据
+ * @param url
+ * @param data
+ * @param success
+ * @param error
+ */
+exports.jsonp = function (url, data, success, error) {
+    ajax({
+        url: url,
+        data: data,
+        success: success,
+        error: error,
+        requestType: "jsonp",
+        responseType: "array",
+        type: "GET"
+    });
+};
 
 /**
  * 对option进行处理，并返回适当的访问连接和host
@@ -191,12 +231,12 @@ function reformat_option(option) {
     return roption;
 }
 
-//以下代码为处理xhr请求
-var xhrSuccessStatus = {
-    0: 200,
-    1223: 204
-};
 
+/**
+ * xhr请求
+ * @param options
+ * @param complete
+ */
 function xhr_request(options, complete) {
     var xhr = null;
     var headers = options.headers;
@@ -242,6 +282,11 @@ function xhr_request(options, complete) {
     }
 }
 
+/**
+ * jsonp请求
+ * @param options
+ * @param complete
+ */
 function script_request(options, complete) {
     var script = document.createElement("script");
     script.src = options.url;
@@ -272,3 +317,43 @@ function script_request(options, complete) {
     };
     document.head.appendChild(script);
 }
+
+/**
+ * 添加代理服务器
+ * @param url
+ */
+ajax.setProxy = function (url) {
+    proxy = url;
+};
+
+/**
+ * 添加主域名
+ * @param h
+ */
+ajax.setHost = function (h) {
+    if (h[h.length] === "/") {
+        host = h.slice(1);
+    } else {
+        host = h;
+    }
+};
+
+/**
+ * 添加特殊的协议
+ * @note 如定义baidu = http://www.baidu.com，则baidu://a/b为会替换为http://www.baidu.com/a/b
+ * @param type {string|*} 类型
+ * @param [target]
+ */
+ajax.setProtocol = function (type, target) {
+    type = typeof type !== 'string' ? type : {type: target};
+    for (var x in type) {
+        if (type.hasOwnProperty(x)) {
+            if (x.indexOf(":") < 0) {
+                protocol[x.toLowerCase() + ":"] = target;
+            }
+            else {
+                protocol[x.toLowerCase()] = target;
+            }
+        }
+    }
+};

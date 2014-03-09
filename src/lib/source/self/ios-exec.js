@@ -1,6 +1,5 @@
 define("cordova/exec", function (require, exports, module) {
     var cordova = require('cordova'),//引入cordova类
-        utils = require('hybrid/util/util'),//引入工具函数类
         bridge = require("hybrid/plugin/cordova-base"),//引入原生桥类
         jsToNativeModes = {
             IFRAME_NAV: 0,
@@ -48,15 +47,15 @@ define("cordova/exec", function (require, exports, module) {
     }
 
     function massageArgsJsToNative(args) {
-        if (!args || utils.typeName(args) != 'Array') {
+        if (!args || Object.prototype.toString.call(args).slice(8, -1) !== 'Array') {
             return args;
         }
         var ret = [];
         args.forEach(function (arg) {
-            if (utils.typeName(arg) == 'ArrayBuffer') {
+            if (Object.prototype.toString.call(args).slice(8, -1) === 'ArrayBuffer') {
                 ret.push({
                     'CDVType': 'ArrayBuffer',
-                    'data': utils.fromArrayBuffer(arg)
+                    'data': btoa(String.fromCharCode.apply(null, arg))
                 });
             } else {
                 ret.push(arg);

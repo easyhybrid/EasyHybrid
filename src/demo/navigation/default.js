@@ -18,7 +18,7 @@ module.exports = function (core) {
         var item = items[i];
         var state = new UIStateItem(
             "active",
-            util.formatString('<div class="ui-nav-default-item"><a class="%s">%s</a></div>', item.style, item.text),
+            util.format('<div class="ui-nav-default-item"><a class="%s">%s</a></div>', item.style, item.text),
             item,
             false
         );

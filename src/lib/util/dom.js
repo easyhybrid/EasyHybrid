@@ -113,62 +113,35 @@ function removeClass(dom, classname) {
 }
 exports.removeClass = removeClass;
 
-/**
- * 获取或者设置element.style
- * @param dom
- * @param style
- * @param value
- */
-function css(dom, style, value) {
-    if (!util.isArray(dom)) {
-        dom = [dom];
-    }
-    for (var i = 0; i < dom.length; i++) {
+var _elementStyle = document.createElement('div').style,
+    _vendor = (function () {
+        var vendors = ['t', 'webkitT', 'MozT', 'msT', 'OT'],
+            transform,
+            i = 0,
+            l = vendors.length;
 
-    }
-}
+        for (; i < l; i++) {
+            transform = vendors[i] + 'ransform';
+            if (transform in _elementStyle) {
+                return vendors[i].substr(0, vendors[i].length - 1);
+            }
+        }
 
-function _style() {
-
-}
-
-function _css() {
-
-}
-
-var rmsPrefix = /^-ms-/,
-    rdashAlpha = /-([\da-z])/gi,
-    fcamelCase = function (all, letter) {
-        return letter.toUpperCase();
-    };
-
-function _camelCase(str) {
-    return str.replace(rmsPrefix, "ms-").replace(rdashAlpha, fcamelCase);
-}
-
-
-exports.css = css;
-
+        return false;
+    })();
 
 /**
- * 计算元素在window中的偏移位置
- * @param el
- * @returns {{left: number, top: number}}
+ * 根据平台获取平台对应的CSS字符串
+ * @param style {string} 样式
+ * @returns {*}
  */
-function offset(el) {
-    var left = -el.offsetLeft,
-        top = -el.offsetTop;
-
-    // jshint -W084
-    while (el = el.offsetParent) {
-        left -= el.offsetLeft;
-        top -= el.offsetTop;
+exports.prefixStyle = function (style) {
+    if (_vendor === false) {
+        return false;
     }
-    // jshint +W084
+    if (_vendor === '') {
+        return style;
+    }
+    return _vendor + style.charAt(0).toUpperCase() + style.substr(1);
+};
 
-    return {
-        left: left,
-        top: top
-    };
-}
-exports.offset = offset;

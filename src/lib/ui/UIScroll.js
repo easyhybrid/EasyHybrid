@@ -39,7 +39,7 @@ function UIScroll(style, event, type, move) {
     if (type === "vertical" || type === "both") {
         this._vertical = true;
     }
-    this._dom = this.wrapper = dom.createDom(util.formatString('<div class="%s" style="position: relative;"></div>', style || ""));
+    this._dom = this.wrapper = dom.createDom(util.format('<div class="%s" style="position: relative;"></div>', style || ""));
     this.freeScroll = !event && os.nativeTouchScroll;
     this.emitEvent = event;
     this.emitMove = event && move;
