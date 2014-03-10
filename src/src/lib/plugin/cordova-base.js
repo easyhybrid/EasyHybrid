@@ -8,7 +8,7 @@
 
 
 var util = require("../util/util"),//工具类
-    EventEmitter = require("../util/EventEmitter").EventEmitter,//事件发生器
+    EventEmitter = require("../util/event").EventEmitter,//事件发生器
     native = null,//原生代码桥
     proxy = {},//代理列表
     events = new EventEmitter();//事件列表

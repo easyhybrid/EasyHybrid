@@ -6,7 +6,7 @@
  */
 var util = require("../util/util");
 var dom = require("../util/dom");
-var EventEmitter = require("../util/EventEmitter").EventEmitter;
+var EventEmitter = require("../util/event").EventEmitter;
 
 /**
  * UI对象基类
@@ -96,7 +96,7 @@ UIObject.prototype.remove = function (ele) {
         this._children.splice(index, 1);
     }
     ele._parent = null;
-    ele._dom.parent.removeChild(ele._dom);
+    ele._dom.parentNode.removeChild(ele._dom);
 };
 
 /**
