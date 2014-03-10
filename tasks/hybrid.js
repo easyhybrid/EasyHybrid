@@ -108,7 +108,7 @@ module.exports = function (grunt) {
 
         content += '\n    //下边为初始化项目代码\n';
         if (config.proxy) {
-            content += '\n    window.devProxy = "http://' + config.proxy.host + ":" + config.proxy.port + '";\n';
+            content += '\n    window.devProxy = "http://' + config.proxy.server + ":" + config.proxy.port + '";\n';
         }
         if (config.native) {
             content += '    window.cordova = require("cordova");\n';
