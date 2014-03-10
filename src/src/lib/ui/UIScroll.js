@@ -7,14 +7,15 @@
 
 var util = require("../util/util"),
     dom = require("../util/dom"),
-    os = require("../util/os"),
     UIObject = require('./UIObject').UIObject,
     _transform = dom.prefixStyle('transform'),
     _transition = {
         transitionTimingFunction: dom.prefixStyle('transitionTimingFunction'),
         transitionDuration: dom.prefixStyle('transitionDuration'),
         transitionDelay: dom.prefixStyle('transitionDelay')
-    };
+    },
+    nativeTouchScroll = document.createElement("div").style["-webkit-overflow-scrolling"] !== undefined
+        && (navigator.userAgent.match(/(iPad).*OS\s([\d_]+)/) || navigator.userAgent.match(/(iPhone\sOS)\s([\d_]+)/));
 
 /**
  * @constructor
@@ -41,7 +42,7 @@ function UIScroll(html, style, event, type, move) {
         this._vertical = true;
     }
     this._dom = this.wrapper = dom.createDom(util.format('<div class="%s" style="position: relative;overflow: hidden;"></div>', style || ""));
-    this.freeScroll = !event && os.os.nativeTouchScroll;
+    this.freeScroll = !event && nativeTouchScroll;
     this.emitEvent = event;
     this.emitMove = event && move;
     if (this.freeScroll) {
