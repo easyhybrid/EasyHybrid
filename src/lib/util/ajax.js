@@ -1528,9 +1528,14 @@ function ajax(url, data, success, error, options) {
         error(xhr.status || 404, xhr.statusText || "请求的文件不存在！");
     };
     try {
-        xhr.send(data || null);
+        if (data instanceof FormData) {
+            xhr.send(data);
+        }
+        else {
+            xhr.send(encode(data) || null);
+        }
     } catch (e) {
-        error(xhr.status || 404, xhr.statusText);
+        error(xhr.status || 404, xhr.statusText || "发送数据错误");
     }
 }
 exports.ajax = ajax;
