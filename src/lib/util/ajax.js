@@ -1525,7 +1525,7 @@ function ajax(url, data, success, error, options) {
         };
     }
     xhr.onerror = function () {
-        error(xhr.status || 404, xhr.statusText);
+        error(xhr.status || 404, xhr.statusText || "请求的文件不存在！");
     };
     try {
         xhr.send(data || null);
