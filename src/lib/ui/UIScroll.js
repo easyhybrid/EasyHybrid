@@ -120,7 +120,7 @@ UIScroll.prototype.remove = function () {
 UIScroll.prototype.scrollTo = function (x, y, time) {
     this.isInTransition = time > 0;
     time = time || 0;
-    this.scroller.style[_transition.transitionDuration] = (time || 0) + 'ms';
+    this.scroller.style[_transition.transitionDuration] = time + 'ms';
     this._translate(x, y);
 };
 
