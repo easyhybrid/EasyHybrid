@@ -1444,7 +1444,7 @@ function ajax(url, data, success, error, options) {
         util.merge(url.query, data || {});
         data = null;
     }
-    url = parse(url);
+    url = format(url);
     var async = options.async || true;
     var username = options.username || null;
     var password = options.password || null;
