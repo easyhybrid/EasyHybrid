@@ -1507,6 +1507,10 @@ function ajax(url, data, success, error, options) {
                 responseHeaders[ key ] = value;
             }
         }
+        if (status !== 200) {
+            error(xhr.status || 404, xhr.statusText || "请求的文件不存在！");
+            return;
+        }
         if (responseType === "buffer") {
             success(xhr.response, status, msg, responseHeaders);
         } else if (responseType === "json" && xhr.responseText) {
