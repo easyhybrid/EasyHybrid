@@ -31,6 +31,7 @@ module.exports = function (grunt) {
                 next();
                 return;
             }
+            req.url = host;
             delete req.headers["x-forwarded-for"];
             proxy.web(req, res, {
                 target: host,
