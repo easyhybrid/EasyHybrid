@@ -19,14 +19,15 @@ module.exports = function (core, data, cb) {
         children: [
             '<div class="ui-header"><div class="ui-header-title">框架介绍</div></div>',
             {
-                args:'ui-content',
-                children:[
-                    {
-                        type: core.ui.UIScroll,
-                        args: [tpl.render(), "ui-content"],
-                        event: {}
-                    }
-                ]
+                args: 'ui-content',
+                children: {
+                    type: core.ui.UIScroll,
+                    args: {
+                        html: tpl.render(),
+                        style: "ui-content"
+                    },
+                    event: {}
+                }
             }
         ]
     });

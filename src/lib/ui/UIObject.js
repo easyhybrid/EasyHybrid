@@ -10,12 +10,18 @@ var EventEmitter = require("../util/event").EventEmitter;
 
 /**
  * UI对象基类
+ * @param options 配置参数
  * @constructor
  */
-function UIObject(str) {
+function UIObject(options) {
+    if (typeof options !== "object") {
+        options = {
+            html: options
+        };
+    }
+    options = options || {};
     EventEmitter.call(this);
-    this._dom = dom.createDom(str) || null;
-    this._parent = null;
+    this._dom = dom.createDom(options.html) || null;
     this._children = [];
     this._eventCache = [];
 }
@@ -24,16 +30,11 @@ util.inherits(UIObject, EventEmitter);
 
 /**
  * 挂接对象到dom树
- * @param parentObject  父对象
+ * @param parent {Node}
  */
-UIObject.prototype.attach = function (parentObject) {
+UIObject.prototype.attach = function (parent) {
     var me = this;
-    var parent = dom.find(parentObject);
-
-    if (parentObject instanceof UIObject) {
-        parentObject.append(me);
-    }
-
+    parent = dom.find(parent);
     for (var i = 0; i < parent.length; i++) {
         parent[i].appendChild(me._dom);
     }
@@ -43,39 +44,20 @@ UIObject.prototype.attach = function (parentObject) {
  * 将对象从dom树上移除
  */
 UIObject.prototype.detach = function () {
-    var me = this;
-    if (me._parent) {
-        me._parent.remove(me);
-        return;
-    }
     if (this._dom && this._dom.parentNode) {
         this._dom.parentNode.removeChild(this._dom);
     }
 };
 
 /**
- * 在本对象中追加元素（可以对DOM元素进行追加，但是无法使用remove函数对追加的元素进行移除）
+ * 在本对象中追加元素
  * @param ele 要追加的元素
  */
 UIObject.prototype.append = function (ele) {
-    if (typeof ele === "string") {
-        ele = dom.createDom(ele);
-    }
-    if (!this._dom) {
-        this._dom = dom.createDom("<div></div>");
-    }
-    if (!(ele instanceof UIObject)) {
-        if (!util.isArray(ele)) {
-            ele = [ele];
-        }
-        for (var i = 0; i < ele.length; i++) {
-            this._dom.appendChild(ele[i]);
-        }
-        return;
-    }
     this._children.push(ele);
-    ele._parent = this;
-    this._dom.appendChild(ele._dom);
+    if (ele._dom) {
+        this._dom.appendChild(ele._dom);
+    }
 };
 
 /**
@@ -95,7 +77,6 @@ UIObject.prototype.remove = function (ele) {
     if (index >= 0) {
         this._children.splice(index, 1);
     }
-    ele._parent = null;
     ele._dom.parentNode.removeChild(ele._dom);
 };
 
@@ -175,12 +156,16 @@ UIObject.prototype.emitAll = emitAll;
  * @param isSelf
  */
 UIObject.prototype.destroy = function (isSelf) {
+    if (!this._eventCache) {
+        return;
+    }
     this.emit('destroy');
     for (var i = 0; i < this._children.length; i++) {
         this._children[i].destroy(false);
     }
     this._children = null;
     this.removeAllListeners();
+    this._events = null;
     var item;
     for (i = 0; i < this._eventCache.length; i++) {
         item = this._eventCache[i];
@@ -190,7 +175,6 @@ UIObject.prototype.destroy = function (isSelf) {
     if (isSelf && this._parent) {
         this._parent.remove(this);
     }
-    this._parent = null;
     if (isSelf && this._dom) {
         var garbageBin = document.getElementById('IELeakGarbageBin');
         if (!garbageBin) {
@@ -216,26 +200,22 @@ function create(obj) {
         if (obj.charAt(0) !== "<") {
             obj = '<div class="' + obj + '"></div> ';
         }
-        return new UIObject(obj);
+        return new UIObject({html: obj});
     }
     var result = null;
     var UIType = obj.type || UIObject;
     if (UIType === UIObject) {
-        var content = obj.args || "";
-        if (content.charAt(0) !== "<") {
-            content = '<div class="' + content + '"></div>';
+        var content = obj.args;
+        if (typeof content === "string") {
+            content = content || "";
+            if (content.charAt(0) !== "<") {
+                content = '<div class="' + content + '"></div>';
+            }
+            content = {html: content};
         }
         result = new UIObject(content);
     } else {
-        var F = function () {
-        };
-        F.prototype = UIType.prototype;
-        result = new F();
-        var args = obj.args;
-        if (!util.isArray(args)) {
-            args = [args];
-        }
-        UIType.apply(result, args);
+        result = new UIType(obj.args);
     }
     if (obj.event) {
         for (var x in obj.event) {
@@ -257,7 +237,7 @@ function create(obj) {
         children = [children];
     }
     for (var i = 0; i < children.length; i++) {
-        result.append(create(obj.children[i]));
+        result.append(create(children[i]));
     }
     return result;
 }

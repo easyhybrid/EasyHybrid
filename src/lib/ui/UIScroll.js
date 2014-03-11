@@ -22,17 +22,15 @@ var util = require("../util/util"),
  */
 /**
  * 内部元素可以自由移动的UIObject类
- * @param [html] innerHTML
- * @param [style] 添加在wrapper上的样式
- * @param [event] 是否触发滚动事件，为free时，将会忽略元素的准确位置
- * @param [type] 滚动类型
- * @param [move] 是否触发
+ * @param options 配置参数
  * move事件
  * @constructor
  */
-function UIScroll(html, style, event, type, move) {
+function UIScroll(options) {
     UIObject.call(this);
-    type = type || "vertical";
+    var event = options.event;
+    var html = options.html;
+    var type = options.type || "vertical";
     this._horizontal = false;
     this._vertical = false;
     if (type === "horizontal" || type === "both") {
@@ -41,10 +39,10 @@ function UIScroll(html, style, event, type, move) {
     if (type === "vertical" || type === "both") {
         this._vertical = true;
     }
-    this._dom = this.wrapper = dom.createDom(util.format('<div class="%s" style="position: relative;overflow: hidden;"></div>', style || ""));
+    this._dom = this.wrapper = dom.createDom(util.format('<div class="%s" style="position: relative;overflow: hidden;"></div>', options.style || ""));
     this.freeScroll = !event && nativeTouchScroll;
     this.emitEvent = event;
-    this.emitMove = event && move;
+    this.emitMove = event && options.move;
     if (this.freeScroll) {
         this.wrapper.style.overflowY = this._horizontal ? "scroll" : "hidden";
         this.wrapper.style.overflowX = this._vertical ? "scroll" : "hidden";
@@ -161,6 +159,9 @@ UIScroll.prototype.handleEvent = function (e) {
             break;
         case 'touchend':
             this._end(e);
+            break;
+        case 'resize':
+            this.refresh(e);
             break;
         case 'transitionend':
         case 'webkitTransitionEnd':
@@ -302,6 +303,7 @@ UIScroll.prototype._translate = function (x, y) {
     this.x = x;
     this.y = y;
 };
+
 
 exports.UIScroll = UIScroll;
 

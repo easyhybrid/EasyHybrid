@@ -168,6 +168,9 @@ function active(navName, itemName) {
             }
         }
     }
+    if (navName === "hide") {
+        return;
+    }
     if (!(navName in nav)) {
         console.log("所加载的导航条项目不存在");
         return;

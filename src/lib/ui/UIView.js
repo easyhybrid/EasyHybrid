@@ -44,6 +44,7 @@ var util = require("../util/util"),//引入工具类
  * @constructor
  */
 function UIView(option) {
+    option = option || {};
     UIObject.call(this);
     this._option = util.merge(util.clone(defaultOption), option);
     this._dom = dom.createDom(
