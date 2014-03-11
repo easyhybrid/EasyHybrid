@@ -204,17 +204,26 @@ module.exports = function (grunt) {
                     ]
                 },
                 "source-css": {
-                    files: fs.readdirSync(config.src).filter(function (item) {
-                        return grunt.file.isDir(process.cwd(), config.src, item);
-                    }).map(function (item) {
-                        return {
+                    files: [
+                        {
                             expand: true,
-                            cwd: config.src + item + "/css/",
-                            src: ["**"],
+                            flatten: true,
+                            cwd: config.src,
+                            src: ["**/*.css"],
                             dest: ".tmp/css/",
                             filter: config.filter.source
-                        };
-                    })
+
+                        },
+                        {
+                            expand: true,
+                            flatten: true,
+                            cwd: config.src,
+                            src: ["**/img/*.*"],
+                            dest: ".tmp/css/img/",
+                            filter: config.filter.source
+
+                        }
+                    ]
                 },
                 "source-js": {
                     files: [
