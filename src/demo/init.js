@@ -13,6 +13,5 @@
 module.exports = function (core) {
     return function () {
         core.href("more/index");//如果没有什么特别的定制，这里可以只是单独的导航到某一个功能
-        core.getNavigation("default").show();
     };
 };

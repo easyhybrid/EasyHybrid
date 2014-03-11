@@ -16,6 +16,12 @@ module.exports = {
             view: "introduce/index"
         },
         {
+            name: "ui",
+            style: "ui-nav-default-ui",
+            text: "架构",
+            view: "ui/index"
+        },
+        {
             name: "util",
             style: "ui-nav-default-util",
             text: "工具",
@@ -30,7 +36,7 @@ module.exports = {
         {
             name: "more",
             style: "ui-nav-default-more",
-            text: "更多",
+            text: "扩展",
             view: "more/index"
         }
     ]

@@ -1,3 +1,11 @@
+/**
+ * Created by 赤菁风铃 on 14-3-1.
+ * @author 清月_荷雾(441984145@qq.com)
+ *         赤菁风铃(liuxuanzy@qq.com)
+ * @note 修复PC端浏览器不支持触摸事件的问题
+ */
+
+
 var cancelClickMove = false;
 var preventAll = function (e) {
     e.preventDefault();

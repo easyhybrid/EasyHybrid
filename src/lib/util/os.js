@@ -6,29 +6,27 @@
  */
 
 var userAgent = window.navigator.userAgent;
-
+var os = {};
 /**
  * 根据userAgent获取系统信息
  */
-var os = {
-    webkit: userAgent.match(/WebKit\/([\d.]+)/) ? true : false,
-    android: userAgent.match(/(Android)\s+([\d.]+)/) || userAgent.match(/Silk-Accelerated/) ? true : false,
-    androidICS: this.android && userAgent.match(/(Android)\s4/) ? true : false,
-    ipad: userAgent.match(/(iPad).*OS\s([\d_]+)/) ? true : false,
-    iphone: !this.ipad && userAgent.match(/(iPhone\sOS)\s([\d_]+)/) ? true : false,
-    webos: userAgent.match(/(webOS|hpwOS)[\s\/]([\d.]+)/) ? true : false,
-    touchpad: this.webos && userAgent.match(/TouchPad/) ? true : false,
-    ios: this.ipad || this.iphone,
-    playbook: userAgent.match(/PlayBook/) ? true : false,
-    blackberry: this.playbook || userAgent.match(/BlackBerry/) ? true : false,
-    blackberry10: this.blackberry && userAgent.match(/Safari\/536/) ? true : false,
-    chrome: userAgent.match(/Chrome/) ? true : false,
-    opera: userAgent.match(/Opera/) ? true : false,
-    fennec: userAgent.match(/fennec/i) ? true : userAgent.match(/Firefox/) ? true : false,
-    ie: userAgent.match(/MSIE 10.0/i) ? true : false,
-    ieTouch: this.ie && userAgent.toLowerCase().match(/touch/i) ? true : false,
-    supportsTouch: 'ontouchstart' in window
-};
+os.webkit = userAgent.match(/WebKit\/([\d.]+)/) ? true : false;
+os.android = userAgent.match(/(Android)\s+([\d.]+)/) || userAgent.match(/Silk-Accelerated/) ? true : false;
+os.androidICS = os.android && userAgent.match(/(Android)\s4/) ? true : false;
+os.ipad = userAgent.match(/(iPad).*OS\s([\d_]+)/) ? true : false;
+os.iphone = !os.ipad && userAgent.match(/(iPhone\sOS)\s([\d_]+)/) ? true : false;
+os.webos = userAgent.match(/(webOS|hpwOS)[\s\/]([\d.]+)/) ? true : false;
+os.touchpad = os.webos && userAgent.match(/TouchPad/) ? true : false;
+os.ios = os.ipad || os.iphone || false;
+os.playbook = userAgent.match(/PlayBook/) ? true : false;
+os.blackberry = os.playbook || userAgent.match(/BlackBerry/) ? true : false;
+os.blackberry10 = os.blackberry && userAgent.match(/Safari\/536/) ? true : false;
+os.chrome = userAgent.match(/Chrome/) ? true : false;
+os.opera = userAgent.match(/Opera/) ? true : false;
+os.fennec = userAgent.match(/fennec/i) ? true : userAgent.match(/Firefox/) ? true : false;
+os.ie = userAgent.match(/MSIE 10.0/i) ? true : false;
+os.ieTouch = os.ie && userAgent.toLowerCase().match(/touch/i) ? true : false;
+os.supportsTouch = 'ontouchstart' in window;
 
 //修复部分不能使用常规判断得到的属性
 var head = document.documentElement.getElementsByTagName("head")[0];
@@ -38,4 +36,4 @@ if (os.android && !os.webkit) {
     os.android = false;
 }
 
-exports.os = os;
+module.exports = os;
