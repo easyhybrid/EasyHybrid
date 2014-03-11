@@ -3,11 +3,11 @@
     border: 1px #bcbab6 solid;
     border-radius: 7px 7px;
     width: 300px;
-    margin: 15px auto 0;
+    margin: 0 auto 15px;
 }
 
 .more-line {
-    height: 0px;
+    height: 0;
     border-bottom: 1px #bcbab6 solid;
     width: 100%;
 }

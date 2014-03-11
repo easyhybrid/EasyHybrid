@@ -28,8 +28,7 @@ module.exports = function (core, data, cb) {
     var head = new UIObject('<div class="ui-header"></div>');
     head.append(new UIObject(util.format('<div class="ui-header-title">%s</div>', "更多")));
     view.append(head);
-    var content = new UIObject("<div class='ui-content'></div>");
-    content.append(new UIScroll(tpl.render(), "full-screen"));
+    var content = new UIScroll(tpl.render(), "ui-content");
     view.append(content);
     cb(view);
 };

@@ -205,4 +205,63 @@ UIObject.prototype.destroy = function (isSelf) {
     }
 };
 
+function create(obj) {
+    if (!obj) {
+        return new UIObject();
+    }
+    if (obj instanceof UIObject) {
+        return obj;
+    }
+    if (typeof obj === "string") {
+        if (obj.charAt(0) !== "<") {
+            obj = '<div class="' + obj + '"></div> ';
+        }
+        return new UIObject(obj);
+    }
+    var result = null;
+    var UIType = obj.type || UIObject;
+    if (UIType === UIObject) {
+        var content = obj.args || "";
+        if (content.charAt(0) !== "<") {
+            content = '<div class="' + content + '"></div>';
+        }
+        result = new UIObject(content);
+    } else {
+        var F = function () {
+        };
+        F.prototype = UIType.prototype;
+        result = new F();
+        var args = obj.args;
+        if (!util.isArray(args)) {
+            args = [args];
+        }
+        UIType.apply(result, args);
+    }
+    if (obj.event) {
+        for (var x in obj.event) {
+            if (obj.event.hasOwnProperty(x)) {
+                var item = obj.event[x];
+                if (typeof item === "function") {
+                    result.on(x, item);
+                } else {
+                    result.bind(item.target, item.type, item.listener);
+                }
+            }
+        }
+    }
+    if (!obj.children) {
+        return result;
+    }
+    var children = obj.children;
+    if (!util.isArray(children)) {
+        children = [children];
+    }
+    for (var i = 0; i < children.length; i++) {
+        result.append(create(obj.children[i]));
+    }
+    return result;
+}
+
+UIObject.create = create;
+
 exports.UIObject = UIObject;
