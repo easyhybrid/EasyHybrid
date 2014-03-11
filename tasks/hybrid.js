@@ -464,6 +464,7 @@ module.exports = function (grunt) {
             }
         });
         var task = [
+            "clean",
             "copy:lib-css",
             "copy:lib-js",
             "copy:source-css",
