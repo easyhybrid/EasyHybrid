@@ -9,7 +9,7 @@ module.exports = function (grunt) {
     //入口函数，使用connect新建一个server 可以用来在开发时对远程数据进行请求
     grunt.task.registerMultiTask("proxy-server", "an javascript proxy server by connect", function () {
         var port = this.data.port;//监听的端口
-        var server = this.data.server || "localhost";//监听的端口
+        var server = this.data.server;//监听的端口
         var project = this.target;//项目名称
         //请求的使用的代理服务器
         var proxy = httpProxy.createProxyServer({
