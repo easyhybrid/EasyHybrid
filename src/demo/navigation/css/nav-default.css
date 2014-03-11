@@ -17,10 +17,15 @@
     display: inline-block;
     height: 50px;
     width: 64px;
-    color: #49AAEE;
+    color: #fff;
     background-image: url(img/icon.png);
     background-repeat: no-repeat;
     line-height: 80px;
+}
+
+.active.ui-nav-default-item a {
+    color: #49AAEE;
+
 }
 
 .ui-nav-default-introduce {
