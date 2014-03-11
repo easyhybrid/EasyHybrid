@@ -28,7 +28,7 @@ module.exports = function (grunt) {
                 develop: {//调试配置信息，如果没有此参数或者值相当于false，都认为是不生成开发版本
                     enable: true,
                     proxy: {//开发代理信息，如果没有此参数或者值相当于false，都认为是不生成代理
-                        server: "192.168.137.1",//server名称，一般是localhost，如果需要通过反向代理部署调试版本可修改此参数
+                        server: "localhost",//server名称，一般是localhost，如果需要通过反向代理部署调试版本可修改此参数
                         port: 3000//用于监听的端口，如果build/demo/dev中存在访问的文件，则会返回对应的文件，否则使用代理获取远程数据（除非必要，请不要使用代理下载文件）
                     }//跨域请求代理，仅供开发时使用请注意端口与
                 },
@@ -56,7 +56,7 @@ module.exports = function (grunt) {
         },
         "proxy-server": {
             demo: {
-                server: "192.168.137.1",//server名称，一般是localhost，如果需要通过反向代理部署调试版本可修改此参数
+                server: "localhost",//server名称，一般是localhost，如果需要通过反向代理部署调试版本可修改此参数
                 port: 3000//用于监听的端口，如果build/demo/dev中存在访问的文件，则会返回对应的文件，否则使用代理获取远程数据（除非必要，请不要使用代理下载文件）
             }
         }
