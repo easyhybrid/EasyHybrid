@@ -11,49 +11,51 @@ var util = require("../util/util"),//引入工具类
 
 /**
  * 导航项目
- * @param style 激活时添加的样式
- * @param html 内部的html
- * @param data 数据
- * @param [disabled] 当按钮处于passive状态时，是否触发点击事件
+ * @param options
  * @constructor
  */
-function UIStateItem(style, html, data, disabled) {
-    UIObject.call(this);
+function UIButton(options) {
+    UIObject.call(this, options);
     var me = this;
-    if (data === false || data === true) {
-        disabled = data;
-        data = {};
-    }
-    me._disabled = disabled;
+    me._data = options.data === undefined ? {} : options.data;//数据
+    me._disabled = options.disabled || false;//当按钮处于passive状态时，是否触发点击事件
     me._active = false;
-    me._style = style;
-    me._dom = dom.createDom(html);//页面的基础元素
+    me._style = options.style || "active";//激活时添加的样式
     me.bind(me._dom, "click", function () {
         if (me._disabled && !me._active) {
             return false;
         }
-        me.emit("click", me._dom, data);
+        me.emit("click", me._data);
+        return true;
+    });
+    me.bind(me._dom, "tap", function () {
+        if (me._disabled && !me._active) {
+            return false;
+        }
+        me.emit("tap", me._data);
         return true;
     });
 }
 
-util.inherits(UIStateItem, UIObject);
+util.inherits(UIButton, UIObject);
 
 /**
  * 隐藏导航条
  */
-UIStateItem.prototype.active = function () {
+UIButton.prototype.active = function () {
     this._active = true;
+    this.emit("change", this._data, true);
     dom.addClass(this._dom, this._style);
 };
 
 /**
  * 显示导航条
  */
-UIStateItem.prototype.passive = function () {
+UIButton.prototype.passive = function () {
     this._active = false;
+    this.emit("change", this._data, false);
     dom.removeClass(this._dom, this._style);
 };
 
 
-exports.UIStateItem = UIStateItem;
+exports.UIButton = UIButton;

@@ -113,6 +113,22 @@ function removeClass(dom, classname) {
 }
 exports.removeClass = removeClass;
 
+function offset(el) {
+    var left = -el.offsetLeft,
+        top = -el.offsetTop;
+
+    while (el = el.offsetParent) {
+        left -= el.offsetLeft;
+        top -= el.offsetTop;
+    }
+    return {
+        left: left,
+        top: top
+    };
+}
+
+exports.offset = offset;
+
 var _elementStyle = document.createElement('div').style,
     _vendor = (function () {
         var vendors = ['t', 'webkitT', 'MozT', 'msT', 'OT'],

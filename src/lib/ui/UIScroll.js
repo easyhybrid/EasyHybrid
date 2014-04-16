@@ -28,6 +28,11 @@ var util = require("../util/util"),
  */
 function UIScroll(options) {
     UIObject.call(this);
+    if (typeof options === "string") {
+        options = {
+            style: options
+        };
+    }
     var event = options.event;
     var html = options.html;
     var type = options.type || "vertical";
@@ -39,7 +44,7 @@ function UIScroll(options) {
     if (type === "vertical" || type === "both") {
         this._vertical = true;
     }
-    this._dom = this.wrapper = dom.createDom(util.format('<div class="%s" style="position: relative;overflow: hidden;"></div>', options.style || ""));
+    this._dom = this.wrapper = dom.createDom(util.format('<div class="%s" style="overflow: hidden;"></div>', options.style || ""));
     this.freeScroll = !event && nativeTouchScroll;
     this.emitEvent = event;
     this.emitMove = event && options.move;
@@ -52,7 +57,7 @@ function UIScroll(options) {
         }
         return;
     }
-    this.scroller = dom.createDom(util.format('<div class="absolute" style="width: 100%;padding: %s 0;"></div>', this._vertical ? "10px" : "0"));
+    this.scroller = dom.createDom('<div class="absolute" style="width: 100%;"></div>');
     this.wrapper.appendChild(this.scroller);
     if (html) {
         this.scroller.innerHTML = html || "";
@@ -62,6 +67,10 @@ function UIScroll(options) {
     this._inited = false;
     var me = this;
     me.once("load", function () {
+        var styles = window.getComputedStyle(me.wrapper, null);
+        if (styles.position !== "absolute") {
+            me.wrapper.style.position = "relative";
+        }
         me.scroller.style[_transition.transitionTimingFunction] = "cubic-bezier(0.1, 0.57, 0.1, 1)";
         me.bind(me.wrapper, "touchstart", me);
         me.bind(me.wrapper, "touchmove", me);
@@ -93,6 +102,24 @@ UIScroll.prototype.append = function () {
     }
 };
 
+
+/**
+ * 重写向前追加元素类
+ */
+UIScroll.prototype.prepend = function () {
+    if (this.freeScroll) {
+        UIObject.prototype.prepend.apply(this, arguments);
+    } else {
+        this._dom = this.scroller;
+        UIObject.prototype.prepend.apply(this, arguments);
+        if (this._inited) {
+            this.refresh();
+        }
+        this._dom = this.wrapper;
+    }
+};
+
+
 /**
  * 重写删除元素类
  */
@@ -109,8 +136,15 @@ UIScroll.prototype.remove = function () {
     }
 };
 
+UIScroll.prototype.clear = function () {
+    UIObject.prototype.clear.call(this);
+    if (!this.freeScroll && this._inited) {
+        this.refresh();
+    }
+};
+
 /**
- * 滚动到制定位置
+ * 滚动到指定元素
  * @param x 开始位置
  * @param y 结束位置
  * @param time 时间
@@ -120,6 +154,30 @@ UIScroll.prototype.scrollTo = function (x, y, time) {
     time = time || 0;
     this.scroller.style[_transition.transitionDuration] = time + 'ms';
     this._translate(x, y);
+};
+
+/**
+ * 滚动到指定元素
+ * @param ele UIObject或者dom
+ * @param time 滚动时间
+ */
+UIScroll.prototype.scrollToElement = function (ele, time) {
+    if (ele instanceof  UIObject) {
+        ele = ele._dom;
+    } else {
+        ele = dom.find(ele, this.scroller)[0];
+    }
+    if (!ele) {
+        return;
+    }
+    var pos = dom.offset(ele);
+    var wap = dom.offset(this.wrapper);
+    pos.left -= wap.left;
+    pos.top -= wap.top;
+    pos.left = pos.left > 0 || this.maxScrollX > 0 ? 0 : pos.left < this.maxScrollX ? this.maxScrollX : pos.left;
+    pos.top = pos.top > 0 || this.maxScrollY > 0 ? 0 : pos.top < this.maxScrollY ? this.maxScrollY : pos.top;
+    time = time === undefined || time === null || time === 'auto' ? Math.max(Math.abs(pos.left) * 2, Math.abs(pos.top) * 2) : time;
+    this.scrollTo(pos.left, pos.top, time);
 };
 
 
@@ -133,8 +191,8 @@ UIScroll.prototype.refresh = function () {
     var scrollerHeight = this.scroller.offsetHeight;
     this.maxScrollX = wrapperWidth - scrollerWidth;
     this.maxScrollY = wrapperHeight - scrollerHeight;
-    this._horizontal = this._horizontal && this.maxScrollX < 0;
-    this._vertical = this._vertical && this.maxScrollY < 0;
+    this._horizontalEnd = this._horizontal && this.maxScrollX < 0;
+    this._verticalEnd = this._vertical && this.maxScrollY < 0;
     if (!this._horizontal) {
         this.maxScrollX = 0;
     }
@@ -199,18 +257,41 @@ UIScroll.prototype._resetPosition = function (time) {
     var x = this.x,
         y = this.y;
     time = time || 0;
-    if (!this._horizontal || this.x > 0) {
+    if (!this._horizontalEnd || this.x > 0) {
         x = 0;
     } else if (this.x < this.maxScrollX) {
         x = this.maxScrollX;
     }
-    if (!this._vertical || this.y > 0) {
+    if (!this._verticalEnd || this.y > 0) {
         y = 0;
     } else if (this.y < this.maxScrollY) {
         y = this.maxScrollY;
     }
     if (x === this.x && y === this.y) {
         return false;
+    }
+    if (this.emitEvent && time > 0) {
+        var self = this;
+        if (this._horizontal && this.x > 0) {
+            setTimeout(function () {
+                self.emit("left");
+            }, 10);
+        }
+        if (this._horizontal && this.x < this.maxScrollX) {
+            setTimeout(function () {
+                self.emit("right");
+            }, 10);
+        }
+        if (this._vertical && this.y > 0) {
+            setTimeout(function () {
+                self.emit("top");
+            }, 10);
+        }
+        if (this._vertical && this.y < this.maxScrollY) {
+            setTimeout(function () {
+                self.emit("bottom");
+            }, 10);
+        }
     }
     this.scrollTo(x, y, time);
     return true;
@@ -228,7 +309,7 @@ UIScroll.prototype._start = function (e) {
     this.scroller.style[_transition.transitionDuration] = '0ms';
     if (this.isInTransition) {
         this.isInTransition = false;
-        var matrix = window.getComputedStyle(dom, null),
+        var matrix = window.getComputedStyle(this.scroller, null),
             x, y;
         matrix = matrix[_transform].split(')')[0] || "";
         var matrix2 = matrix.split(', ');
@@ -239,7 +320,9 @@ UIScroll.prototype._start = function (e) {
     }
     this.pointX = point.pageX;
     this.pointY = point.pageY;
-    this.emit("start", {x: this.x, y: this.y});
+    if (this.emitEvent) {
+        this.emit("start", {x: this.x, y: this.y});
+    }
 };
 
 /**

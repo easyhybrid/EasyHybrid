@@ -9,11 +9,14 @@
 
 var util = require("../util/util"),//工具类
     EventEmitter = require("../util/event").EventEmitter,//事件发生器
-    native = null,//原生代码桥
-    proxy = {},//代理列表
-    events = new EventEmitter();//事件列表
+    native = null ,//原生代码桥
+    proxy = {};//代理列表
 
-exports.events = events;
+try {
+    native = require("cordova/exec");
+} catch (e) {
+    console.log("not found cordova support for current paltform");
+}
 
 /**
  * 通过代理来执行回调函数
@@ -27,17 +30,25 @@ function exec(success, fail, service, action, args) {
     //处理代理功能
     if (service in proxy && action in proxy[service]) {
         var func = proxy[service][action];
-        func(success, fail, args);
-        return;
+        try {
+            func(success, fail, args);
+            return;
+        } catch (e) {
+            console.log("proxy error in service:" + service);
+            if (fail) {
+                fail("proxy error in service:" + service);
+            }
+        }
     }
-
     //处理原生代码执行函数
     if (native) {
         native(success, fail, service, action, args);
         return;
     }
-    console.log("没有找到代理函数" + service + "." + action);
-    fail();
+    console.log("no proxy found for" + service + "." + action);
+    if (fail) {
+        fail("no proxy found for" + service + "." + action);
+    }
 }
 
 exports.exec = exec;
@@ -47,17 +58,8 @@ exports.exec = exec;
  * @param service 功能名
  * @param obj 功能对象
  */
-function registerProxy(service, obj) {
+function register(service, obj) {
     proxy[service] = proxy[service] || {};
     util.merge(proxy[service], obj);
 }
-exports.registerProxy = registerProxy;
-
-/**
- * 注册原生代理函数
- * @param func
- */
-function registerNative(func) {
-    native = func;
-}
-exports.registerNative = registerNative;
+exports.register = register;

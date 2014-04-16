@@ -14,14 +14,23 @@ var EventEmitter = require("../util/event").EventEmitter;
  * @constructor
  */
 function UIObject(options) {
-    if (typeof options !== "object") {
-        options = {
-            html: options
-        };
-    }
-    options = options || {};
     EventEmitter.call(this);
-    this._dom = dom.createDom(options.html) || null;
+    options = options || {
+        html: "<div></div>"
+    };
+    var html = options.html || options;
+    if (!/^ *</.test(html)) {
+        html = '<div class="' + html + '"></div>';
+    }
+    var doms = dom.createDom(html);
+    if (util.isArray(doms)) {
+        this._dom = dom.createDom("<div></div>");
+        for (var i = 0; i < doms.length; i++) {
+            this._dom.appendChild(doms[i]);
+        }
+    } else {
+        this._dom = doms || null;
+    }
     this._children = [];
     this._eventCache = [];
 }
@@ -38,6 +47,20 @@ UIObject.prototype.attach = function (parent) {
     for (var i = 0; i < parent.length; i++) {
         parent[i].appendChild(me._dom);
     }
+};
+
+/**
+ * 显示元素
+ */
+UIObject.prototype.show = function () {
+    dom.removeClass(this._dom, "hidden");
+};
+
+/**
+ * 隐藏元素
+ */
+UIObject.prototype.hide = function () {
+    dom.addClass(this._dom, "hidden");
 };
 
 /**
@@ -61,6 +84,20 @@ UIObject.prototype.append = function (ele) {
 };
 
 /**
+ * 在本对象中追加元素
+ * @param ele 要追加的元素
+ */
+UIObject.prototype.prepend = function (ele) {
+    this._children.unshift(ele);
+    if (this._dom.firstChild) {
+        this._dom.insertBefore(ele._dom, this._dom.firstChild);
+    } else {
+        this._dom.appendChild(ele._dom);
+    }
+};
+
+
+/**
  * 在本对象删除UIObject元素
  * @param ele 要删除的元素
  */
@@ -77,7 +114,26 @@ UIObject.prototype.remove = function (ele) {
     if (index >= 0) {
         this._children.splice(index, 1);
     }
-    ele._dom.parentNode.removeChild(ele._dom);
+    if (ele._dom && ele._dom.parentNode) {
+        ele._dom.parentNode.removeChild(ele._dom);
+    }
+};
+
+/**
+ * 清空内部元素
+ * @param type
+ */
+UIObject.prototype.clear = function (type) {
+    for (var i = 0; i < this._children.length; i++) {
+        var item = this._children[i];
+        if (item._dom && item._dom.parentNode) {
+            item._dom.parentNode.removeChild(item._dom);
+        }
+        if (type) {
+            item.destroy(true);
+        }
+    }
+    this._children = [];
 };
 
 /**
@@ -86,6 +142,7 @@ UIObject.prototype.remove = function (ele) {
  * @returns {*}
  */
 UIObject.prototype.find = function (selector) {
+    selector = selector || this._dom;
     return dom.find(selector, this._dom);
 };
 
@@ -102,7 +159,7 @@ UIObject.prototype.bind = function (target, type, listener) {
         target = me.find(target);
     }
     if (!target) {
-        return;
+        target = [this._dom];
     }
     for (var i = 0; i < target.length; i++) {
         item = target[i];
@@ -156,7 +213,7 @@ UIObject.prototype.emitAll = emitAll;
  * @param isSelf
  */
 UIObject.prototype.destroy = function (isSelf) {
-    if (!this._eventCache) {
+    if (!this._eventCache && !this._children && !this._dom && !this._events) {
         return;
     }
     this.emit('destroy');
@@ -172,9 +229,6 @@ UIObject.prototype.destroy = function (isSelf) {
         item.target.removeEventListener(item.target, item.listener, false);
     }
     this._eventCache = null;
-    if (isSelf && this._parent) {
-        this._parent.remove(this);
-    }
     if (isSelf && this._dom) {
         var garbageBin = document.getElementById('IELeakGarbageBin');
         if (!garbageBin) {
@@ -190,58 +244,42 @@ UIObject.prototype.destroy = function (isSelf) {
 };
 
 function create(obj) {
-    if (!obj) {
-        return new UIObject();
-    }
+    obj = obj || "<div></div>";
     if (obj instanceof UIObject) {
         return obj;
     }
     if (typeof obj === "string") {
-        if (obj.charAt(0) !== "<") {
-            obj = '<div class="' + obj + '"></div> ';
-        }
-        return new UIObject({html: obj});
+        return new UIObject(obj);
     }
-    var result = null;
     var UIType = obj.type || UIObject;
-    if (UIType === UIObject) {
-        var content = obj.args;
-        if (typeof content === "string") {
-            content = content || "";
-            if (content.charAt(0) !== "<") {
-                content = '<div class="' + content + '"></div>';
-            }
-            content = {html: content};
-        }
-        result = new UIObject(content);
-    } else {
-        result = new UIType(obj.args);
-    }
-    if (obj.event) {
-        for (var x in obj.event) {
-            if (obj.event.hasOwnProperty(x)) {
-                var item = obj.event[x];
-                if (typeof item === "function") {
-                    result.on(x, item);
-                } else {
-                    result.bind(item.target, item.type, item.listener);
-                }
-            }
+    var result = new UIType(obj.args);
+
+    for (var x in obj) {
+        if (x !== "children" && x !== "args" && x !== "type" && x !== "listeners" && obj.hasOwnProperty(x)) {
+            result.on(x, obj[x]);
         }
     }
-    if (!obj.children) {
-        return result;
+    if (obj.listeners) {
+        var listeners = obj.listeners;
+        if (!util.isArray(listeners)) {
+            listeners = [listeners];
+        }
+        for (var j = 0; j < listeners.length; j++) {
+            result.bind(listeners[j].target ? listeners[j].target : result._dom, listeners[j].type, listeners[j].listener);
+        }
     }
-    var children = obj.children;
-    if (!util.isArray(children)) {
-        children = [children];
-    }
-    for (var i = 0; i < children.length; i++) {
-        result.append(create(children[i]));
+    if (obj.children) {
+        var children = obj.children;
+        if (!util.isArray(children)) {
+            children = [children];
+        }
+        for (var i = 0; i < children.length; i++) {
+            result.append(create(children[i]));
+        }
     }
     return result;
 }
 
-UIObject.create = create;
+exports.create = create;
 
 exports.UIObject = UIObject;

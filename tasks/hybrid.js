@@ -89,13 +89,13 @@ module.exports = function (grunt) {
         content += '\n    //下边为config注册代码\n';
         content += '\n    core.config = require("hybrid/config");\n';
 
-        content += '\n    //下边为navigation注册代码\n';
+        content += '\n    //下边为widget注册代码\n';
         var list4 = grunt.file.expand({
-            cwd: src + "/navigation/"
+            cwd: src + "/widget/"
         }, "*.js");
         list4.forEach(function (item) {
             var id = item.split(".")[0];
-            content += '    core.registerNavigation("' + id + '", require("hybrid/navigation/' + item.split(".")[0] + '")(core));\n';
+            content += '    core.registerWidget("' + id + '", require("hybrid/widget/' + item.split(".")[0] + '")(core));\n';
         });
 
         content += '\n    //下边为view注册代码\n';

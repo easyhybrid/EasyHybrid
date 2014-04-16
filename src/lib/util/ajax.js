@@ -1281,7 +1281,7 @@ function parse(url) {
     result.href = format(result);
     return result;
 }
-exports.parse = parse;
+exports.parseUrl = parse;
 
 /**
  * 从更正后的url对象中
@@ -1335,7 +1335,7 @@ function format(result) {
     search = search.replace('#', '%23');
     return protocol + host + pathname + search + hash;
 }
-exports.format = format;
+exports.formatUrl = format;
 
 /**
  * 添加主域名
@@ -1348,6 +1348,7 @@ exports.host = function (h) {
         host = h;
     }
 };
+
 
 /**
  * 发起一个jsonp请求
@@ -1408,6 +1409,7 @@ function jsonp(url, data, success, error, cbname) {
 }
 exports.jsonp = jsonp;
 
+var cache = {};
 
 /**
  * 发起一个ajax请求
@@ -1423,6 +1425,14 @@ function ajax(url, data, success, error, options) {
         error = success;
         success = data;
         data = null;
+    }
+    options = options || {};
+    var cached = options.cache || false;
+    //处理数据内存缓冲（只有JSON和文本格式的数据会被缓冲）
+    var token = url + JSON.stringify(data);
+    if (cached && token in cache) {
+        success(cache[token], 304, "使用缓冲数据", {});
+        return;
     }
     url = parse(url);
     if (!url.protocol) {
@@ -1440,7 +1450,7 @@ function ajax(url, data, success, error, options) {
         delete  url.hash;
     }
     var type = (options.type || "GET").toUpperCase();
-    if (type === "GET") {
+    if (type === "GET" || type === "DELETE") {
         util.merge(url.query, data || {});
         data = null;
     }
@@ -1456,7 +1466,14 @@ function ajax(url, data, success, error, options) {
     };
     if (window.devProxy) {
         headers["X-Forwarded-For"] = url;
-        url = window.devProxy;
+        url = window.devProxy + "?id=" + util.uuid();
+    }
+    if (type === "POST" || type === "PUT") {
+        if (typeof data === "object") {
+            headers["Content-Type"] = "application/x-www-form-urlencoded; charset=UTF-8";
+        } else {
+            headers["Content-Type"] = "multipart/form-data; boundary=AaB03x";
+        }
     }
     var cookie = options.cookie;
     if (cookie) {
@@ -1515,11 +1532,17 @@ function ajax(url, data, success, error, options) {
             success(xhr.response, status, msg, responseHeaders);
         } else if (responseType === "json" && xhr.responseText) {
             success(JSON.parse(xhr.responseText), status, msg, responseHeaders);
+            if (cached) {
+                cache[token] = JSON.parse(xhr.responseText);
+            }
         } else if (responseType === "xml" && xhr.responseText) {
             var parser = new DOMParser();
             success(parser.parseFromString(xhr.responseText, "text/xml"), status, msg, responseHeaders);
         } else {
             success(xhr.responseText, status, msg, responseHeaders);
+            if (cached) {
+                cache[token] = xhr.responseText;
+            }
         }
     };
     if (timeout) {
@@ -1576,7 +1599,11 @@ exports.post = function (url, data, success, error, type) {
  * @param [target]
  */
 exports.setProtocol = function (type, target) {
-    type = typeof type !== 'string' ? type : {type: target};
+    if (typeof type === 'string') {
+        var ora = type;
+        type = {};
+        type[ora] = target;
+    }
     for (var x in type) {
         if (type.hasOwnProperty(x)) {
             if (x.indexOf(":") < 0) {
@@ -1605,34 +1632,31 @@ exports.protocol = function (url, data, success, error, options) {
         data = null;
     }
     options = options || {};
+    data = data || {};
     var rest = url.trim();
-    var flag = false;
     var proto = protocolPattern.exec(rest);
     if (proto) {
         proto = proto[0].toLowerCase();
         rest = rest.substr(proto.length + 2);
-        for (var x in protocols) {
-            if (protocols.hasOwnProperty(x) && x === proto) {
-                flag = true;
-                var result = "";
-                var target = protocols[x].url;
-                if (target[target.length - 1] === "/") {
-                    result += target.url.slice(0, -1);
-                } else {
-                    result += target.url;
-                }
-                result += "/";
-                if (rest[0] === "/") {
-                    result += rest.slice(1);
-                } else {
-                    result += rest;
-                }
-                url = result;
-                options = util.merge({}, protocols[x], true);
-                delete  options[url];
-                ajax(url, data, success, error, options);
-                return;
+        if (proto in protocols) {
+            var result = "";
+            var target = protocols[proto].url;
+            if (target[target.length - 1] === "/") {
+                result += target.slice(0, -1);
+            } else {
+                result += target;
             }
+            result += "/";
+            if (rest[0] === "/") {
+                result += rest.slice(1);
+            } else {
+                result += rest;
+            }
+            url = result;
+            data = util.merge(util.clone(data), protocols[proto].data || {});
+            options = util.merge(util.clone(options), protocols[proto].options || {}, true);
+            ajax(url, data, success, error, options);
+            return;
         }
     }
     ajax(url, data, success, error, options);

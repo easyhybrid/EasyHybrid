@@ -3,26 +3,14 @@ var require,
 
 (function () {
     var modules = {},
-    // Stack of moduleIds currently being built.
         requireStack = [],
-    // Map of module ID -> index into requireStack of modules currently being built.
-        inProgressModules = {},
-        SEPARATOR = ".";
-
+        inProgressModules = {};
 
     function build(module) {
-        var factory = module.factory,
-            localRequire = function (id) {
-                var resultantId = id;
-                //Its a relative path, so lop off the last portion and add the id (minus "./")
-                if (id.charAt(0) === ".") {
-                    resultantId = module.id.slice(0, module.id.lastIndexOf(SEPARATOR)) + SEPARATOR + id.slice(2);
-                }
-                return require(resultantId);
-            };
+        var factory = module.factory;
         module.exports = {};
         delete module.factory;
-        factory(localRequire, module.exports, module);
+        factory(require, module.exports, module);
         return module.exports;
     }
 

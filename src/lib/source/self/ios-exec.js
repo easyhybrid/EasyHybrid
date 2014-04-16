@@ -1,6 +1,6 @@
 define("cordova/exec", function (require, exports, module) {
     var cordova = require('cordova'),//引入cordova类
-        bridge = require("hybrid/plugin/cordova-base"),//引入原生桥类
+        bridge = require("hybrid/plugin/base"),//引入原生桥类
         jsToNativeModes = {
             IFRAME_NAV: 0,
             XHR_NO_PAYLOAD: 1,

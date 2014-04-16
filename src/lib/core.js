@@ -39,10 +39,12 @@ exports.ui = ui;//暴露UI相关工具
 //region 视图相关功能
 
 var view = {},//页面列表（只接受能生成UIView、UIView的子类以及与UIView有相同结构的对象的函数，给core.href和core.back函数使用）
-    nav = {},//导航条列表（只接受UINavigation、只接受UINavigation的子类以及与只接受UINavigation有相同结构的对象的数组，给core.active函数使用）
+    widget = {},//页面组件对象
     dom = require("./util/dom"),//DOM操作工具
     backStack = [],//回退栈
     current = null,//当前页面
+    zindex = 10001,
+    transformStyles = ["horizontal-in", "vertical-in", "pop-in", "fade-in", "horizontal-out", "vertical-out", "pop-out", "fade-out"].join(" "),//所有需要在重新加载时移除的样式
     root = dom.createDom(''
         + '<div class="absolute full-screen" style="z-index: 10000;">'
         + '    <div class="absolute full-screen hidden" style="z-index: 40000"></div>'
@@ -52,16 +54,20 @@ var view = {},//页面列表（只接受能生成UIView、UIView的子类以及�
 
 document.body.appendChild(root);//绑定root元素
 exports.root = root;//根元素
+
 /**
  * 导航页面到name
  * @param name 页面的名称，为back时回退页面
  * @param [data] 导航数据
+ * @param [options] 配置参数
  */
-function href(name, data) {
+function href(name, data, options) {
     if (name === "back") {//回退快捷方式
-        back(data);
+        back(data, options);
         return;
     }
+    data = data || null;
+    options = options || {};
     //取出构造函数并执行校验
     var createFunc = view[name];
     if (!createFunc || typeof (createFunc) !== "function") {
@@ -71,21 +77,21 @@ function href(name, data) {
     try {
         var i = 0;
         dom.removeClass(prevent, "hidden");//打开阻止层
-        createFunc(exports, data || null, function (item) {
-            var style = item.style();//页面样式
-            var navigation = item.navigation().split(".");//导航条样式
-            item.load(root, function () {
-                active.apply(undefined, navigation);
+        createFunc(exports, data, function (item) {
+            item._dom.style.zIndex = zindex++;
+            var style = item.style = options.style || "none";//页面样式
+            function done() {
+                item.emitAll("load");
                 //从dom树上摘除当前页
                 if (style !== "frame" && current) {
                     current.detach();
                 }
-                if (style === "switch" && current && current.style() === "switch") {
+                if (style === "switch" && current && current.style === "switch") {
                     current.destroy(true);
                     current = null;
                 } else if (style === "switch") {
                     for (i = backStack.length - 1; i >= 0; i++) {
-                        if (backStack[i].style() === "switch") {
+                        if (backStack[i].style === "switch") {
                             var arr = backStack.splice(i, backStack.length - i);
                             for (var j = 0; j < arr.length; j++) {
                                 arr[j].destroy(true);
@@ -108,7 +114,18 @@ function href(name, data) {
                     backStack = [];
                 }
                 dom.addClass(prevent, "hidden");//关闭阻止层
-            });//激活当前页
+            }
+
+            dom.removeClass(item._dom, transformStyles);
+            var transform = item.transform = options.transform || "none";
+            if (transform !== "none") {
+                dom.addClass(item._dom, transform + "-in");
+                setTimeout(done, 400);
+                item.attach(root);
+            } else {
+                item.attach(root);
+                done();
+            }
         });//构造页面（这一步可能出现异常）
     } catch (e) {
         dom.addClass(prevent, "hidden");//关闭阻止层
@@ -120,23 +137,37 @@ exports.href = href;
 /**
  * 回退页面
  * @param data 导航数据
+ * @param [options] 配置参数
  */
-function back(data) {
-    data = data || {};
-    if (backStack.length === 0 || !current || current.style() === "none") {//已经回退完毕
+function back(data, options) {
+    options = options || {};
+    if (backStack.length === 0 || !current || current.style === "none") {//已经回退完毕
         return;
     }
     var item = current;
+    var style = options.style || item.style || "none";//页面样式
     dom.removeClass(prevent, "hidden");//打开阻止层
     current = backStack.pop();//获取上一页面
-    if (item.style() !== "frame") {
+    dom.removeClass(current._dom, transformStyles);
+    if (style !== "frame") {
         current.attach(root);//恢复当前页
     }
     current.emit("back", data);//触发回退页面的back事件
-    item.unload(function () {
+    function done() {
+        item.emitAll("unload");
         item.destroy(true);//销毁页面元素，并清理元素内部的事件，释放内存
         dom.addClass(prevent, "hidden");//关闭阻止层
-    });//删除上一页
+    }
+
+    dom.removeClass(item._dom, transformStyles);
+    var transform = options.transform || item.transform || "none";
+
+    if (transform !== "none") {
+        dom.addClass(item._dom, transform + "-out");
+        setTimeout(done, 400);
+    } else {
+        done();
+    }
 }
 exports.back = back;
 
@@ -151,51 +182,22 @@ function registerView(name, createFunc) {
 exports.registerView = registerView;
 
 /**
- * 激活导航条
- * @param [navName] 导航条名称
- * @param [itemName] 导航条项目
- */
-function active(navName, itemName) {
-    if (navName === "common") {
-        return;
-    }
-    for (var x in nav) {
-        if (nav.hasOwnProperty(x)) {
-            if (x === navName && navName !== "hide") {
-                nav[x].show();
-            } else {
-                nav[x].hide();
-            }
-        }
-    }
-    if (navName === "hide") {
-        return;
-    }
-    if (!(navName in nav)) {
-        console.log("所加载的导航条项目不存在");
-        return;
-    }
-    nav[navName].active(itemName);
-}
-exports.active = active;
-
-/**
  * 获取一个导航条
  * @param name 导航条名称
  */
-function getNav(name) {
-    return nav[name] || null;
+function getWidget(name) {
+    return widget[name] || null;
 }
-exports.getNavigation = getNav;
+exports.getWidget = getWidget;
 
 /**
  * 注册导航条函数
  * @param name 导航条名称
  * @param obj 导航条对象
  */
-function registerNavigation(name, obj) {
-    nav[name] = obj;
-    obj.attach(document.body);
+function registerWidget(name, obj) {
+    widget[name] = obj;
+    obj.attach(root);
 }
-exports.registerNavigation = registerNavigation;
+exports.registerWidget = registerWidget;
 //endregion 视图相关功能

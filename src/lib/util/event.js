@@ -256,12 +256,10 @@ var nextGuid = 1;
 
 /**
  * 频道信息类
- * @param type 频道名
  * @param sticky 是否单次执行
  * @constructor
  */
-function Channel(type, sticky) {
-    this.type = type;
+function Channel(sticky) {
     this.handlers = {};
     this.state = sticky ? 1 : 0;
     this.fireArgs = null;
@@ -380,3 +378,31 @@ function close(context, func, params) {
         };
     }
 }
+
+/**
+ * 联合频道
+ * @param h 要触发的函数
+ * @param c 前置频道组
+ */
+exports.joinChannel = function (h, c) {
+    var len = c.length,
+        i = len,
+        f = function () {
+            if (!(--i)) {
+                for (var j = 0; j < len; j++) {
+                    c[j].unsubscribe(f);
+                }
+                f = null;
+                h();
+            }
+        };
+    for (var j = 0; j < len; j++) {
+        if (c[j].state === 0) {
+            throw new Error('Can only use join with sticky channels.');
+        }
+        c[j].subscribe(f);
+    }
+    if (!len) {
+        h();
+    }
+};

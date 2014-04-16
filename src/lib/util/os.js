@@ -31,9 +31,11 @@ os.supportsTouch = 'ontouchstart' in window;
 //修复部分不能使用常规判断得到的属性
 var head = document.documentElement.getElementsByTagName("head")[0];
 os.nativeTouchScroll = typeof (head.style["-webkit-overflow-scrolling"]) !== "undefined" && os.ios;
+
 //去除所有标记为android但不是用webkit核心的浏览器
 if (os.android && !os.webkit) {
     os.android = false;
 }
+
 
 module.exports = os;
