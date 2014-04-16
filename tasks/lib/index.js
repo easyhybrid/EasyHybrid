@@ -149,12 +149,9 @@ function run(data) {
         '            v = [];\n' +
         '        map = map || {};' +
         '        for(var i in map) {\n' +
-        '            if (map.hasOwnProperty(i)) {\n' +
-        '                p.push(i);\n' +
-        '                v.push(map[i]);\n' +
-        '            }\n' +
+        '           p.push(i);\n' +
+        '           v.push(map[i]);\n' +
         '        }\n' +
-        '        /*jshint evil: true */\n' +
         '        return (new Function(p, \"var _s=[];_s.push(' + source + ' return _s;\")).apply(null, v).join("");\n' +
         '    }\n' +
         '};';
