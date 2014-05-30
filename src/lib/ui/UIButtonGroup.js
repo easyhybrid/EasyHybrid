@@ -6,7 +6,6 @@
  */
 
 var util = require("../util/util"),//引入工具类
-    dom = require("../util/dom"),//DOM操作类
     UIObject = require('./UIObject').UIObject;//UIObject
 
 /**

@@ -6,7 +6,7 @@
  */
 var util = require("../util/util");
 var dom = require("../util/dom");
-var EventEmitter = require("../util/event").EventEmitter;
+var EventEmitter = util.EventEmitter;
 
 /**
  * UI对象基类
@@ -22,14 +22,14 @@ function UIObject(options) {
     if (!/^ *</.test(html)) {
         html = '<div class="' + html + '"></div>';
     }
-    var doms = dom.createDom(html);
-    if (util.isArray(doms)) {
-        this._dom = dom.createDom("<div></div>");
+    var doms = dom.create(html);
+    if (doms.length > 1) {
+        this._dom = dom.create("<div></div>")[0];
         for (var i = 0; i < doms.length; i++) {
             this._dom.appendChild(doms[i]);
         }
     } else {
-        this._dom = doms || null;
+        this._dom = doms[0] || null;
     }
     this._children = [];
     this._eventCache = [];
@@ -154,12 +154,12 @@ UIObject.prototype.find = function (selector) {
  */
 UIObject.prototype.bind = function (target, type, listener) {
     var me = this;
+    if (!target) {
+        target = [this._dom];
+    }
     var item;
     if (!util.isArray(target)) {
         target = me.find(target);
-    }
-    if (!target) {
-        target = [this._dom];
     }
     for (var i = 0; i < target.length; i++) {
         item = target[i];
@@ -230,15 +230,7 @@ UIObject.prototype.destroy = function (isSelf) {
     }
     this._eventCache = null;
     if (isSelf && this._dom) {
-        var garbageBin = document.getElementById('IELeakGarbageBin');
-        if (!garbageBin) {
-            garbageBin = document.createElement('div');
-            garbageBin.id = 'IELeakGarbageBin';
-            garbageBin.style.display = 'none';
-            document.body.appendChild(garbageBin);
-        }
-        garbageBin.appendChild(this._dom);
-        garbageBin.innerHTML = '';
+        dom.remove(this._dom, true);
         this._dom = null;
     }
 };

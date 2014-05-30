@@ -1,0 +1,49 @@
+<div class="shop-detail-title">{{DWXX_MC}}</div>
+<div class="shop-detail-basic">
+    <div class="shop-detail-basic-img ">
+        <img src="{{DWXX_TP}}"/>
+    </div>
+    {{if(/^\d+$/.test(DWXX_BH))}}
+    <div class="shop-detail-basic-content">
+        <div class="shop-detail-basic-star">
+            <span class="shop-label">推荐指数：</span>
+            <span class="shop-list-item-star{{DWXX_XJ}}"></span>
+        </div>
+        <div class="shop-detail-basic-cost">
+            <span>平均消费：</span>
+            <span>￥{{DWXX_FY}}</span>
+        </div>
+        <div class="shop-detail-basic-phone line">
+            <span>联系电话：</span>
+            <span>{{DWXX_Phone}}</span>
+        </div>
+    </div>
+    {{else}}
+    <div class="shop-detail-basic-content">
+        <div class="shop-detail-basic-star">
+            <span class="shop-label">服务指数：</span>
+            <span class="shop-list-item-star{{DWXX_XJ}}"></span>
+        </div>
+        <div class="shop-detail-basic-cost line">
+            <span>工作时间：</span>
+            <span>{{DWXX_GZSJ}}</span>
+        </div>
+        <div class="shop-detail-basic-phone line">
+            <span>联系电话：</span>
+            <span>{{DWXX_Phone}}</span>
+        </div>
+    </div>
+    {{endif}}
+</div>
+{{if(DWXX_Phone)}}
+<a href="tel:{{DWXX_Phone}}" target="_blank" class="shop-detail-item shop-next">
+    <span class="shop-detail-item-title">电话：</span>
+    <span>{{DWXX_LXDH}}</span>
+</a>
+{{endif}}
+<div class="shop-detail-item shop-next" id="dwxx_address">
+    <span class="shop-detail-item-title">地址：</span>
+    <span>{{DWXX_DZ}}</span>
+    <br/>
+    <span class="shop-detail-item-location">{{DWXX_JL}}</span>
+</div>

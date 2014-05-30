@@ -8,9 +8,9 @@
 var dom = require("../util/dom"),
     util = require("../util/util"),
     UIObject = require("./UIObject").UIObject,
-    blur = dom.createDom("<input type='text' style='width: 0;opacity: 0;border: none' />");
+    blurdom = dom.create("<input type='text' style='width: 0;opacity: 0;border: none' />")[0];
 
-document.body.insertBefore(blur, document.body.firstChild);
+document.body.insertBefore(blurdom, document.body.firstChild);
 
 /**
  * 输入条控件
@@ -56,11 +56,11 @@ UIInput.prototype.focus = function () {
  */
 UIInput.prototype.blur = function () {
     this.find("input[type=text]")[0].blur();
-    blur.blur();
-    blur.focus();
-    blur.style.display = "none";
+    blurdom.blur();
+    blurdom.focus();
+    blurdom.style.display = "none";
     setTimeout(function () {
-        blur.style.display = "block";
+        blurdom.style.display = "block";
     }, 50);
 };
 

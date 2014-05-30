@@ -5,19 +5,120 @@
  * @note 地理信息
  */
 
-var EARTH_RADIUS = 6378137.0;    //单位M
-var PI = Math.PI;
+var lastPosition = null,
+    EARTH_RADIUS = 6378137.0,    //单位M
+    PI = Math.PI,
+    base = require("./plugin");
+
+/**
+ * 计算两个经纬度之间的实际距离
+ * @param pos1 经纬度1
+ * @param pos2 经纬度2
+ */
+exports.distance = function (pos1, pos2) {
+    return getFlatternDistance(pos1.latitude, pos1.longitude, pos2.latitude, pos2.longitude);
+};
+
+exports.position = function (successCallback, errorCallback, options) {
+    options = parseParameters(options);
+    var timeoutTimer = {
+        timer: null
+    };
+    var win = function (p) {
+        clearTimeout(timeoutTimer.timer);
+        if (!(timeoutTimer.timer)) {
+            return;
+        }
+        p = format(p);
+        lastPosition = p;
+        successCallback(p);
+    };
+    var fail = function (e) {
+        clearTimeout(timeoutTimer.timer);
+        timeoutTimer.timer = null;
+        if (errorCallback) {
+            errorCallback(e.code, e.message);
+        }
+    };
+
+    if (lastPosition && options.maximumAge && (((new Date()).getTime() - lastPosition.timestamp.getTime()) <= options.maximumAge)) {
+        successCallback(lastPosition);
+    } else if (options.timeout === 0) {
+        fail({
+            code: 3,
+            message: "您请求立刻返回结果，但是当前没有缓冲位置"
+        });
+    } else {
+        if (options.timeout !== Infinity) {
+            timeoutTimer.timer = createTimeout(fail, options.timeout);
+        } else {
+            timeoutTimer.timer = true;
+        }
+        base.exec(win, fail, "Geolocation", "getLocation", [options.enableHighAccuracy, options.maximumAge]);
+    }
+    return timeoutTimer;
+
+};
+
+function format(p) {
+    var pos = {
+        latitude: p.latitude,
+        longitude: p.longitude,
+        accuracy: p.accuracy,
+        altitude: (p.altitude !== undefined ? p.altitude : null),
+        heading: ( p.heading !== undefined ? p.heading : null),
+        velocity: ( p.velocity !== undefined ? p.velocity : null),
+        altitudeAccuracy: ( p.altitudeAccuracy !== undefined ? p.altitudeAccuracy : null)
+    };
+    if (pos.velocity === null || pos.velocity === 0) {
+        pos.heading = NaN;
+    }
+    return {
+        coords: pos,
+        timestamp: (p.timestamp === undefined ? new Date() : ((p.timestamp instanceof Date) ? p.timestamp : new Date(p.timestamp)))
+    };
+}
+
+function parseParameters(options) {
+    var opt = {
+        maximumAge: 0,
+        enableHighAccuracy: false,
+        timeout: Infinity
+    };
+
+    if (options) {
+        if (options.maximumAge !== undefined && !isNaN(options.maximumAge) && options.maximumAge > 0) {
+            opt.maximumAge = options.maximumAge;
+        }
+        if (options.enableHighAccuracy !== undefined) {
+            opt.enableHighAccuracy = options.enableHighAccuracy;
+        }
+        if (options.timeout !== undefined && !isNaN(options.timeout)) {
+            if (options.timeout < 0) {
+                opt.timeout = 0;
+            } else {
+                opt.timeout = options.timeout;
+            }
+        }
+    }
+
+    return opt;
+}
+
+function createTimeout(errorCallback, timeout) {
+    var t = setTimeout(function () {
+        clearTimeout(t);
+        t = null;
+        errorCallback(3, "请求超时");
+    }, timeout);
+    return t;
+}
+
 
 function getRad(d) {
     return d * PI / 180.0;
 }
-/**
- * approx distance between two points on earth ellipsoid
- * @param {Object} lat1 纬度1
- * @param {Object} lng1 经度1
- * @param {Object} lat2
- * @param {Object} lng2
- */
+
 function getFlatternDistance(lat1, lng1, lat2, lng2) {
     if (typeof lat1 !== 'number') {
         lat1 = parseFloat(lat1);
@@ -62,25 +163,3 @@ function getFlatternDistance(lat1, lng1, lat2, lng2) {
 }
 
 
-/**
- * 计算两个经纬度之间的实际距离
- * @param pos1 经纬度1
- * @param pos2 经纬度2
- */
-exports.distance = function (pos1, pos2) {
-    return getFlatternDistance(pos1.latitude, pos1.longitude, pos2.latitude, pos2.longitude);
-};
-
-exports.gps = function (success, fail) {
-    //    success({
-    //        latitude: 27,
-    //        longitude: 118
-    //    });
-    //    return;
-    navigator.geolocation.getCurrentPosition(function (p) {
-        success({
-            latitude: p.coords.latitude,
-            longitude: p.coords.longitude
-        });
-    }, fail);
-};

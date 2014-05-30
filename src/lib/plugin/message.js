@@ -4,7 +4,7 @@ var util = require("../util/util"),
         ok: "确定",
         cancel: "取消"
     },
-    base = require("./base");
+    base = require("./plugin");
 
 exports.messageDefault = function (setting) {
     util.merge(defautSetting, setting);

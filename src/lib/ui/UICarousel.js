@@ -90,7 +90,7 @@ UICarousel.prototype.stop = function () {
     if (!this._start) {
         return;
     }
-    self._start = false;
+    this._start = false;
     clearInterval(this._time);
     this._interval = null;
     for (var k = 0; k < this._children.length; k++) {

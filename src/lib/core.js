@@ -2,58 +2,45 @@
  * Created by 清月_荷雾 on 14-2-16.
  * @author 清月_荷雾(441984145@qq.com)
  *        赤菁风铃(liuxuanzy@qq.com)
- * 核心工具类
- * @note 其它模块不要引入本文件，这是最高级文件
+ * 核心工具类（所有相关插件会注入到此文件中）
  */
 
-//region 插件相关
+var util = exports.util = require("./util/util"),//基础工具函数（此工具无法被排除）
+    dom = exports.dom = require("./util/dom"),//DOM操作工具（此工具无法被排除）
+    ui = exports.ui = {},//ui元素类（构建页面所需要的元素类）
+    widget = exports.widget = {},//公用组件（比如菜单，loading，常规错误处理）等放在这里面
+    view = exports.view = {},//视图类（用于保存实现页面的基本逻辑）
+    root = exports.root = dom.parse('<div class="absolute full-screen" style="z-index: 10000;"></div>')[0],//页面的根元素;
+    prevent = false,//用于在页面切换过程中阻止事件的元素
+    backStack = [],//回退栈
+    current = null,//当前页面
+    transformStyles = ["horizontal-in", "vertical-in", "pop-in", "fade-in", "horizontal-out", "vertical-out", "pop-out", "fade-out"].join(" "),//要清除的样式
+    zindex = 10001;//页面的z-index
 
-var utils = {},//实用工具(零散，公用以及与WEB直接相关的工具会直接放在这里，请注意这不是硬性规定，util，ui，plugin的关系是对等的)
-    util = require("./util/util"),//引入本对象所必须的工具信息
-    plugins = {}, //插件工具（通常和平台相关或者来源自cordova的工具会出现在这里，请注意这不是硬性规定，util，ui，plugin的关系是对等的）
-    ui = {};//UI相关工具（通常用来构成页面结构的控件会出现在UI目录中，请注意这不是硬性规定，util，ui，plugin的关系是对等的）
+exports.plugin = require("./plugin/plugin"); //基础插件工具（此工具无法被排除）
+document.body.appendChild(root);//绑定root元素
 
 /**
  * 注册相关插件
- * @param type 注册类型（可以是实用工具、插件工具或者UI相关工具）
+ * @param type 注册类型（请注意规避plugin、ui、view、widget、root、register、href、back、config）另外请确保plugin与util不会重复，否则会发生覆盖
  * @param obj 注册的对象
  */
 function register(type, obj) {
-    if (type === "util") {//实用工具
-        util.merge(utils, obj);
-    } else if (type === "plugin") {//注入插件工具
-        util.merge(plugins, obj);
-    } else if (type === "ui") {//注入UI相关工具
+    if (type === "ui") {//注入UI相关工具
         util.merge(ui, obj);
-    } else {
-        console.log("未知的注册类型：" + type);
+    } else if (type === "widget") {//注入公用组件
+        widget[obj] = arguments[2];
+    } else if (type === "view") {//注入视图
+        view[obj] = arguments[2];
+    } else {//注册其它使用工具或者插件，请注意是系统保留控件，请不要使用这几个名字
+        //排除所有与系统函数重名的插件，加快效率
+        if (type in exports) {
+            return;
+        }
+        exports[type] = obj;
     }
 }
 exports.register = register;
-exports.util = utils;//暴露实用工具
-exports.plugin = plugins;//暴露插件工具
-exports.ui = ui;//暴露UI相关工具
-
-//endregion 插件相关
-
-//region 视图相关功能
-
-var view = {},//页面列表（只接受能生成UIView、UIView的子类以及与UIView有相同结构的对象的函数，给core.href和core.back函数使用）
-    widget = {},//页面组件对象
-    dom = require("./util/dom"),//DOM操作工具
-    backStack = [],//回退栈
-    current = null,//当前页面
-    zindex = 10001,
-    transformStyles = ["horizontal-in", "vertical-in", "pop-in", "fade-in", "horizontal-out", "vertical-out", "pop-out", "fade-out"].join(" "),//所有需要在重新加载时移除的样式
-    root = dom.createDom(''
-        + '<div class="absolute full-screen" style="z-index: 10000;">'
-        + '    <div class="absolute full-screen hidden" style="z-index: 40000"></div>'
-        + '</div>'
-    ),//页面的根元素
-    prevent = root.firstChild;//用于在页面切换过程中阻止事件的元素
-
-document.body.appendChild(root);//绑定root元素
-exports.root = root;//根元素
 
 /**
  * 导航页面到name
@@ -66,17 +53,20 @@ function href(name, data, options) {
         back(data, options);
         return;
     }
+    if (prevent) {
+        return;
+    }
     data = data || null;
     options = options || {};
     //取出构造函数并执行校验
     var createFunc = view[name];
     if (!createFunc || typeof (createFunc) !== "function") {
-        console.log("名称为：" + name + "的页面不存在");
+        window.console.log("名称为：" + name + "的页面不存在");
         return;
     }
     try {
         var i = 0;
-        dom.removeClass(prevent, "hidden");//打开阻止层
+        prevent = true;
         createFunc(exports, data, function (item) {
             item._dom.style.zIndex = zindex++;
             var style = item.style = options.style || "none";//页面样式
@@ -113,7 +103,7 @@ function href(name, data, options) {
                     }
                     backStack = [];
                 }
-                dom.addClass(prevent, "hidden");//关闭阻止层
+                prevent = false;
             }
 
             dom.removeClass(item._dom, transformStyles);
@@ -128,8 +118,8 @@ function href(name, data, options) {
             }
         });//构造页面（这一步可能出现异常）
     } catch (e) {
-        dom.addClass(prevent, "hidden");//关闭阻止层
-        console.log("创建页面时出错：" + e.message);
+        prevent = false;
+        window.console.log("创建页面时出错：" + e.message);
     }
 }
 exports.href = href;
@@ -141,12 +131,12 @@ exports.href = href;
  */
 function back(data, options) {
     options = options || {};
-    if (backStack.length === 0 || !current || current.style === "none") {//已经回退完毕
-        return;
+    if (prevent || backStack.length === 0 || !current || current.style === "none") {//已经回退完毕
+        return false;
     }
+    prevent = true;
     var item = current;
     var style = options.style || item.style || "none";//页面样式
-    dom.removeClass(prevent, "hidden");//打开阻止层
     current = backStack.pop();//获取上一页面
     dom.removeClass(current._dom, transformStyles);
     if (style !== "frame") {
@@ -156,7 +146,7 @@ function back(data, options) {
     function done() {
         item.emitAll("unload");
         item.destroy(true);//销毁页面元素，并清理元素内部的事件，释放内存
-        dom.addClass(prevent, "hidden");//关闭阻止层
+        prevent = false;
     }
 
     dom.removeClass(item._dom, transformStyles);
@@ -168,36 +158,6 @@ function back(data, options) {
     } else {
         done();
     }
+    return true;
 }
 exports.back = back;
-
-/**
- * 注册视图函数
- * @param {string} name 视图名通常会是user/index这样的名字
- * @param {function} createFunc 视图函数
- */
-function registerView(name, createFunc) {
-    view[name] = createFunc;
-}
-exports.registerView = registerView;
-
-/**
- * 获取一个导航条
- * @param name 导航条名称
- */
-function getWidget(name) {
-    return widget[name] || null;
-}
-exports.getWidget = getWidget;
-
-/**
- * 注册导航条函数
- * @param name 导航条名称
- * @param obj 导航条对象
- */
-function registerWidget(name, obj) {
-    widget[name] = obj;
-    obj.attach(root);
-}
-exports.registerWidget = registerWidget;
-//endregion 视图相关功能

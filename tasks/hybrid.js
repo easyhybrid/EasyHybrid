@@ -1,4 +1,3 @@
-var fs = require("fs");
 var lib = require("./lib/index");
 var path = require('path');
 
@@ -21,7 +20,8 @@ module.exports = function (grunt) {
         var deep = config.target.split("/").length;
         var match_type = new RegExp("^(cordova-)?" + config.platform + "-(.+)$");
         var match_url = /require *\( *['"](.+?)['"] *\)/ig;
-        var mapping = grunt.file.expandMapping(["**", "!source/**"], config.target, {
+        //noinspection JSUnusedGlobalSymbols
+        var mapping = grunt.file.expandMapping(["**", "!source/" + (!config.cordova ? "cordova" : "self" ) + "/**.js", "source/" + (config.cordova ? "cordova" : "self" ) + "/**.js", "!source/" + (config.cordova ? "cordova" : "self" ) + "/load.js", "!source/" + (config.cordova ? "cordova" : "self" ) + "/require.js"], config.target, {
             cwd: config.path,
             rename: function (dest, src) {
                 return dest + src.split(/\/|\\/).map(function (item) {
@@ -38,7 +38,15 @@ module.exports = function (grunt) {
                 grunt.file.mkdir(dest);
                 return;
             }
-            var id = ("hybrid/" + arr.slice(deep - 1).join("/") + "/" + basename.split(".")[0]).replace(/\/+/g, "/");
+            var b = basename.split(".")[0];
+            var id = ("hybrid/" + arr.slice(deep - 1).join("/") + "/" + b).replace(/\/+/g, "/");
+            if (arr[2] === "source") {
+                if (arr.length === 4 && b === "cordova") {
+                    id = "cordova";
+                } else {
+                    id = ("cordova/" + arr.slice(deep + 1).join("/") + "/" + b).replace(/\/+/g, "/");
+                }
+            }
             grunt.file.copy(src, dest, {
                 encoding: "utf8",
                 process: function (content) {
@@ -80,7 +88,7 @@ module.exports = function (grunt) {
                 cwd: src + type + "/"
             }, "*.js");
             list.forEach(function (item) {
-                content += '    core.register("' + type + '", require("hybrid/' + type + "/" + item.split(".")[0] + '"));\n';
+                content += '    core.register("' + (type !== "ui" ? item.split(".")[0] : type) + '", require("hybrid/' + type + "/" + item.split(".")[0] + '"));\n';
             });
         }
 
@@ -95,7 +103,7 @@ module.exports = function (grunt) {
         }, "*.js");
         list4.forEach(function (item) {
             var id = item.split(".")[0];
-            content += '    core.registerWidget("' + id + '", require("hybrid/widget/' + item.split(".")[0] + '")(core));\n';
+            content += '    core.register("widget" ,"' + id + '", require("hybrid/widget/' + item.split(".")[0] + '")(core));\n';
         });
 
         content += '\n    //下边为view注册代码\n';
@@ -103,18 +111,25 @@ module.exports = function (grunt) {
             cwd: src + "/view/"
         }, "*/*.js");
         list2.forEach(function (item) {
-            content += '    core.registerView("' + item.split(".")[0] + '", require("hybrid/view/' + item.split(".")[0] + '"));\n';
+            content += '    core.register("view", "' + item.split(".")[0] + '", require("hybrid/view/' + item.split(".")[0] + '"));\n';
         });
 
         content += '\n    //下边为初始化项目代码\n';
-        if (config.proxy) {
-            content += '\n    window.devProxy = "' + config.proxy + '";\n';
-        }
         if (config.native) {
-            content += '    window.cordova = require("cordova");\n';
-            content += '    require("cordova/exec");\n';
+            content += '    var channel = require("cordova/channel");\n';
+            content += '    var cordova = window.cordova = require("cordova");\n';
+            content += '    cordova["exec"] = require("cordova/exec");\n';
+            content += '    channel.onPause = cordova.addDocumentEventHandler("pause");\n';
+            content += '    channel.onResume = cordova.addDocumentEventHandler("resume");\n';
         }
-        content += '    exports.init = require("hybrid/init")(core);\n';
+        if (config.proxy) {
+            content += '    window.devProxy = "' + config.proxy + '";\n';
+        }
+        content += '    exports.init = function () {\n' +
+            '        core.util.join(function(){\n' +
+            '            require("hybrid/init")(core);\n' +
+            '        }, core.plugin.channels);\n' +
+            '    };\n';
         content += '});';
         grunt.file.write(config.dest, content);
     });
@@ -128,6 +143,9 @@ module.exports = function (grunt) {
         var js = config.sources.js;
         var content = '<html>\n    <head>' +
             '\n        <meta charset="utf-8"/>' +
+            '\n        <meta name="apple-touch-fullscreen" content="yes"/>' +
+            '\n        <meta name="apple-mobile-web-app-capable" content="yes" />' +
+            '\n        <meta name="apple-mobile-web-app-status-bar-style" content="black">' +
             '\n        <base target="_self"/>' +
             '\n        <title>' + config.name + '</title>';
         css.forEach(function (item) {
@@ -253,7 +271,7 @@ module.exports = function (grunt) {
                         {
                             expand: true,
                             cwd: ".tmp/js/source/" + (config.cordova ? "cordova" : "self") + "/",
-                            src: config.native ? ["load.js", "require.js", "channel.js" , "cordova.js" , config.platform + "-exec.js" ] : ["load.js", "require.js"],
+                            src: ["load.js", "require.js"],
                             dest: ".tmp/"
                         }
                     ]
@@ -261,6 +279,7 @@ module.exports = function (grunt) {
             },
             "easy-hybrid-rename": {
                 path: ".tmp/js/",
+                cordova: config.cordova,
                 platform: config.platform,
                 target: ".tmp/compress/"
             },
@@ -277,14 +296,6 @@ module.exports = function (grunt) {
                 sources: config.sources,
                 name: config.name
             },
-            jshint: {
-                all: [
-                    '.tmp/compress/**/*.js'
-                ],
-                options: {
-                    jshintrc: '.jshintrc'
-                }
-            },
             clean: {
                 tmp: [".tmp/"],
                 target: config.target
@@ -300,7 +311,7 @@ module.exports = function (grunt) {
                         }
                     },
                     files: {
-                        ".tmp/all.js": [".tmp/require.js", ".tmp/cordova.js", ".tmp/channel.js", ".tmp/" + config.platform + "-exec.js", ".tmp/compress/**/*.js", ".tmp/load.js"]
+                        ".tmp/all.js": [".tmp/require.js", ".tmp/compress/**/*.js", ".tmp/load.js"]
                     }
                 }
             },
@@ -328,7 +339,6 @@ module.exports = function (grunt) {
             "easy-hybrid-index",
             "easy-hybrid-build",
             "clean:target",
-            "jshint",
             "copy:build",
             "concat",
             "uglify",
@@ -364,7 +374,7 @@ module.exports = function (grunt) {
                         {
                             expand: true,
                             cwd: config.lib,
-                            src: ["**", "!css/**"],
+                            src: ["**", "!css/**", "!source/self/**", "source/self/load.js", "source/self/require.js"],
                             dest: ".tmp/js/",
                             filter: config.filter.lib
                         }
@@ -434,7 +444,8 @@ module.exports = function (grunt) {
             },
             "easy-hybrid-rename": {
                 path: ".tmp/js/",
-                platform: config.platform,
+                cordova: config.cordova,
+                platform: "web",
                 target: ".tmp/compress/"
             },
             "easy-hybrid-index": {
@@ -449,14 +460,6 @@ module.exports = function (grunt) {
                 target: ".tmp/index.html",
                 sources: config.sources,
                 name: config.name
-            },
-            jshint: {
-                all: [
-                    '.tmp/compress/**/*.js'
-                ],
-                options: {
-                    jshintrc: '.jshintrc'
-                }
             },
             clean: {
                 tmp: [".tmp/"],
@@ -473,7 +476,6 @@ module.exports = function (grunt) {
             "easy-hybrid-index",
             "easy-hybrid-fix",
             "clean:target",
-            "jshint",
             "copy:build",
             "clean:tmp",
             "easy-hybrid-rescue"
@@ -484,12 +486,21 @@ module.exports = function (grunt) {
     //入口函数，用于产生新的配置文件，并对文件进行处理
     grunt.task.registerMultiTask("hybrid", "an javascript development approach base on cordova-js", function () {
         var me = this;
+        var task = ["jshint"];
         //重新生成请求参数
         grunt.config.init({
             "easy-hybrid-rescue": grunt.config.get(),//缓存现有文件
+            jshint: {
+                all: [
+                    (me.data.lib || "src/lib/") + "**.js",
+                    "src/" + me.target + "/**.js"
+                ],
+                options: {
+                    jshintrc: '.jshintrc'
+                }
+            },
             "easy-hybrid-platform": lib.platformInit(me.target, me.data)
         });
-        var task = ["easy-hybrid-platform"];
         var dev = lib.developInit(me.target, me.data);
         if (dev) {
             grunt.config.set("easy-hybrid-dev", {
@@ -497,6 +508,7 @@ module.exports = function (grunt) {
             });
             task.push("easy-hybrid-dev");
         }
+        task.push("easy-hybrid-platform");
         task.push("easy-hybrid-rescue");
         grunt.task.run(task);
     });

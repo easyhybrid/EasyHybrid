@@ -2,7 +2,7 @@
  * Created by 赤菁风铃 on 14-3-1.
  * @author 清月_荷雾(441984145@qq.com)
  *         赤菁风铃(liuxuanzy@qq.com)
- * @note 修复直接使用手机浏览器访问时的问题,请注意如果您的设备是手机(如果您在做非竖版手机应用，请排除此文件)
+ * @note 处理pad或者横板的应用的显示，请注意这个文件仅仅是将应用全屏，您需要自己处理各分辨率下的显示方式
  */
 
 var os = require("../util/os"),//引入系统库
@@ -16,13 +16,11 @@ if (os.ios) {
 viewport.name = 'viewport';
 style.position = "relative";
 style.overflow = "hidden";
-var width = window.screen.width / dpr;
 if (os.ipad) {
     style.width = "100%";
     style.height = "100%";
     viewport.content = 'width=device-width, initial-scale=1.0, user-scalable=no';
 } else {
-    //按照320宽度优化页面
     style.width = "100%";
     style.height = "100%";
     viewport.content = 'target-densitydpi=160, width=device-width, user-scalable=no';
