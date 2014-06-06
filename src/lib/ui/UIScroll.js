@@ -44,7 +44,7 @@ function UIScroll(options) {
     if (type === "vertical" || type === "both") {
         this._vertical = true;
     }
-    this._dom = this.wrapper = dom.create(util.format('<div class="%s" style="overflow: hidden;"></div>', options.style || ""))[0];
+    this._dom = this.wrapper = dom.parse(util.format('<div class="%s" style="overflow: hidden;"></div>', options.style || ""))[0];
     this.freeScroll = !event && nativeTouchScroll;
     this.emitEvent = event;
     this.emitMove = event && options.move;
@@ -57,7 +57,7 @@ function UIScroll(options) {
         }
         return;
     }
-    this.scroller = dom.create('<div class="absolute" style="width: 100%;"></div>')[0];
+    this.scroller = dom.parse('<div class="absolute" style="width: 100%;"></div>')[0];
     this.wrapper.appendChild(this.scroller);
     if (html) {
         this.scroller.innerHTML = html || "";

@@ -5,8 +5,8 @@
  * @note 系统信息
  */
 
-var userAgent = window.navigator.userAgent;
-var os = {};
+var userAgent = window.navigator.userAgent,
+    os = {};
 /**
  * 根据userAgent获取系统信息
  */

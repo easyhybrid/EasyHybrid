@@ -4,6 +4,7 @@
  *         赤菁风铃(liuxuanzy@qq.com)
  * @note 本文件为与运行环境无关的Javascript工具函数
  */
+
 var class2type = {},
     formatRegExp = /%[sdj%]/g,
     nextGuid = 1,
@@ -31,7 +32,6 @@ function typeName(obj) {
     if (obj == null) {
         return obj + "";
     }
-
     return typeof obj === "object" || typeof obj === "function" ?
         class2type[ Object.prototype.toString.call(obj) ] || "object" :
         typeof obj;
@@ -103,7 +103,7 @@ exports.isFunction = isFunction;
 /**
  * 原型继承函数
  * @param  {function} subClass    子类
- * @param  {function} superClass  父类
+ * @param  {function|object} superClass  父类
  */
 function inherits(subClass, superClass) {
     F.prototype = isFunction(superClass) ? superClass.prototype : superClass;
@@ -364,6 +364,29 @@ function each(obj, callback, args) {
 exports.each = each;
 
 /**
+ * 异步调用数组中的每一个元素并执行回调
+ * @param arr 数组
+ * @param fn 调用的函数
+ * @param cb 完成时的回调
+ */
+function async(arr, fn, cb) {
+    var total = arr.length,
+        i = 0;
+
+    function done() {
+        if (i >= total) {
+            cb();
+            return;
+        }
+        fn.call(arr[i], self[i], i, self, done);
+        i++;
+    }
+
+    done();
+}
+exports.async = async;
+
+/**
  * 过滤数组
  * @param elems {Array} 要过滤的数组元素
  * @param callback {Function} 过滤函数
@@ -443,16 +466,6 @@ function EventEmitter() {
     this._events = this._events || {};
     this._maxListeners = this._maxListeners || 10;
 }
-/**
- * 设置最大监听数量
- * @param n  数量
- */
-EventEmitter.prototype.setMaxListeners = function (n) {
-    if (typeof n !== 'number' || n < 0) {
-        throw new TypeError('参数n必须大于0');
-    }
-    this._maxListeners = n;
-};
 
 /**
  * 触发事件
@@ -460,19 +473,9 @@ EventEmitter.prototype.setMaxListeners = function (n) {
  * @returns {boolean}
  */
 EventEmitter.prototype.emit = function (type) {
-    var er, handler, len, args, i, listeners;
+    var handler, len, args, i, listeners;
     if (!this._events) {
         this._events = {};
-    }
-    if (type === 'error') {
-        if (!this._events.error || (typeof this._events.error === 'object' && !this._events.error.length)) {
-            er = arguments[1];
-            if (er instanceof Error) {
-                throw er;
-            } else {
-                throw new TypeError('发现没捕获的未知异常');
-            }
-        }
     }
 
     handler = this._events[type];
@@ -519,37 +522,22 @@ EventEmitter.prototype.emit = function (type) {
  * @param listener 监听函数
  * @returns {EventEmitter}
  */
-EventEmitter.prototype.addListener = function (type, listener) {
-    var m;
+EventEmitter.prototype.on = function (type, listener) {
     if (typeof listener !== 'function') {
         throw new TypeError('listener must be a function');
     }
     if (!this._events) {
         this._events = {};
     }
-    if (this._events.newListener) {// To avoid recursion in the case that type === "newListener"! Before adding it to the listeners, first emit "newListener".
-        this.emit('newListener', type, typeof listener.listener === 'function' ? listener.listener : listener);
-    }
     if (!this._events[type]) {
-        this._events[type] = listener;// Optimize the case of one listener. Don't need the extra array object.
+        this._events[type] = listener;
     } else if (typeof this._events[type] === 'object') {
-        this._events[type].push(listener);// If we've already got an array, just append.
+        this._events[type].push(listener);
     } else {
-        this._events[type] = [this._events[type], listener];// Adding the second element, need to change to array.
-    }
-    // Check for listener leak
-    if (typeof this._events[type] === 'object' && !this._events[type].warned) {
-        m = this._maxListeners;
-        if (m && m > 0 && this._events[type].length > m) {
-            this._events[type].warned = true;
-            window.console.error('warning: possible EventEmitter memory leak detected. ' + this._events[type].length + ' listeners added. Use emitter.setMaxListeners() to increase limit.');
-            window.console.trace();
-        }
+        this._events[type] = [this._events[type], listener];
     }
     return this;
 };
-
-EventEmitter.prototype.on = EventEmitter.prototype.addListener;
 
 /**
  * 添加单次监听
@@ -564,7 +552,7 @@ EventEmitter.prototype.once = function (type, listener) {
     var self = this;
 
     function g() {
-        self.removeListener(type, g);
+        self.off(type, g);
         listener.apply(this, arguments);
     }
 
@@ -579,7 +567,7 @@ EventEmitter.prototype.once = function (type, listener) {
  * @param listener 函数
  * @returns {EventEmitter}
  */
-EventEmitter.prototype.removeListener = function (type, listener) {
+EventEmitter.prototype.off = function (type, listener) {
     var list, position, length, i;
     if (typeof listener !== 'function') {
         throw new TypeError('listener must be a function');
@@ -592,9 +580,6 @@ EventEmitter.prototype.removeListener = function (type, listener) {
     position = -1;
     if (list === listener || (typeof list.listener === 'function' && list.listener === listener)) {
         delete this._events[type];
-        if (this._events.removeListener) {
-            this.emit('removeListener', type, listener);
-        }
     } else if (typeof list === 'object') {
         for (i = length; i-- > 0;) {
             if (list[i] === listener || (list[i].listener && list[i].listener === listener)) {
@@ -611,9 +596,6 @@ EventEmitter.prototype.removeListener = function (type, listener) {
         } else {
             list.splice(position, 1);
         }
-        if (this._events.removeListener) {
-            this.emit('removeListener', type, listener);
-        }
     }
     return this;
 };
@@ -623,39 +605,15 @@ EventEmitter.prototype.removeListener = function (type, listener) {
  * @param [type] 事件名
  * @returns {EventEmitter}
  */
-EventEmitter.prototype.removeAllListeners = function (type) {
-    var key, listeners;
+EventEmitter.prototype.clean = function (type) {
     if (!this._events) {
         return this;
     }
-    if (!this._events.removeListener) {
-        if (arguments.length === 0) {
-            this._events = {};
-        } else if (this._events[type]) {
-            delete this._events[type];
-        }
-        return this;
-    }
-
     if (arguments.length === 0) {
-        for (key in this._events) {
-            if (this._events.hasOwnProperty(key) && key !== 'removeListener') {
-                this.removeAllListeners(key);
-            }
-        }
-        this.removeAllListeners('removeListener');
-        this._events = {};
-        return this;
+        this._events = null;
+    } else if (this._events[type]) {
+        delete this._events[type];
     }
-    listeners = this._events[type];
-    if (typeof listeners === 'function') {
-        this.removeListener(type, listeners);
-    } else {
-        while (listeners.length) {
-            this.removeListener(type, listeners[listeners.length - 1]);
-        }
-    }
-    delete this._events[type];
     return this;
 };
 

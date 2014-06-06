@@ -17,6 +17,7 @@ var util = require("../util/util"),//引入工具类
 function UIButton(options) {
     UIObject.call(this, options);
     var me = this;
+    //TODO 需要修改引用_data
     me._data = options.data === undefined ? {} : options.data;//数据
     me._disabled = options.disabled || false;//当按钮处于passive状态时，是否触发点击事件
     me._active = false;

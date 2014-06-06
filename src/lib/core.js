@@ -5,26 +5,45 @@
  * 核心工具类（所有相关插件会注入到此文件中）
  */
 
-var util = exports.util = require("./util/util"),//基础工具函数（此工具无法被排除）
-    dom = exports.dom = require("./util/dom"),//DOM操作工具（此工具无法被排除）
-    ui = exports.ui = {},//ui元素类（构建页面所需要的元素类）
-    widget = exports.widget = {},//公用组件（比如菜单，loading，常规错误处理）等放在这里面
-    view = exports.view = {},//视图类（用于保存实现页面的基本逻辑）
-    root = exports.root = dom.parse('<div class="absolute full-screen" style="z-index: 10000;"></div>')[0],//页面的根元素;
-    prevent = false,//用于在页面切换过程中阻止事件的元素
+var ui = exports.ui = {},//UI元素
+    widget = exports.widget = {},//组件
+    view = exports.view = {},//页面
+    util = require("./util/util"),
+    dom = require("./util/dom"),
+    UIObject = require("./ui/UIObject").UIObject,
+    root = new UIObject('<div class="absolute full-screen" style="z-index: 10000;"></div>');
+var prevent = false,//用于在页面切换过程中阻止事件的元素
     backStack = [],//回退栈
     current = null,//当前页面
     transformStyles = ["horizontal-in", "vertical-in", "pop-in", "fade-in", "horizontal-out", "vertical-out", "pop-out", "fade-out"].join(" "),//要清除的样式
     zindex = 10001;//页面的z-index
+//init
+root.attach(document.body);
 
-exports.plugin = require("./plugin/plugin"); //基础插件工具（此工具无法被排除）
-document.body.appendChild(root);//绑定root元素
 
+
+//
+//
+//var util = exports.util = require("./util/util"),//基础工具函数（此工具无法被排除）
+//    dom = exports.dom = require("./util/dom"),//DOM操作工具（此工具无法被排除）
+//    ui = exports.ui = {},//ui元素类（构建页面所需要的元素类）
+//    widget = exports.widget = {},//公用组件（比如菜单，loading，常规错误处理）等放在这里面
+//    view = exports.view = {},//视图类（用于保存实现页面的基本逻辑）
+//    root = exports.root = dom.parse('<div class="absolute full-screen" style="z-index: 10000;"></div>')[0],//页面的根元素;
+//    prevent = false,//用于在页面切换过程中阻止事件的元素
+//    backStack = [],//回退栈
+//    current = null,//当前页面
+//    transformStyles = ["horizontal-in", "vertical-in", "pop-in", "fade-in", "horizontal-out", "vertical-out", "pop-out", "fade-out"].join(" "),//要清除的样式
+//    zindex = 10001;//页面的z-index
+//
+//exports.plugin = require("./plugin/plugin"); //基础插件工具（此工具无法被排除）
+//document.body.appendChild(root);//绑定root元素
+//
 /**
- * 注册相关插件
- * @param type 注册类型（请注意规避plugin、ui、view、widget、root、register、href、back、config）另外请确保plugin与util不会重复，否则会发生覆盖
- * @param obj 注册的对象
- */
+* 注册相关插件
+* @param type 注册类型（请注意规避plugin、ui、view、widget、root、register、href、back、config）另外请确保plugin与util不会重复，否则会发生覆盖
+* @param obj 注册的对象
+*/
 function register(type, obj) {
     if (type === "ui") {//注入UI相关工具
         util.merge(ui, obj);
@@ -43,11 +62,11 @@ function register(type, obj) {
 exports.register = register;
 
 /**
- * 导航页面到name
- * @param name 页面的名称，为back时回退页面
- * @param [data] 导航数据
- * @param [options] 配置参数
- */
+* 导航页面到name
+* @param name 页面的名称，为back时回退页面
+* @param [data] 导航数据
+* @param [options] 配置参数
+*/
 function href(name, data, options) {
     if (name === "back") {//回退快捷方式
         back(data, options);
@@ -125,10 +144,10 @@ function href(name, data, options) {
 exports.href = href;
 
 /**
- * 回退页面
- * @param data 导航数据
- * @param [options] 配置参数
- */
+* 回退页面
+* @param data 导航数据
+* @param [options] 配置参数
+*/
 function back(data, options) {
     options = options || {};
     if (prevent || backStack.length === 0 || !current || current.style === "none") {//已经回退完毕

@@ -8,7 +8,7 @@
 var dom = require("../util/dom"),
     util = require("../util/util"),
     UIObject = require("./UIObject").UIObject,
-    blurdom = dom.create("<input type='text' style='width: 0;opacity: 0;border: none' />")[0];
+    blurdom =   dom.parse("<input type='text' style='width: 0;opacity: 0;border: none' />")[0];
 
 document.body.insertBefore(blurdom, document.body.firstChild);
 
