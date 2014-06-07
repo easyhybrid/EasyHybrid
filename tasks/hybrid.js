@@ -491,12 +491,43 @@ module.exports = function (grunt) {
         grunt.config.init({
             "easy-hybrid-rescue": grunt.config.get(),//缓存现有文件
             jshint: {
-                all: [
-                    (me.data.lib || "src/lib/") + "**.js",
-                    "src/" + me.target + "/**.js"
-                ],
-                options: {
-                    jshintrc: '.jshintrc'
+                lib: {
+                    files: [
+                        {
+                            src: (me.data.lib || "src/lib/") + "**/*.js"
+                        }
+                    ],
+                    options: {
+                        "bitwise": true,
+                        "curly": true,
+                        "eqeqeq": true,
+                        "es3": true,
+                        "forin": true,
+                        "immed": true,
+                        "newcap": true,
+                        "latedef": false,
+                        "noarg": true,
+                        "noempty": true,
+                        "undef": true,
+                        "unused": true,
+                        "trailing": true,
+                        "boss": true,
+                        "laxbreak": true,
+                        "browser": true,
+                        "node": true,
+//                        "onevar": true,
+                        "eqnull": true
+                    }
+                },
+                project: {
+                    files: [
+                        {
+                            src: "src/" + me.target + "**/*.js"
+                        }
+                    ],
+                    options: {
+                        jshintrc: '.jshintrc'
+                    }
                 }
             },
             "easy-hybrid-platform": lib.platformInit(me.target, me.data)

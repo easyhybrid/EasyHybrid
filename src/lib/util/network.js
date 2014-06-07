@@ -6,7 +6,7 @@
  *  @note 如果您需要使用代理来获取数据，并且使用"X-Forwarded-For"头来获取真实的URL，您可以简单的使用如下代码。
  *          window.devProxy = "http://xxxx"
  */
-
+//jshint onevar:false
 var protocolPattern = /^([a-z0-9.+-]+:)/i,
     portPattern = /:[0-9]*$/,
     delims = ['<', '>', '"', '`', ' ', '\r', '\n', '\t'],
@@ -46,22 +46,27 @@ var protocolPattern = /^([a-z0-9.+-]+:)/i,
  * @returns {string}
  */
 function encode(obj, sep, eq, name) {
+    var k, v, ks,
+        maps = [];
     sep = sep || '&';
     eq = eq || '=';
     if (obj === null) {
         obj = undefined;
     }
     if (typeof obj === 'object') {
-        return Object.keys(obj).map(function (k) {
-            var ks = encodeURIComponent(stringifyPrimitive(k)) + eq;
-            if (Array.isArray(obj[k])) {
-                return obj[k].map(function (v) {
-                    return ks + encodeURIComponent(stringifyPrimitive(v));
-                }).join(sep);
-            } else {
-                return ks + encodeURIComponent(stringifyPrimitive(obj[k]));
+        for (k in obj) {
+            if (obj.hasOwnProperty(k)) {
+                ks = encodeURIComponent(stringifyPrimitive(k)) + eq;
+                if (util.isArray(obj[k])) {
+                    for (v = 0; v < obj[k].length; v++) {
+                        maps.push(ks + encodeURIComponent(stringifyPrimitive(obj[k][v])));
+                    }
+                } else {
+                    maps.push(ks + encodeURIComponent(stringifyPrimitive(obj[k])));
+                }
             }
-        }).join(sep);
+        }
+        return maps.join(sep);
     }
     if (!name) {
         return '';
@@ -80,17 +85,18 @@ exports.encode = encode;
 function decode(qs, sep, eq) {
     sep = sep || '&';
     eq = eq || '=';
-    var obj = {};
     if (typeof qs !== 'string' || qs.length === 0) {
-        return obj;
+        return {};
     }
-    var regexp = /\+/g;
     qs = qs.split(sep);
-    var len = qs.length;
-    for (var i = 0; i < len; ++i) {
-        var x = qs[i].replace(regexp, '%20'),
-            idx = x.indexOf(eq),
-            kstr, vstr, k, v;
+
+    var obj = {},
+        regexp = /\+/g,
+        len = qs.length,
+        i, x, idx, kstr, vstr, k, v;
+    for (i = 0; i < len; ++i) {
+        x = qs[i].replace(regexp, '%20');
+        idx = x.indexOf(eq);
 
         if (idx >= 0) {
             kstr = x.substr(0, idx);
@@ -103,7 +109,7 @@ function decode(qs, sep, eq) {
         v = decodeURIComponent(vstr);
         if (!Object.prototype.hasOwnProperty.call(obj, k)) {
             obj[k] = v;
-        } else if (Array.isArray(obj[k])) {
+        } else if (util.isArray(obj[k])) {
             obj[k].push(v);
         } else {
             obj[k] = [obj[k], v];
@@ -126,26 +132,32 @@ function parse(url) {
     var rest = url.trim(),
         proto = protocolPattern.exec(rest),
         i = 0,
-        result = {};
+        result = {},
+        slashes,
+        hostEnd, hec, auth, atSign,
+        host, port, ipv6Hostname,
+        hostparts, part;
+
     if (proto) {
         proto = proto[0];
         result.protocol = proto.toLowerCase();
         rest = rest.substr(proto.length);
     }
-    var slashes = rest.substr(0, 2) === '//';
+
+    slashes = rest.substr(0, 2) === '//';
     if (slashes) {
         rest = rest.substr(2);
         result.slashes = true;
     }
+
     if (slashes || (proto && !slashedProtocol[proto])) {
-        var hostEnd = -1;
+        hostEnd = -1;
         for (i = 0; i < hostEndingChars.length; i++) {
-            var hec1 = rest.indexOf(hostEndingChars[i]);
-            if (1 !== -1 && (hostEnd === -1 || hec1 < hostEnd)) {
-                hostEnd = hec1;
+            hec = rest.indexOf(hostEndingChars[i]);
+            if (1 !== -1 && (hostEnd === -1 || hec < hostEnd)) {
+                hostEnd = hec;
             }
         }
-        var auth, atSign;
         if (hostEnd === -1) {
             atSign = rest.lastIndexOf('@');
         } else {
@@ -155,11 +167,11 @@ function parse(url) {
         if (atSign !== -1) {
             auth = rest.slice(0, atSign);
             rest = rest.slice(atSign + 1);
-            this.auth = decodeURIComponent(auth);
+            result.auth = decodeURIComponent(auth);
         }
         hostEnd = -1;
         for (i = 0; i < nonHostChars.length; i++) {
-            var hec = rest.indexOf(nonHostChars[i]);
+            hec = rest.indexOf(nonHostChars[i]);
             if (hec !== -1 && (hostEnd === -1 || hec < hostEnd)) {
                 hostEnd = hec;
             }
@@ -169,8 +181,8 @@ function parse(url) {
         }
         result.host = rest.slice(0, hostEnd);
         rest = rest.slice(hostEnd);
-        var host = result.host;
-        var port = portPattern.exec(host);
+        host = result.host;
+        port = portPattern.exec(host);
         if (port) {
             port = port[0];
             if (port !== ':') {
@@ -182,11 +194,11 @@ function parse(url) {
             result.hostname = host;
         }
         result.hostname = result.hostname || '';
-        var ipv6Hostname = result.hostname[0] === '[' && result.hostname[result.hostname.length - 1] === ']';
+        ipv6Hostname = result.hostname[0] === '[' && result.hostname[result.hostname.length - 1] === ']';
         if (!ipv6Hostname) {
-            var hostparts = result.hostname.split(/\./);
+            hostparts = result.hostname.split(/\./);
             for (i = 0; i < hostparts.length; i++) {
-                var part = hostparts[i];
+                part = hostparts[i];
                 if (!part) {
                     continue;
                 }
@@ -680,7 +692,7 @@ function stringifyPrimitive(v) {
             return '';
     }
 }
-
+//jshint onevar:true
 exports.mime = {
     '123': 'application/vnd.lotus-1-2-3',
     ez: 'application/andrew-inset',

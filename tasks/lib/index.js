@@ -1,4 +1,3 @@
-var fs = require('fs');
 var util = require("util");
 var support = ["ios", "android", "web"];
 var native = ["ios", "android"];//目前系统支持的通过phonegap原生代码交互来实现的平台，系统会加载一个简易版的cordova核心用来和
@@ -81,7 +80,7 @@ function run(data) {
     var isFirst = true; // 是否第一行
     var str; // 循环中每行的代码
     // 去注释空行，转义双引号和斜杆，根据语法进行分行，去空行，然后根据行切割
-    data = data.replace(/<!--[\w\W\r\n]*?-->/g, '').replace(/("|\\)/g, '\\$1').replace(/({{.+?}})/g,function (s) {
+    data = data.replace(/<!--[\w\W\r\n]*?-->/g, '').replace(/("|\\)/g, '\\$1').replace(/({{.+?}})/g, function (s) {
         return '\n' + s + '\n';
     }).replace(/\r/g, '');
     data = data.split('\n').filter(function (v) {
@@ -106,12 +105,13 @@ function run(data) {
             } else {
                 flag = 1;
             }
+
             if (preFlag == 1) {
                 if (isFirst) {
                     source += '\'';
                 }
                 if (flag == 1) {
-                    source += ' ' + str;
+                    source += str;
                 } else if (flag == 2) {
                     source += '\',' + helper.variable(str);
                 } else if (flag == 3) {
@@ -127,7 +127,7 @@ function run(data) {
                 }
             } else if (preFlag == 3) {
                 if (flag == 1) {
-                    source += '_s.push(\' ' + str;
+                    source += '_s.push(\'' + str;
                 } else if (flag == 2) {
                     source += '_s.push(' + helper.variable(str);
                 } else if (flag == 3) {
@@ -138,16 +138,18 @@ function run(data) {
             preFlag = flag;
         }
     }
+
     if (flag == 1) {
         source += '\');';
     } else if (flag == 2) {
         source += ');';
     }
-    return 'module.exports = {\n' +
+    return '' +
+        'module.exports = {\n' +
         '    render: function(map) {\n' +
         '        var p = [],\n' +
         '            v = [];\n' +
-        '        map = map || {};' +
+        '        map = map || {};\n' +
         '        for(var i in map) {\n' +
         '           p.push(i);\n' +
         '           v.push(map[i]);\n' +

@@ -378,7 +378,7 @@ function async(arr, fn, cb) {
             cb();
             return;
         }
-        fn.call(arr[i], self[i], i, self, done);
+        fn.call(arr[i], arr[i], i, arr, done);
         i++;
     }
 
@@ -464,7 +464,6 @@ exports.toArray = toArray;
  */
 function EventEmitter() {
     this._events = this._events || {};
-    this._maxListeners = this._maxListeners || 10;
 }
 
 /**

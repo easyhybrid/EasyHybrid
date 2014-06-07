@@ -13,9 +13,9 @@
     "unused": true,
     "trailing": true,
     "boss": true,
+    "eqnull": true,
     "laxbreak": true,
     "browser": true,
-    "node": true,
-    "eqnull": true,
-    "onevar": true
+    "devel": true,
+    "node": true
 }

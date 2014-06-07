@@ -57,8 +57,8 @@ dom.support = (function () {
     function computePixelPositionAndBoxSizingReliable() {
         div.style.cssText =
             "-webkit-box-sizing:border-box;-moz-box-sizing:border-box;" +
-                "box-sizing:border-box;display:block;margin-top:1%;top:1%;" +
-                "border:1px;padding:1px;width:4px;position:absolute";
+            "box-sizing:border-box;display:block;margin-top:1%;top:1%;" +
+            "border:1px;padding:1px;width:4px;position:absolute";
         div.innerHTML = "";
         docElem.appendChild(container);
 
@@ -85,7 +85,7 @@ dom.support = (function () {
                 marginDiv = div.appendChild(document.createElement("div"));
             marginDiv.style.cssText = div.style.cssText =
                 "-webkit-box-sizing:content-box;-moz-box-sizing:content-box;" +
-                    "box-sizing:content-box;display:block;margin:0;border:0;padding:0";
+                "box-sizing:content-box;display:block;margin:0;border:0;padding:0";
             marginDiv.style.marginRight = marginDiv.style.width = "0";
             div.style.width = "1px";
             docElem.appendChild(container);
@@ -97,7 +97,6 @@ dom.support = (function () {
 
     return support;
 })();
-
 
 //HTML相关工具函数
 (function () {
@@ -534,7 +533,7 @@ dom.support = (function () {
             ret = elem.value;
             return typeof ret === "string" ?
                 ret.replace(rreturn, "") :
-                ret == null ? "" : ret;
+                    ret == null ? "" : ret;
         }
         if (value == null) {
             value = "";
@@ -670,7 +669,7 @@ dom.support = (function () {
 
 })();
 
-//处理项目样式
+//处理CSS
 (function () {
     var support = dom.support,
         cssProps = {
@@ -776,10 +775,7 @@ dom.support = (function () {
     }
 
     function augmentWidthOrHeight(elem, name, extra, isBorderBox, styles) {
-        var i = extra === ( isBorderBox ? "border" : "content" ) ?
-                4 :
-                name === "width" ? 1 : 0,
-
+        var i = extra === ( isBorderBox ? "border" : "content" ) ? 4 : name === "width" ? 1 : 0,
             val = 0;
 
         for (; i < 4; i += 2) {
@@ -828,7 +824,7 @@ dom.support = (function () {
             augmentWidthOrHeight(
                 elem,
                 name,
-                extra || ( isBorderBox ? "border" : "content" ),
+                    extra || ( isBorderBox ? "border" : "content" ),
                 valueIsBorderBox,
                 styles
             )
@@ -933,6 +929,11 @@ dom.support = (function () {
         }
         return val;
     };
+    /**
+     * 获取元素的绝对位置位置
+     * @param elem {Element} 要获取的元素
+     * @returns {{top: number, left: number}}
+     */
     dom.position = function (elem) {
         var offsetParent, offset,
             parentOffset = { top: 0, left: 0 };
@@ -953,6 +954,12 @@ dom.support = (function () {
             left: offset.left - parentOffset.left - dom.css(elem, "marginLeft", true)
         };
     };
+
+    /**
+     * 获取元素的offset
+     * @param elem {Element} 要获取的元素
+     * @returns {{top: number, left: number}}
+     */
     dom.offset = function (elem) {
         var docElem, win,
             box = { top: 0, left: 0 },
@@ -1001,13 +1008,13 @@ dom.support = (function () {
             set: function (elem, value, extra) {
                 var styles = extra && getStyles(elem);
                 return setPositiveNumber(elem, value, extra ?
-                    augmentWidthOrHeight(
-                        elem,
-                        name,
-                        extra,
-                        dom.css(elem, "boxSizing", false, styles) === "border-box",
-                        styles
-                    ) : 0
+                        augmentWidthOrHeight(
+                            elem,
+                            name,
+                            extra,
+                                dom.css(elem, "boxSizing", false, styles) === "border-box",
+                            styles
+                        ) : 0
                 );
             }
         };
@@ -1045,6 +1052,82 @@ dom.support = (function () {
             }
         );
     });
+})();
+
+//事件绑定
+(function () {
+    /**
+     * 用于创建一个区域，进行事件绑定
+     * @param id {string} 区域进行绑定的ID
+     * @param root {Element} 区域的根节点
+     * @constructor
+     */
+    function Domain(id, root) {
+        this._expando = id;
+        this._root = root;
+        this._event = [];//事件缓存，用于快速释放本Domain中的事件
+        this._data = {};//事件
+    }
+
+    Domain.prototype = {
+        constructor: Domain,
+        /**
+         * 绑定事件
+         * @param elem {Element} 要绑定的元素
+         * @param types {string} 要绑定的事件
+         * @param handler {function} 要绑定的方法
+         * @param data 要绑定的数据
+         * @param selector {string} 委托选择器
+         */
+        bind: function (elem, types, handler, selector, data) {
+        },
+        /**
+         * 解绑事件
+         * @param elem {Element} 要绑定的元素
+         * @param types {string} 要绑定的事件
+         * @param handler {function} 要绑定的方法
+         * @param selector {string} 委托选择器
+         */
+        unbind: function (elem, types, handler, selector) {
+
+        },
+        /**
+         * 触发事件（附加冒泡）
+         * @param elem {Element} 要绑定的元素
+         * @param type {string} 要触发的事件
+         * @param data 触发时的数据
+         */
+        trigger: function (elem, type, data) {
+
+        },
+        /**
+         * 执行绑定的函数
+         * @param elem {Element} 要绑定的元素
+         * @param event 事件对象
+         */
+        dispatch: function (elem, event) {
+
+        },
+        /**
+         * 模拟事件
+         * @param elem {Element} 要绑定的元素
+         * @param type {string} 要触发的事件
+         * @param event 事件对象
+         * @param bubble {boolean} 是否冒泡
+         */
+        simulate: function (elem, type, event, bubble) {
+
+        },
+        /**
+         * 销毁区域
+         */
+        destroy: function () {
+
+        }
+    };
+
+    dom.Domain = Domain;
+
 })();
 
 module.exports = dom;
