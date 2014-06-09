@@ -62,6 +62,7 @@ dom.support = (function () {
         div.innerHTML = "";
         docElem.appendChild(container);
 
+        //noinspection JSCheckFunctionSignatures
         var divStyle = window.getComputedStyle(div, null);
         pixelPositionVal = divStyle.top !== "1%";
         boxSizingReliableVal = divStyle.width === "4px";
@@ -89,12 +90,16 @@ dom.support = (function () {
             marginDiv.style.marginRight = marginDiv.style.width = "0";
             div.style.width = "1px";
             docElem.appendChild(container);
+            //noinspection JSCheckFunctionSignatures
             ret = !parseFloat(window.getComputedStyle(marginDiv, null).marginRight);
             docElem.removeChild(container);
             return ret;
         }
     });
+    support.focusinBubbles = "onfocusin" in window;
 
+    support.nativeTouchScroll = div.style["-webkit-overflow-scrolling"] !== undefined
+        && (navigator.userAgent.match(/(iPad).*OS\s([\d_]+)/) || navigator.userAgent.match(/(iPhone\sOS)\s([\d_]+)/));
     return support;
 })();
 
@@ -227,6 +232,7 @@ dom.support = (function () {
      * @param elem {Element} 要销毁的元素
      */
     dom.destroy = function (elem) {
+        dom.event.clean(getAll(elem));
         var garbageBin = document.getElementById('LeakGarbageBin');
         if (!garbageBin) {
             garbageBin = document.createElement('div');
@@ -525,11 +531,13 @@ dom.support = (function () {
         if (!elem || (nType = elem.nodeType) === 3 || nType === 8 || nType === 2) {
             return;
         }
+        //noinspection JSUnresolvedVariable
         hooks = valHooks[ elem.type ] || valHooks[ elem.nodeName.toLowerCase() ];
         if (arguments.length < 2) {
             if (hooks && "get" in hooks && (ret = hooks.get(elem, "value")) !== undefined) {
                 return ret;
             }
+            //noinspection JSUnresolvedVariable
             ret = elem.value;
             return typeof ret === "string" ?
                 ret.replace(rreturn, "") :
@@ -1056,49 +1064,346 @@ dom.support = (function () {
 
 //事件绑定
 (function () {
-    /**
-     * 用于创建一个区域，进行事件绑定
-     * @param id {string} 区域进行绑定的ID
-     * @param root {Element} 区域的根节点
-     * @constructor
-     */
-    function Domain(id, root) {
-        this._expando = id;
-        this._root = root;
-        this._event = [];//事件缓存，用于快速释放本Domain中的事件
-        this._data = {};//事件
+
+    var noData = {
+            "applet ": true,
+            "embed ": true,
+            "object ": "clsid:D27CDB6E-AE6D-11cf-96B8-444553540000"
+        },
+        support = dom.support,
+        special = {// 需要特殊处理的事件列表
+            load: {
+                noBubble: true
+            },
+            focus: {
+                trigger: function () {
+                    if (this !== safeActiveElement() && this.focus) {
+                        this.focus();
+                        return false;
+                    }
+                },
+                delegateType: "focusin"
+            },
+            blur: {
+                trigger: function () {
+                    if (this === safeActiveElement() && this.blur) {
+                        this.blur();
+                        return false;
+                    }
+                },
+                delegateType: "focusout"
+            },
+            click: {
+                trigger: function () {
+                    if (this.type === "checkbox" && this.click && dom.nodeName(this, "input")) {
+                        this.click();
+                        return false;
+                    }
+                }
+            }
+        },
+        fixHooks = {},
+        rkeyEvent = /^key/,
+        rmouseEvent = /^(?:mouse|pointer|contextmenu)|click/,
+        rtouchEvent = /^touch/,
+        rfocusMorph = /^(?:focusinfocus|focusoutblur)$/,
+        props = "altKey bubbles cancelable ctrlKey currentTarget eventPhase metaKey relatedTarget shiftKey target timeStamp view which".split(" "),
+        rnotwhite = /\S+/g,
+        keyHooks = {
+            props: "char charCode key keyCode".split(" "),
+            filter: function (event, original) {
+                if (event.which == null) {
+                    event.which = original.charCode != null ? original.charCode : original.keyCode;
+                }
+                return event;
+            }
+        },
+        mouseHooks = {
+            props: "button buttons clientX clientY offsetX offsetY pageX pageY screenX screenY toElement".split(" "),
+            filter: function (event, original) {
+                var eventDoc, doc, body,
+                    button = original.button;
+                if (event.pageX == null && original.clientX != null) {
+                    eventDoc = event.target.ownerDocument || document;
+                    doc = eventDoc.documentElement;
+                    body = eventDoc.body;
+
+                    event.pageX = original.clientX + ( doc && doc.scrollLeft || body && body.scrollLeft || 0 ) - ( doc && doc.clientLeft || body && body.clientLeft || 0 );
+                    event.pageY = original.clientY + ( doc && doc.scrollTop || body && body.scrollTop || 0 ) - ( doc && doc.clientTop || body && body.clientTop || 0 );
+                }
+                if (!event.which && button !== undefined) {
+                    /*jshint bitwise:false */
+                    //noinspection JSBitwiseOperatorUsage
+                    event.which = ( button & 1 ? 1 : ( button & 2 ? 3 : ( button & 4 ? 2 : 0 ) ) );
+                    /*jshint bitwise:true */
+                }
+
+                return event;
+            }
+        },
+        touchHooks = {
+            props: "button buttons clientX clientY offsetX offsetY pageX pageY screenX screenY toElement touches".split(" "),
+            filter: function (event, original) {
+                var eventDoc, doc, body,
+                    button = original.button;
+                if (event.pageX == null && original.clientX != null) {
+                    eventDoc = event.target.ownerDocument || document;
+                    doc = eventDoc.documentElement;
+                    body = eventDoc.body;
+
+                    event.pageX = original.clientX + ( doc && doc.scrollLeft || body && body.scrollLeft || 0 ) - ( doc && doc.clientLeft || body && body.clientLeft || 0 );
+                    event.pageY = original.clientY + ( doc && doc.scrollTop || body && body.scrollTop || 0 ) - ( doc && doc.clientTop || body && body.clientTop || 0 );
+                }
+                if (!event.which && button !== undefined) {
+                    /*jshint bitwise:false */
+                    //noinspection JSBitwiseOperatorUsage
+                    event.which = ( button & 1 ? 1 : ( button & 2 ? 3 : ( button & 4 ? 2 : 0 ) ) );
+                    /*jshint bitwise:true */
+                }
+
+                return event;
+            }
+        },
+        dataCache = {};
+
+    function returnTrue() {
+        return true;
     }
 
-    Domain.prototype = {
-        constructor: Domain,
+    function returnFalse() {
+        return false;
+    }
+
+    function safeActiveElement() {
+        try {
+            return document.activeElement;
+        } catch (err) {
+        }
+    }
+
+    dom.expando = "event" + util.uuid();
+    dom.event = {
+        /**
+         * 获取元素的事件缓冲
+         * @param elem {HTMLElement}
+         * @param [name] {string} 要获取的数据的名字
+         * @param [data] 数据，如果传递此参数，表示设置
+         * @private
+         */
+        data: function (elem, name, data) {
+            var nodeType, nd, expando, cache;
+            if (!elem || !elem.nodeType || ((nodeType = elem.nodeType) !== 1 && nodeType !== 9)) {
+                return;
+            }
+            nd = noData[ (elem.nodeName + " ").toLowerCase() ];
+            if (nd === true || (nd && elem.getAttribute("classid") === nd )) {
+                return;
+            }
+            expando = dom.attr(elem, dom.expando);
+            if (!expando) {
+                expando = dom.attr(elem, dom.expando, util.uuid());
+            }
+            cache = dataCache[expando] = dataCache[expando] || {};
+            if (arguments.length === 1) {
+                return cache;
+            } else if (arguments.length === 2) {
+                return cache[name];
+            } else {
+                return cache[name] = data;
+            }
+        },
+
         /**
          * 绑定事件
          * @param elem {Element} 要绑定的元素
          * @param types {string} 要绑定的事件
-         * @param handler {function} 要绑定的方法
-         * @param data 要绑定的数据
+         * @param handler 要绑定的方法
          * @param selector {string} 委托选择器
+         * @param data 要绑定的数据
          */
         bind: function (elem, types, handler, selector, data) {
+            var elemData = dom.event.data(elem),
+                events, eventHandle;
+            if (!elemData || !types) {
+                return;
+            }
+            handler.guid = handler.guid || util.uuid();
+            if (!(events = elemData.events)) {
+                events = elemData.events = {};
+            }
+            if (!(eventHandle = elemData.handle)) {
+                eventHandle = elemData.handle = function (e) {
+                    var args;
+                    if (dom && dom.event.triggered !== e.type) {
+                        if (arguments.length <= 1) {
+                            dom.event.dispatch(elem, e);
+                        } else {
+                            args = slice.call(arguments);
+                            args.unshift(elem);
+                            dom.event.dispatch.apply(dom.event, args);
+                        }
+                    }
+                };
+            }
+            types = types.match(rnotwhite) || [];
+            util.each(types, function (t, origType) {
+                var type, handlers, handleObj,
+                    eventType = special[ origType ] || {};
+                type = ( selector ? eventType.delegateType : eventType.bindType ) || origType;
+                eventType = special[ type ] || {};
+                handleObj = {
+                    type: type,
+                    origType: origType,
+                    data: data,
+                    handler: handler,
+                    guid: handler.guid,
+                    selector: selector
+                };
+                if (!(handlers = events[ type ])) {
+                    handlers = events[ type ] = [];
+                    handlers.delegateCount = 0;
+                    if (!eventType.setup || eventType.setup.call(elem, data, eventHandle) === false) {
+                        elem.addEventListener(type, eventHandle, false);
+                    }
+                }
+                if (selector) {
+                    handlers.splice(handlers.delegateCount++, 0, handleObj);
+                } else {
+                    handlers.push(handleObj);
+                }
+            });
         },
         /**
          * 解绑事件
          * @param elem {Element} 要绑定的元素
          * @param types {string} 要绑定的事件
-         * @param handler {function} 要绑定的方法
+         * @param handler 要绑定的方法
          * @param selector {string} 委托选择器
          */
         unbind: function (elem, types, handler, selector) {
+            var elemData = dom.event.data(elem),
+                events;
+            if (!elemData || !(events = elemData.events)) {
+                return;
+            }
+            if (!types) {
+                util.each(events, function (type) {
+                    dom.event.unbind(elem, type, handler, selector);
+                });
+                return;
+            }
+            types = types.match(rnotwhite) || [];
+            util.each(types, function (t, origType) {
+                var type, handleObj, origCount, handlers, j,
+                    eventType = special[ origType ] || {};
 
+                type = ( selector ? eventType.delegateType : eventType.bindType ) || origType;
+                eventType = special[ type ] || {};
+                handlers = events[ type ] || [];
+                origCount = j = handlers.length;
+                while (j--) {
+                    handleObj = handlers[ j ];
+                    if (origType === handleObj.origType &&
+                        ( !handler || handler.guid === handleObj.guid ) &&
+                        ( !selector || selector === handleObj.selector || selector === "**" && handleObj.selector )) {
+                        handlers.splice(j, 1);
+                        if (handleObj.selector) {
+                            handlers.delegateCount--;
+                        }
+                    }
+                }
+                if (origCount && !handlers.length) {
+                    if (!eventType.teardown || eventType.teardown.call(elem, elemData.handle) === false) {
+                        elem.removeEventListener(type, elemData.handle, false);
+                    }
+                    delete events[ type ];
+                }
+            });
         },
         /**
          * 触发事件（附加冒泡）
          * @param elem {Element} 要绑定的元素
-         * @param type {string} 要触发的事件
+         * @param event {*} 要触发的事件
          * @param data 触发时的数据
+         * @param [onlyHandlers] {boolean} 是否只触发当前元素的事件
          */
-        trigger: function (elem, type, data) {
+        trigger: function (elem, event, data, onlyHandlers) {
+            var i, cur, tmp, bubbleType, ontype, handle, eventType,
+                eventPath = [ elem || document ],
+                type = event.hasOwnProperty("type") ? event.type : event;
 
+            cur = tmp = elem = elem || document;
+
+            if (elem.nodeType === 3 || elem.nodeType === 8) {
+                return;
+            }
+
+            if (rfocusMorph.test(type + dom.event.triggered)) {
+                return;
+            }
+
+            ontype = "on" + type;
+
+            event = event[ dom.expando ] ? event : new dom.Event(type, typeof event === "object" && event);
+
+            event.isTrigger = onlyHandlers ? 2 : 3;
+
+            event.result = undefined;
+            if (!event.target) {
+                event.target = elem;
+            }
+
+            data = data == null ? [ event ] : [ event, data ];
+
+            eventType = special[ type ] || {};
+            if (!onlyHandlers && eventType.trigger && eventType.trigger.apply(elem, data) === false) {
+                return;
+            }
+
+            if (!onlyHandlers && !eventType.noBubble && !dom.isWindow(elem)) {
+                bubbleType = eventType.delegateType || type;
+                if (!rfocusMorph.test(bubbleType + type)) {
+                    cur = cur.parentNode;
+                }
+                for (; cur; cur = cur.parentNode) {
+                    eventPath.push(cur);
+                    tmp = cur;
+                }
+
+                if (tmp === (elem.ownerDocument || document)) {
+                    eventPath.push(tmp.defaultView || tmp.parentWindow || window);
+                }
+            }
+
+            i = 0;
+            while ((cur = eventPath[i++]) && !event.isPropagationStopped()) {
+                event.type = i > 1 ? bubbleType : eventType.bindType || type;
+                handle = (dom.event.data(cur, "events") || {} )[ event.type ] && dom.event.data(cur, "handle");
+                if (handle) {
+                    handle.apply(cur, data);
+                }
+                handle = ontype && cur[ ontype ];
+                if (handle && handle.apply) {
+                    event.result = handle.apply(cur, data);
+                    if (event.result === false) {
+                        event.preventDefault();
+                    }
+                }
+            }
+            event.type = type;
+            if (!onlyHandlers && !event.isDefaultPrevented() && ontype && util.isFunction(elem[ type ]) && !dom.isWindow(elem)) {
+                tmp = elem[ ontype ];
+                if (tmp) {
+                    elem[ ontype ] = null;
+                }
+                dom.event.triggered = type;
+                elem[ type ]();
+                dom.event.triggered = undefined;
+                if (tmp) {
+                    elem[ ontype ] = tmp;
+                }
+            }
+            return event.result;
         },
         /**
          * 执行绑定的函数
@@ -1106,28 +1411,273 @@ dom.support = (function () {
          * @param event 事件对象
          */
         dispatch: function (elem, event) {
+            event = dom.event.fix(event);
 
+            var i, j, ret, matched, handleObj,
+                handlerQueue,
+                args = slice.call(arguments),
+                handlers = ( dom.event.data(elem, "events") || {} )[ event.type ] || [];
+
+            args[0] = event;
+            event.delegateTarget = elem;
+            handlerQueue = dom.event.handlers(elem, event, handlers);
+            i = 0;
+            while ((matched = handlerQueue[ i++ ]) && !event.isPropagationStopped()) {
+                event.currentTarget = matched.elem;
+                j = 0;
+                while ((handleObj = matched.handlers[ j++ ]) && !event.isImmediatePropagationStopped()) {
+                    event.handleObj = handleObj;
+                    event.data = handleObj.data;
+                    ret = ( (special[ handleObj.origType ] || {}).handle || handleObj.handler ).apply(matched.elem, args);
+                    if (ret !== undefined) {
+                        if ((event.result = ret) === false) {
+                            event.preventDefault();
+                            event.stopPropagation();
+                        }
+                    }
+                }
+            }
+            return event.result;
         },
         /**
-         * 模拟事件
+         * 模拟事件触发流程
          * @param elem {Element} 要绑定的元素
          * @param type {string} 要触发的事件
          * @param event 事件对象
          * @param bubble {boolean} 是否冒泡
          */
         simulate: function (elem, type, event, bubble) {
-
+            var e = new dom.Event(type, {
+                isSimulated: true,
+                originalEvent: {}
+            });
+            if (bubble) {
+                dom.event.trigger(elem, e);
+            } else {
+                dom.event.dispatch(elem, e);
+            }
+            if (e.isDefaultPrevented()) {
+                event.preventDefault();
+            }
         },
         /**
-         * 销毁区域
+         * 筛选所有匹配的事件handlers
+         * @param elem {HTMLElement} 要执行的元素
+         * @param event {Event} 事件
+         * @param handlers {Array} 事件绑定的函数
+         * @returns {Array}
          */
-        destroy: function () {
+        handlers: function (elem, event, handlers) {
+            //noinspection JSUnresolvedVariable
+            var i, matches, sel, handleObj,
+                handlerQueue = [],
+                delegateCount = handlers.delegateCount,
+                cur = event.target;
 
+            if (delegateCount && cur.nodeType && (!event.button || event.type !== "click")) {
+                for (; cur !== elem; cur = cur.parentNode || this) {
+                    if (cur.disabled !== true || event.type !== "click") {
+                        matches = [];
+                        for (i = 0; i < delegateCount; i++) {
+                            handleObj = handlers[ i ];
+                            sel = handleObj.selector + " ";
+                            if (matches[ sel ] === undefined) {
+                                matches[ sel ] = dom.find(sel, elem, null, [ cur ]).length;
+                            }
+                            if (matches[ sel ]) {
+                                matches.push(handleObj);
+                            }
+                        }
+                        if (matches.length) {
+                            handlerQueue.push({ elem: cur, handlers: matches });
+                        }
+                    }
+                }
+            }
+            if (delegateCount < handlers.length) {
+                handlerQueue.push({ elem: this, handlers: handlers.slice(delegateCount) });
+            }
+            return handlerQueue;
+        },
+        fix: function (event) {
+            if (event[ dom.expando ]) {
+                return event;
+            }
+
+            var i, prop, copy,
+                type = event.type,
+                originalEvent = event,
+                fixHook = fixHooks[ type ];
+            if (!fixHook) {
+                fixHooks[ type ] = fixHook = rmouseEvent.test(type) ? mouseHooks :
+                    rkeyEvent.test(type) ? keyHooks :
+                        rtouchEvent.test(type) ? touchHooks : {};
+            }
+            copy = fixHook.props ? props.concat(fixHook.props) : props;
+            event = new dom.Event(originalEvent);
+            i = copy.length;
+            while (i--) {
+                prop = copy[ i ];
+                event[ prop ] = originalEvent[ prop ];
+            }
+            if (!event.target) {
+                event.target = document;
+            }
+            if (event.target.nodeType === 3) {
+                event.target = event.target.parentNode;
+            }
+            return fixHook.filter ? fixHook.filter(event, originalEvent) : event;
+        },
+        clean: function (elems) {
+            var elem, nodeType, nd, expando, cache, events,
+                i = 0;
+            for (; (elem = elems[ i ]) !== undefined; i++) {
+                if (!elem || !elem.nodeType || ((nodeType = elem.nodeType) !== 1 && nodeType !== 9)) {
+                    continue;
+                }
+                nd = noData[ (elem.nodeName + " ").toLowerCase() ];
+                if (nd === true || (nd && elem.getAttribute("classid") === nd )) {
+                    continue;
+                }
+                expando = dom.attr(elem, dom.expando);
+                if (!expando || !(cache = dataCache[expando])) {
+                    continue;
+                }
+                if (events = cache.events) {
+                    /* jshint -W083 */
+                    util.each(events, function (type) {
+                        if (special[ type ]) {
+                            dom.event.unbind(elem, type);
+                        } else {
+                            elem.removeEventListener(type, cache.handle, false);
+                        }
+                    });
+                    /* jshint +W083 */
+                    delete cache.events;
+                }
+                if (cache.handle) {
+                    delete cache.handle;
+                }
+                delete dataCache[expando];
+            }
         }
     };
 
-    dom.Domain = Domain;
+    /**
+     *
+     * @param src
+     * @param props
+     */
+    dom.Event = function (src, props) {
+        if (src && src.type) {
+            this.originalEvent = src;
+            this.type = src.type;
+            //noinspection JSUnresolvedVariable
+            this.isDefaultPrevented = src.defaultPrevented || src.defaultPrevented === undefined && src.returnValue === false ?
+                returnTrue :
+                returnFalse;
+        } else {
+            this.type = src;
+        }
+        if (props) {
+            util.merge(this, props);
+        }
+        this.timeStamp = src && src.timeStamp || util.now();
+        this[ dom.expando ] = true;
+    };
 
+    dom.Event.prototype = {
+        constructor: dom.Event,
+        isDefaultPrevented: returnFalse,
+        isPropagationStopped: returnFalse,
+        isImmediatePropagationStopped: returnFalse,
+        /**
+         * 阻止默认行为
+         */
+        preventDefault: function () {
+            var e = this.originalEvent;
+            this.isDefaultPrevented = returnTrue;
+            if (e && e.preventDefault) {
+                e.preventDefault();
+            }
+        },
+        /**
+         * 阻止冒泡
+         */
+        stopPropagation: function () {
+            var e = this.originalEvent;
+            this.isPropagationStopped = returnTrue;
+            if (e && e.stopPropagation) {
+                e.stopPropagation();
+            }
+        },
+        /**
+         * 组织同时其它事件冒泡
+         */
+        stopImmediatePropagation: function () {
+            var e = this.originalEvent;
+            this.isImmediatePropagationStopped = returnTrue;
+            if (e && e.stopImmediatePropagation) {
+                e.stopImmediatePropagation();
+            }
+            this.stopPropagation();
+        }
+    };
+
+    util.each({
+        mouseenter: "mouseover",
+        mouseleave: "mouseout",
+        pointerenter: "pointerover",
+        pointerleave: "pointerout"
+    }, function (orig, fix) {
+        special[ orig ] = {
+            delegateType: fix,
+            bindType: fix,
+            handle: function (event) {
+                var ret,
+                    target = this,
+                    related = event.relatedTarget,
+                    handleObj = event.handleObj;
+                if (!related || (related !== target && !dom.contains(target, related))) {
+                    event.type = handleObj.origType;
+                    ret = handleObj.handler.apply(this, arguments);
+                    event.type = fix;
+                }
+                return ret;
+            }
+        };
+    });
+
+    if (!support.focusinBubbles) {
+        util.each({ focus: "focusin", blur: "focusout" }, function (orig, fix) {
+            var handler = function (event) {
+                dom.event.simulate(fix, event.target, dom.event.fix(event), true);
+            };
+
+            special[ fix ] = {
+                setup: function () {
+                    var doc = this.ownerDocument || this,
+                        attaches = dom.event.data(doc, fix);
+
+                    if (!attaches) {
+                        doc.addEventListener(orig, handler, true);
+                    }
+                    dom.event.data(doc, fix, ( attaches || 0 ) + 1);
+                },
+                teardown: function () {
+                    var doc = this.ownerDocument || this,
+                        attaches = dom.event.data(doc, fix) - 1;
+
+                    if (!attaches) {
+                        doc.removeEventListener(orig, handler, true);
+                        dom.event.data(doc, fix, undefined);
+                    } else {
+                        dom.event.data(doc, fix, attaches);
+                    }
+                }
+            };
+        });
+    }
 })();
 
 module.exports = dom;

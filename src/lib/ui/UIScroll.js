@@ -8,33 +8,43 @@
 var util = require("../util/util"),
     dom = require("../util/dom"),
     UIObject = require('./UIObject').UIObject,
-    _transform = dom.prefixStyle('transform'),
-    _transition = {
-        transitionTimingFunction: dom.prefixStyle('transitionTimingFunction'),
-        transitionDuration: dom.prefixStyle('transitionDuration'),
-        transitionDelay: dom.prefixStyle('transitionDelay')
-    },
-    nativeTouchScroll = document.createElement("div").style["-webkit-overflow-scrolling"] !== undefined
-        && (navigator.userAgent.match(/(iPad).*OS\s([\d_]+)/) || navigator.userAgent.match(/(iPhone\sOS)\s([\d_]+)/));
+    nativeTouchScroll = dom.support.nativeTouchScroll,
+    handleFunc = function (e) {
+        switch (e.type) {
+            case 'touchstart':
+                this._start(e);
+                break;
+            case 'touchmove':
+                this._move(e);
+                break;
+            case 'touchend':
+                this._end(e);
+                break;
+            case 'resize':
+                this.refresh(e);
+                break;
+            case 'transitionend':
+            case 'webkitTransitionEnd':
+            case 'oTransitionEnd':
+            case 'MSTransitionEnd':
+                this._transitionEnd(e);
+                break;
+        }
+    };
 
-/**
- * @constructor
- */
 /**
  * 内部元素可以自由移动的UIObject类
  * @param options 配置参数
- * move事件
  * @constructor
  */
 function UIScroll(options) {
-    UIObject.call(this);
-    if (typeof options === "string") {
+    if (!options || typeof options === "string" || options.nodeType) {
         options = {
-            style: options
+            html: options
         };
     }
+    UIObject.call(this, options.html);
     var event = options.event;
-    var html = options.html;
     var type = options.type || "vertical";
     this._horizontal = false;
     this._vertical = false;
@@ -44,44 +54,33 @@ function UIScroll(options) {
     if (type === "vertical" || type === "both") {
         this._vertical = true;
     }
-    this._dom = this.wrapper = dom.parse(util.format('<div class="%s" style="overflow: hidden;"></div>', options.style || ""))[0];
+    this.wrapper = this._dom;
     this.freeScroll = !event && nativeTouchScroll;
     this.emitEvent = event;
     this.emitMove = event && options.move;
     if (this.freeScroll) {
-        this.wrapper.style.overflowY = this._horizontal ? "scroll" : "hidden";
-        this.wrapper.style.overflowX = this._vertical ? "scroll" : "hidden";
-        this.wrapper.style.webkitOverflowScrolling = "touch";
-        if (html) {
-            this.wrapper.innerHTML = html || "";
-        }
+        dom.style(this.wrapper, "overflowY", this._horizontal ? "scroll" : "hidden");
+        dom.style(this.wrapper, "overflowX", this._vertical ? "scroll" : "hidden");
+        dom.style(this.wrapper, "webkitOverflowScrolling", "touch");
         return;
     }
     this.scroller = dom.parse('<div class="absolute" style="width: 100%;"></div>')[0];
-    this.wrapper.appendChild(this.scroller);
-    if (html) {
-        this.scroller.innerHTML = html || "";
+    for (var item = this.wrapper.firstChild; item; item.nextSibling) {
+        this.scroller.appendChild(item);
     }
+    this.wrapper.appendChild(this.scroller);
     this.x = 0;//水平滚动位置
     this.y = 0;//竖直滚动位置
     this._inited = false;
-    var me = this;
-    me.once("load", function () {
-        var styles = window.getComputedStyle(me.wrapper, null);
-        if (styles.position !== "absolute") {
-            me.wrapper.style.position = "relative";
-        }
-        me.scroller.style[_transition.transitionTimingFunction] = "cubic-bezier(0.1, 0.57, 0.1, 1)";
-        me.bind(me.wrapper, "touchstart", me);
-        me.bind(me.wrapper, "touchmove", me);
-        me.bind(me.wrapper, "touchend", me);
-        me.bind(me.scroller, "transitionend", me);
-        me.bind(me.scroller, "webkitTransitionEnd", me);
-        me.bind(me.scroller, "oTransitionEnd", me);
-        me.bind(me.scroller, "MSTransitionEnd", me);
-        me._inited = true;
-        me.refresh();
-    });
+    var proxy = util.proxy(handleFunc, this);
+    this.bind(this.wrapper, "touchstart", proxy);
+    this.bind(this.wrapper, "touchmove", proxy);
+    this.bind(this.wrapper, "touchend", proxy);
+    this.bind(this.scroller, "transitionend", proxy);
+    this.bind(this.scroller, "webkitTransitionEnd", proxy);
+    this.bind(this.scroller, "oTransitionEnd", proxy);
+    this.bind(this.scroller, "MSTransitionEnd", proxy);
+    dom.style(this.scroller, "transitionTimingFunction", "cubic-bezier(0.1, 0.57, 0.1, 1)");
 }
 
 util.inherits(UIScroll, UIObject);
@@ -102,23 +101,21 @@ UIScroll.prototype.append = function () {
     }
 };
 
-
 /**
- * 重写向前追加元素类
+ * 重写追加元素类
  */
-UIScroll.prototype.prepend = function () {
+UIScroll.prototype.insert = function () {
     if (this.freeScroll) {
-        UIObject.prototype.prepend.apply(this, arguments);
+        UIObject.prototype.insert.apply(this, arguments);
     } else {
         this._dom = this.scroller;
-        UIObject.prototype.prepend.apply(this, arguments);
+        UIObject.prototype.insert.apply(this, arguments);
         if (this._inited) {
             this.refresh();
         }
         this._dom = this.wrapper;
     }
 };
-
 
 /**
  * 重写删除元素类
@@ -150,18 +147,30 @@ UIScroll.prototype.clear = function () {
  * @param time 时间
  */
 UIScroll.prototype.scrollTo = function (x, y, time) {
+    if (!dom.contains(document.body, this.wrapper)) {
+        return;
+    } else if (!this._inited) {
+        this.refresh();
+    }
     this.isInTransition = time > 0;
     time = time || 0;
-    this.scroller.style[_transition.transitionDuration] = time + 'ms';
+    dom.style(this.scroller, "transitionDuration", time + 'ms');
     this._translate(x, y);
 };
 
+//noinspection JSUnusedGlobalSymbols
 /**
  * 滚动到指定元素
  * @param ele UIObject或者dom
  * @param time 滚动时间
  */
 UIScroll.prototype.scrollToElement = function (ele, time) {
+    if (!dom.contains(document.body, this.wrapper)) {
+        return;
+    } else if (!this._inited) {
+        this.refresh();
+    }
+
     if (ele instanceof  UIObject) {
         ele = ele._dom;
     } else {
@@ -185,6 +194,13 @@ UIScroll.prototype.scrollToElement = function (ele, time) {
  * 重新初始化页面位置
  */
 UIScroll.prototype.refresh = function () {
+    if (!this._inited) {
+        var position = dom.css(this.wrapper, "position");
+        if (position !== "absolute") {
+            dom.style(this.wrapper, "position", "relative");
+        }
+        this._inited = true;
+    }
     var wrapperWidth = this.wrapper.clientWidth;
     var wrapperHeight = this.wrapper.clientHeight;
     var scrollerWidth = this.scroller.offsetWidth;
@@ -203,34 +219,6 @@ UIScroll.prototype.refresh = function () {
 };
 
 /**
- * 事件回调
- * @private
- * @param e 异常事件
- */
-UIScroll.prototype.handleEvent = function (e) {
-    switch (e.type) {
-        case 'touchstart':
-            this._start(e);
-            break;
-        case 'touchmove':
-            this._move(e);
-            break;
-        case 'touchend':
-            this._end(e);
-            break;
-        case 'resize':
-            this.refresh(e);
-            break;
-        case 'transitionend':
-        case 'webkitTransitionEnd':
-        case 'oTransitionEnd':
-        case 'MSTransitionEnd':
-            this._transitionEnd(e);
-            break;
-    }
-};
-
-/**
  * 动画结束事件
  * @private
  */
@@ -238,7 +226,7 @@ UIScroll.prototype._transitionEnd = function (e) {
     if (e.target !== this.scroller || !this.isInTransition) {
         return;
     }
-    this.scroller.style[_transition.transitionDuration] = '0ms';
+    dom.style(this.scroller, "transitionDuration", '0ms');
     if (!this._resetPosition(600)) {
         this.isInTransition = false;
         if (this.emitEvent) {
@@ -302,16 +290,18 @@ UIScroll.prototype._resetPosition = function (time) {
  * @private
  */
 UIScroll.prototype._start = function (e) {
+    if (!this._inited) {
+        this.refresh();
+    }
     var point = e.touches ? e.touches[0] : e;
     this.moved = false;
     this.distX = 0;
     this.distY = 0;
-    this.scroller.style[_transition.transitionDuration] = '0ms';
+    dom.style(this.scroller, "transitionDuration", '0ms');
     if (this.isInTransition) {
         this.isInTransition = false;
-        var matrix = window.getComputedStyle(this.scroller, null),
+        var matrix = dom.css(this.scroller, "transform").replace(")", ""),
             x, y;
-        matrix = matrix[_transform].split(')')[0] || "";
         var matrix2 = matrix.split(', ');
         x = +(matrix2[12] || matrix2[4]);
         y = +(matrix2[13] || matrix2[5]);
@@ -382,7 +372,7 @@ UIScroll.prototype._end = function () {
 };
 
 UIScroll.prototype._translate = function (x, y) {
-    this.scroller.style[_transform] = 'translate(' + x + 'px,' + y + 'px)';
+    dom.style(this.scroller, "transform", 'translate(' + x + 'px,' + y + 'px)');
     this.x = x;
     this.y = y;
 };

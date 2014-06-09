@@ -14,7 +14,12 @@ var util = require("../util/util"),//引入工具类
  * @constructor
  */
 function UIButtonGroup(options) {
-    UIObject.call(this, options);
+    if (!options || typeof options === "string" || options.nodeType) {
+        options = {
+            html: options
+        };
+    }
+    UIObject.call(this, options.html);
     this._items = {};
 }
 
@@ -26,44 +31,54 @@ util.inherits(UIButtonGroup, UIObject);
  * @param item UIButton类型
  */
 UIButtonGroup.prototype.append = function (name, item) {
-    if (!item) {
-        //表示正常追加元素
-        UIObject.prototype.append.apply(this, arguments);
-        return;
+    var start = +( typeof name === "string");
+    var args = Array.prototype.slice.call(arguments, start);
+    if (start) {
+        var self = this;
+        if (name in this._items) {
+            util.error("您已经绑定此对象");
+        }
+        item.on("click", function (data) {
+            self.active(name);
+            self.emit("change", item, data);
+        });
+        self._items[name] = item;
     }
-    var self = this;
-    item.on("click", function (data) {
-        self.active(name);
-        self.emit("change", item, data);
-    });
-    if (name in this._items) {
-        throw  new Error("您已经绑定此对象");
-    }
-    self._items[name] = item;
-    UIObject.prototype.append.call(self, item);
+    UIObject.prototype.append.apply(this, args);
 };
 
-/**
- * 添加一个按钮
- * @param name 按钮名字
- * @param item UIButton类型
- */
-UIButtonGroup.prototype.prepend = function (name, item) {
-    if (!item) {
-        //表示正常追加元素
-        UIObject.prototype.prepend.apply(this, arguments);
-        return;
+UIButtonGroup.prototype.insert = function (name, item) {
+    var start = +( typeof name === "string");
+    var args = Array.prototype.slice.call(arguments, start);
+    if (start) {
+        var self = this;
+        if (name in this._items) {
+            util.error("您已经绑定此对象");
+        }
+        item.on("click", function (data) {
+            self.active(name);
+            self.emit("change", item, data);
+        });
+        self._items[name] = item;
     }
-    var self = this;
-    item.on("click", function (data) {
-        self.active(name);
-        self.emit("change", item, data);
-    });
-    if (name in this._items) {
-        throw  new Error("您已经绑定此对象");
+    UIObject.prototype.insert.apply(this, args);
+};
+
+UIButtonGroup.prototype.add = function (name, item) {
+    var start = +( typeof name === "string");
+    var args = Array.prototype.slice.call(arguments, start);
+    if (start) {
+        var self = this;
+        if (name in this._items) {
+            util.error("您已经绑定此对象");
+        }
+        item.on("click", function (data) {
+            self.active(name);
+            self.emit("change", item, data);
+        });
+        self._items[name] = item;
     }
-    self._items[name] = item;
-    UIObject.prototype.prepend.call(self, item);
+    UIObject.prototype.add.apply(this, args);
 };
 
 /**

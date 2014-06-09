@@ -97,6 +97,18 @@ function isFunction(obj) {
     return typeName(obj) === 'function' && typeName(obj) === 'function';
 }
 exports.isFunction = isFunction;
+
+/* jshint -W089 */
+function isEmptyObject(obj) {
+    var name;
+    //noinspection LoopStatementThatDoesntLoopJS
+    for (name in obj) {
+        return false;
+    }
+    return true;
+}
+/* jshint +W089  */
+exports.isEmptyObject = isEmptyObject;
 /*endregion types*/
 
 /*region tools*/
@@ -252,7 +264,6 @@ exports.proxy = proxy;
 function merge(first, second, deep) {
     var i, key;
     if (!second || typeof second === 'function' || isDate(second) || typeof second !== 'object') {
-        first = second;
         return first;
     }
     if (isArray(first) && isArray(second)) {

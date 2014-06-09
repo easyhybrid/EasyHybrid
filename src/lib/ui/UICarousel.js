@@ -16,7 +16,12 @@ var util = require("../util/util"),//引入工具类
  * @constructor
  */
 function UICarousel(options) {
-    UIObject.call(this, options);
+    if (!options || typeof options === "string" || options.nodeType) {
+        options = {
+            html: options
+        };
+    }
+    UIObject.call(this, options.html);
     var event = options.event || false;//是否直接滑动切换
     var self = this;
     self._start = false;
@@ -30,7 +35,7 @@ function UICarousel(options) {
         }
     });
     if (event) {
-        self.bind("", "swipeLeft", function () {
+        self.bind(null, "swipeLeft", function () {
             if (self._children.length <= 1) {
                 return;
             }
@@ -45,7 +50,7 @@ function UICarousel(options) {
                 self.next();
             }, self._time);
         });
-        self.bind("", "swipeRight", function () {
+        self.bind(null, "swipeRight", function () {
             if (self._children.length <= 1) {
                 return;
             }

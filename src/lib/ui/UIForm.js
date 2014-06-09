@@ -6,6 +6,7 @@
  * 如果你不打算提供一个提交按钮，请使用此控件
  */
 var util = require("../util/util"),
+    dom = require("../util/dom"),
     UIObject = require("./UIObject").UIObject;
 
 
@@ -14,18 +15,25 @@ var util = require("../util/util"),
  * @constructor
  */
 function UIForm(options) {
-    options = options || {};
-    var form = util.format(
-        "<form action='#' class='%s'>" +
-            "<input type='submit' style='width: 0;opacity: 0;border: none' value='%s'/>" +
-            "</form>",
-        options.style || "",
-        options.button || "前往"
-    );
-    UIObject.call(this, form);
+    if (!options || typeof options === "string" || options.nodeType) {
+        options = {
+            html: options
+        };
+    }
+    UIObject.call(this, options.html);
+    if (!dom.nodeName(this._dom, "form")) {
+        var form = dom.parse("<form action='#'></form>")[0];
+        var parent = this._dom.parentNode;
+        form.append(this._dom);
+        if (parent) {
+            parent.appendChild(form);
+        }
+    }
+    this._dom.appendChild(dom.parse("<input type='submit' style='width: 0;opacity: 0;border: none' value='" + (options.button || "前往") + "'/>")[0]);
     var self = this;
     this.bind(null, "submit", function (e) {
         e.preventDefault();
+        e.stopPropagation();
         self.emit("submit", self._dom);
         return false;
     });

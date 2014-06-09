@@ -15,21 +15,25 @@ var util = require("../util/util"),//引入工具类
  * @constructor
  */
 function UIButton(options) {
-    UIObject.call(this, options);
+    if (!options || typeof options === "string" || options.nodeType) {
+        options = {
+            html: options
+        };
+    }
+    UIObject.call(this, options.html);
     var me = this;
-    //TODO 需要修改引用_data
     me._data = options.data === undefined ? {} : options.data;//数据
     me._disabled = options.disabled || false;//当按钮处于passive状态时，是否触发点击事件
     me._active = false;
     me._style = options.style || "active";//激活时添加的样式
-    me.bind(me._dom, "click", function () {
+    me.bind(null, "click", function () {
         if (me._disabled && !me._active) {
             return false;
         }
         me.emit("click", me._data);
         return true;
     });
-    me.bind(me._dom, "tap", function () {
+    me.bind(null, "tap", function () {
         if (me._disabled && !me._active) {
             return false;
         }
@@ -57,6 +61,5 @@ UIButton.prototype.passive = function () {
     this.emit("change", this._data, false);
     dom.removeClass(this._dom, this._style);
 };
-
 
 exports.UIButton = UIButton;

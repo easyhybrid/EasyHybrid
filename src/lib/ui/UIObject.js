@@ -11,11 +11,10 @@ var util = require("../util/util"),
 
 /**
  * UI对象基类
- * @param html {Element|string|Array} 用于创建对象的元素或者HTML字符串
- * @param [domain] {Domain} 本对象使用的事件池
+ * @param html {Element|string|Array|*} 用于创建对象的元素或者HTML字符串
  * @constructor
  */
-function UIObject(html, domain) {
+function UIObject(html) {
     EventEmitter.call(this);
     if (!html) {
         html = dom.parse("<div></div>");
@@ -30,8 +29,6 @@ function UIObject(html, domain) {
     this._dom = html[0];//仅使用第一个元素的内容作为节点
     this._children = {};//子元素节点
     this._expando = "data" + util.uuid();//本对象中元素事件的标识
-    this._relative = !!domain;//是否一个相对节点
-    this._domain = domain || new dom.Domain(this._expando, this._dom);//用于事件绑定的节点
 }
 
 util.inherits(UIObject, EventEmitter);
@@ -164,18 +161,16 @@ UIObject.prototype.find = function (selector) {
  * @param [data] {*}
  */
 UIObject.prototype.bind = function (target, types, listener, selector, data) {
-    var me = this;
-
     if (!target) {
         target = [this._dom];
     } else if (typeof target === "string") {
         target = this.find(target);
-    } else if (!"length" in target) {
+    } else if (!("length" in target)) {
         target = [target];
     }
 
     util.each(target, function (i, item) {
-        me._domain.bind(item, types, listener, selector, data);
+        dom.event.bind(item, types, listener, selector, data);
     });
 };
 
@@ -187,18 +182,16 @@ UIObject.prototype.bind = function (target, types, listener, selector, data) {
  * @param [selector] {string} 委托选择器
  */
 UIObject.prototype.unbind = function (target, types, listener, selector) {
-    var me = this;
-
     if (!target) {
         target = [this._dom];
     } else if (typeof target === "string") {
         target = this.find(target);
-    } else if (!"length" in target) {
+    } else if (!("length" in target)) {
         target = [target];
     }
 
     util.each(target, function (i, item) {
-        me._domain.bind(item, types, listener, selector, data);
+        dom.event.unbind(item, types, listener, selector);
     });
 };
 
@@ -210,10 +203,6 @@ UIObject.prototype.destroy = function (type) {
     this.emit('destroy');
     this.clean();
     this.clear(false);
-    if (!this._relative) {
-        this._domain.destroy();
-    }
-    this._domain = null;
 
     if (type && this._dom) {
         dom.destroy(this._dom);
