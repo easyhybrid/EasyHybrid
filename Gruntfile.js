@@ -87,6 +87,6 @@ module.exports = function (grunt) {
     });
     grunt.task.loadNpmTasks("grunt-contrib-watch");
     grunt.task.loadTasks("tasks");
-    grunt.task.registerTask("default", [ "hybrid:demo", "proxy-server:demo", "watch"]);
-    grunt.task.registerTask("template", [ "hybrid:template", "proxy-server:template", "watch"]);
+    grunt.task.registerTask("demo", [ "hybrid:demo", "proxy-server:demo", "watch"]);
+    grunt.task.registerTask("default", [ "hybrid:template", "proxy-server:template", "watch"]);
 };

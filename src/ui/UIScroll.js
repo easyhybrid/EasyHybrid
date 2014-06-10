@@ -64,6 +64,7 @@ function UIScroll(options) {
         dom.style(this.wrapper, "webkitOverflowScrolling", "touch");
         return;
     }
+    dom.style(this.wrapper, "overflow", "hidden");
     this.scroller = dom.parse('<div class="absolute" style="width: 100%;"></div>')[0];
     for (var item = this.wrapper.firstChild; item; item.nextSibling) {
         this.scroller.appendChild(item);
