@@ -112,9 +112,11 @@ function createItem(elem, names) {
 function tree(elem, names) {
     var root = createItem(elem, names), item;
     for (item = elem.firstChild; item; item = item.nextSibling) {
-        if (dom.attr(item, "data-tree") === "false" || dom.find("[data-type],[data-name]", item).length === 0) {
+        if (item.nodeType === 3) {
+            root.add(new UIObject(item));
+        } else if (item.nodeType === 1 && (dom.attr(item, "data-tree") === "false" || dom.find("[data-type],[data-name]", item).length === 0)) {
             root.add(load(item, names));
-        } else {
+        } else if (item.nodeType === 1) {
             root.add(tree(item, names));
         }
     }

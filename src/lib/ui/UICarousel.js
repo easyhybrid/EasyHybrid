@@ -36,9 +36,6 @@ function UICarousel(options) {
     });
     if (event) {
         self.bind(null, "swipeLeft", function () {
-            if (self._children.length <= 1) {
-                return;
-            }
             if (!self._start) {
                 self.next();
                 return;
@@ -51,9 +48,6 @@ function UICarousel(options) {
             }, self._time);
         });
         self.bind(null, "swipeRight", function () {
-            if (self._children.length <= 1) {
-                return;
-            }
             if (!self._start) {
                 self.prev();
                 return;
@@ -75,7 +69,7 @@ util.inherits(UICarousel, UIObject);
  */
 UICarousel.prototype.start = function () {
     var self = this;
-    if (self._start || self._children.length === 0) {
+    if (self._start || self._children.length <= 1) {
         return;
     }
     self._start = true;
@@ -107,6 +101,9 @@ UICarousel.prototype.stop = function () {
  */
 UICarousel.prototype.next = function () {
     var self = this;
+    if (self._children.length <= 1) {
+        return;
+    }
     var next = self._index;
     this.reset();
     this._index = (self._index + 1) % self._children.length;
@@ -120,7 +117,9 @@ UICarousel.prototype.next = function () {
  */
 UICarousel.prototype.prev = function () {
     var self = this;
-
+    if (self._children.length <= 1) {
+        return;
+    }
     self._index = (self._index - 1 + self._children.length) % self._children.length;
     var next = self._index;
     dom.addClass(self._children[next]._dom, self._transform + "-out");
