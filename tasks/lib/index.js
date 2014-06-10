@@ -1,4 +1,5 @@
 var util = require("util");
+var path = require("path");
 var support = ["ios", "android", "web"];
 var native = ["ios", "android"];//目前系统支持的通过phonegap原生代码交互来实现的平台，系统会加载一个简易版的cordova核心用来和
 var plugins = ["ui", "plugin", "patch", "util"];
@@ -169,7 +170,8 @@ exports.run = run;
 function platformInit(target, pkg) {
     //对相关参数进行规范化
     pkg.cordova = !!pkg.cordova;//是否使用cordova
-    pkg.lib = pkg.lib || "src/";//库文件路径
+    //noinspection JSUnresolvedVariable
+    pkg.lib = pkg.lib || path.join(__dirname, "../../src");//库文件路径
     pkg.name = pkg.name || "";//项目名称
     pkg.platforms = pkg.platforms || ["web"];//目标平台
     pkg.sources = pkg.sources || {};//额外资源路径
