@@ -40,7 +40,7 @@ module.exports = function (grunt) {
                     js: []
                 }
             },
-            wesou: {
+            template: {
                 cordova: false,//是否使用cordova，关开此参数，请参考头部的注释信息
                 lib: "",//使用的代码基础库所在位置，如果没有此参数或者值相当于false，都认为是src/lib/
                 develop: {//调试配置信息，如果没有此参数或者值相当于false，都认为是不生成开发版本
@@ -68,9 +68,9 @@ module.exports = function (grunt) {
                 files: ['demo/**'],
                 tasks: ['hybrid:demo']
             },
-            wesou: {
-                files: ['wesou/**'],
-                tasks: ['hybrid:wesou']
+            template: {
+                files: ['template/**'],
+                tasks: ['hybrid:template']
             }
 
         },
@@ -79,7 +79,7 @@ module.exports = function (grunt) {
                 server: undefined,//server名称，一般是localhost，如果需要通过反向代理部署调试版本可修改此参数
                 port: 3000//用于监听的端口，如果build/demo/dev中存在访问的文件，则会返回对应的文件，否则使用代理获取远程数据（除非必要，请不要使用代理下载文件）
             },
-            wesou: {
+            template: {
                 server: undefined,//server名称，一般是localhost，如果需要通过反向代理部署调试版本可修改此参数
                 port: 3001//用于监听的端口，如果build/demo/dev中存在访问的文件，则会返回对应的文件，否则使用代理获取远程数据（除非必要，请不要使用代理下载文件）
             }
@@ -88,5 +88,5 @@ module.exports = function (grunt) {
     grunt.task.loadNpmTasks("grunt-contrib-watch");
     grunt.task.loadTasks("tasks");
     grunt.task.registerTask("default", [ "hybrid:demo", "proxy-server:demo", "watch"]);
-    grunt.task.registerTask("wesou", [ "hybrid:wesou", "proxy-server:wesou", "watch"]);
+    grunt.task.registerTask("template", [ "hybrid:template", "proxy-server:template", "watch"]);
 };
