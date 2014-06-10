@@ -1,5 +1,4 @@
-src/lib/patch/improve-sizzle.js
-src/lib/patch/improve-jquery.js
-src/lib/util/olddom.js
-src/lib/source/**
-tasks/**
+src/patch/improve-sizzle.js
+src/patch/improve-jquery.js
+src/util/olddom.js
+src/source/**

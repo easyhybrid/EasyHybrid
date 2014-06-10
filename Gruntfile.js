@@ -61,15 +61,15 @@ module.exports = function (grunt) {
         },
         watch: {//监视文件改动
             all: {
-                files: ['src/lib/**'],
+                files: ['src/**'],
                 tasks: ['hybrid']
             },
             demo: {
-                files: ['src/demo/**'],
+                files: ['demo/**'],
                 tasks: ['hybrid:demo']
             },
             wesou: {
-                files: ['src/wesou/**'],
+                files: ['wesou/**'],
                 tasks: ['hybrid:wesou']
             }
 

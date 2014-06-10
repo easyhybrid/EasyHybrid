@@ -298,7 +298,7 @@ module.exports = function (grunt) {
             },
             clean: {
                 tmp: [".tmp/"],
-                target: config.target
+                target: [ config.build]
             },
             concat: {
                 build: {
@@ -325,7 +325,6 @@ module.exports = function (grunt) {
                 build: {
                     src: [".tmp/css/*.css"],
                     dest: config.build + "css/index.css"
-
                 }
             }
         });
@@ -463,7 +462,7 @@ module.exports = function (grunt) {
             },
             clean: {
                 tmp: [".tmp/"],
-                target: config.target
+                target: [ config.build]
             }
         });
         var task = [
@@ -515,14 +514,14 @@ module.exports = function (grunt) {
                         "laxbreak": true,
                         "browser": true,
                         "node": true,
-//                        "onevar": true,
+                        //                        "onevar": true,
                         "eqnull": true
                     }
                 },
                 project: {
                     files: [
                         {
-                            src:  me.target + "**/*.js"
+                            src: me.target + "**/*.js"
                         }
                     ],
                     options: {
