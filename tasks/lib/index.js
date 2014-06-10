@@ -171,7 +171,7 @@ function platformInit(target, pkg) {
     //对相关参数进行规范化
     pkg.cordova = !!pkg.cordova;//是否使用cordova
     //noinspection JSUnresolvedVariable
-    pkg.lib = pkg.lib || path.join(__dirname, "../../src");//库文件路径
+    pkg.lib = pkg.lib || path.join(__dirname, "../../src") + "/";//库文件路径
     pkg.name = pkg.name || "";//项目名称
     pkg.platforms = pkg.platforms || ["web"];//目标平台
     pkg.sources = pkg.sources || {};//额外资源路径
@@ -214,7 +214,7 @@ function platformInit(target, pkg) {
             src: target + "/",//源代码目录
             lib: pkg.lib,//从哪里选择基础库
             filter: {
-                lib: createFilter(pkg, pkg.lib.split("/").length, item),//库文件过滤函数
+                lib: createFilter(pkg, pkg.lib.split(/\/|\\/).length, item),//库文件过滤函数
                 source: createFilter(pkg, 0, item)//一般文件过滤函数
             },
             sources: source//要引入index.html的资源
@@ -264,7 +264,7 @@ function developInit(target, pkg) {
         name: pkg.name,
         lib: pkg.lib,//从哪里选择基础库
         filter: {
-            lib: createFilter(pkg, pkg.lib.split("/").length, "web"),//库文件过滤函数
+            lib: createFilter(pkg, pkg.lib.split(/\/|\\/).length, "web"),//库文件过滤函数
             source: createFilter(pkg, 0, "web")//一般文件过滤函数
         },
         sources: source//要引入index.html的资源

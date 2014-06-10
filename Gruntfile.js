@@ -47,7 +47,7 @@ module.exports = function (grunt) {
                     enable: true,
                     proxy: "/"//开发代理信息，如果没有此参数或者值相当于false，都认为是不生成代理（此参数仅供开发使用）
                 },
-                name: "位搜",
+                name: "企业展示模板",
                 platforms: ["android", "web", "ios"],//需要的目标平台，目前支持"android", "web", "ios"，以后会陆续添加
                 patch: ["viewport-pad", "improve-sizzle", "improve-jquery" , "improve-array"],//用于屏蔽用不到的patch插件，请注意平台不匹配的插件已经自动屏蔽
                 util: [],//用于屏蔽用不到的util插件，请注意平台不匹配的插件已经自动屏蔽
