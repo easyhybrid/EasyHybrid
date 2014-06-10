@@ -27,8 +27,7 @@ function UIObject(html) {
         html = [html];
     }
     this._dom = html[0];//仅使用第一个元素的内容作为节点
-    this._children = {};//子元素节点
-    this._expando = "data" + util.uuid();//本对象中元素事件的标识
+    this._children = [];//子元素节点
 }
 
 util.inherits(UIObject, EventEmitter);
@@ -81,8 +80,8 @@ UIObject.prototype.append = function (ele, refNode) {
     if (!refNode) {
         util.error("参考节点不存在");
     }
-    this._children = this._children || {};
-    this._children[ele._expando] = ele;
+    this._children = this._children || [];
+    this._children.push(ele);
     refNode.appendChild(ele._dom);
 };
 
@@ -102,8 +101,8 @@ UIObject.prototype.insert = function (ele, refNode) {
     if (!refNode || !refNode.parentNode) {
         util.error("参考节点不存在");
     }
-    this._children = this._children || {};
-    this._children[ele._expando] = ele;
+    this._children = this._children || [];
+    this._children.push(ele);
     refNode.parentNode.insertBefore(ele._dom, refNode);
 };
 
@@ -112,8 +111,8 @@ UIObject.prototype.insert = function (ele, refNode) {
  * @param ele {UIObject}  要追加的元素
  */
 UIObject.prototype.add = function (ele) {
-    this._children = this._children || {};
-    this._children[ele._expando] = ele;
+    this._children = this._children || [];
+    this._children.push(ele);
 };
 
 /**
@@ -121,9 +120,12 @@ UIObject.prototype.add = function (ele) {
  * @param ele {UIObject} 要删除的元素
  */
 UIObject.prototype.remove = function (ele) {
-    if (ele._expando in this._children) {
-        delete  this._children[ele._expando];
-    }
+    var self = this;
+    util.each(this._children, function (i, item) {
+        if (item === ele) {
+            self._children[i] = null;
+        }
+    });
     ele.detach();
 };
 
@@ -203,7 +205,6 @@ UIObject.prototype.destroy = function (type) {
     this.emit('destroy');
     this.clean();
     this.clear(false);
-
     if (type && this._dom) {
         dom.destroy(this._dom);
     }

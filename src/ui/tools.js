@@ -110,6 +110,9 @@ function createItem(elem, names) {
  * @returns {*}
  */
 function tree(elem, names) {
+    if (typeof elem === "string") {
+        elem = dom.parse(elem)[0];
+    }
     var root = createItem(elem, names), item;
     for (item = elem.firstChild; item; item = item.nextSibling) {
         if (item.nodeType === 3) {
@@ -132,6 +135,9 @@ exports.tree = tree;
  * @returns {*}
  */
 function load(elem, names) {
+    if (typeof elem === "string") {
+        elem = dom.parse(elem)[0];
+    }
     var root = createItem(elem, names);
     util.each(dom.find("[data-type],[data-name]", elem), function (i, item) {
         root.add(createItem(item, names));

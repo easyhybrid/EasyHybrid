@@ -11,7 +11,7 @@ pids
 logs
 results
 tmp
-src/wesou
+wesou
 
 test
 npm-debug.log

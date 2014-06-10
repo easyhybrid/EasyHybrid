@@ -169,7 +169,7 @@ exports.run = run;
 function platformInit(target, pkg) {
     //对相关参数进行规范化
     pkg.cordova = !!pkg.cordova;//是否使用cordova
-    pkg.lib = pkg.lib || "src/lib/";//库文件路径
+    pkg.lib = pkg.lib || "src/";//库文件路径
     pkg.name = pkg.name || "";//项目名称
     pkg.platforms = pkg.platforms || ["web"];//目标平台
     pkg.sources = pkg.sources || {};//额外资源路径
@@ -209,7 +209,7 @@ function platformInit(target, pkg) {
             target: target,//工程名称
             platform: item,//平台的名称
             name: pkg.name,
-            src: "src/" + target + "/",//源代码目录
+            src: target + "/",//源代码目录
             lib: pkg.lib,//从哪里选择基础库
             filter: {
                 lib: createFilter(pkg, pkg.lib.split("/").length, item),//库文件过滤函数
@@ -258,7 +258,7 @@ function developInit(target, pkg) {
         cordova: pkg.cordova,//是否启用cordova
         build: "build/" + target + "/dev/",//目标代码目录
         target: target,//工程名称
-        src: "src/" + target + "/",//源代码目录
+        src: target + "/",//源代码目录
         name: pkg.name,
         lib: pkg.lib,//从哪里选择基础库
         filter: {
