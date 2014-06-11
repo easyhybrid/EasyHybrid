@@ -419,6 +419,7 @@ function ajax(url, data, success, error, options) {
         data = null;
     }
     options = options || {};
+    error = error || options.error || util.noop;
     var cached = options.cache || false,
         type = (options.type || "GET").toUpperCase(),
         async = options.async || true,

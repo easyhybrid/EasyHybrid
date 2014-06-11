@@ -97,9 +97,7 @@ function href(name, data, style, transform) {
     try {
         var createFunc = view[name],
             i = 0;
-
         prevent = true;
-
         createFunc(core, data, function (item) {
             dom.style(item._dom, "z-index", zindex++);
             style = item._style = style || "none";//页面样式

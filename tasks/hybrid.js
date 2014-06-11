@@ -406,7 +406,7 @@ module.exports = function (grunt) {
                         {
                             expand: true,
                             cwd: config.src,
-                            src: ["**.js","**.html",  "!**/css/**"],
+                            src: ["**","!**/*.iml","!**/*.md","!**/.*",  "!**/css/**"],
                             dest: ".tmp/js/",
                             filter: config.filter.source
                         }
