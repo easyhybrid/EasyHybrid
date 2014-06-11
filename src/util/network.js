@@ -6,7 +6,6 @@
  *  @note 如果您需要使用代理来获取数据，并且使用"X-Forwarded-For"头来获取真实的URL，您可以简单的使用如下代码。
  *          window.devProxy = "http://xxxx"
  */
-//jshint onevar:false
 var protocolPattern = /^([a-z0-9.+-]+:)/i,
     portPattern = /:[0-9]*$/,
     delims = ['<', '>', '"', '`', ' ', '\r', '\n', '\t'],
@@ -34,6 +33,7 @@ var protocolPattern = /^([a-z0-9.+-]+:)/i,
         0: 200,
         1223: 204
     },
+    cache = {},
     protocols = {}, //自定义特殊的协议，以简化书写
     util = require("./util");
 
@@ -127,7 +127,7 @@ exports.decode = decode;
  */
 function parse(url) {
     if (typeof url !== 'string') {
-        throw new TypeError("Parameter 'url' must be a string, not " + typeof url);
+        util.error("Parameter 'url' must be a string, not " + typeof url);
     }
     var rest = url.trim(),
         proto = protocolPattern.exec(rest),
@@ -136,7 +136,7 @@ function parse(url) {
         slashes,
         hostEnd, hec, auth, atSign,
         host, port, ipv6Hostname,
-        hostparts, part;
+        hostparts, flag, domainArray, newOut, p, h, hash, qm;
 
     if (proto) {
         proto = proto[0];
@@ -152,30 +152,29 @@ function parse(url) {
 
     if (slashes || (proto && !slashedProtocol[proto])) {
         hostEnd = -1;
-        for (i = 0; i < hostEndingChars.length; i++) {
-            hec = rest.indexOf(hostEndingChars[i]);
-            if (1 !== -1 && (hostEnd === -1 || hec < hostEnd)) {
+        util.each(hostEndingChars, function (i, item) {
+            hec = rest.indexOf(item);
+            if (hec !== -1 && (hostEnd === -1 || hec < hostEnd)) {
                 hostEnd = hec;
             }
-        }
+        });
         if (hostEnd === -1) {
             atSign = rest.lastIndexOf('@');
         } else {
             atSign = rest.lastIndexOf('@', hostEnd);
         }
-
         if (atSign !== -1) {
             auth = rest.slice(0, atSign);
             rest = rest.slice(atSign + 1);
             result.auth = decodeURIComponent(auth);
         }
         hostEnd = -1;
-        for (i = 0; i < nonHostChars.length; i++) {
-            hec = rest.indexOf(nonHostChars[i]);
+        util.each(nonHostChars, function (i, item) {
+            hec = rest.indexOf(item);
             if (hec !== -1 && (hostEnd === -1 || hec < hostEnd)) {
                 hostEnd = hec;
             }
-        }
+        });
         if (hostEnd === -1) {
             hostEnd = rest.length;
         }
@@ -197,24 +196,24 @@ function parse(url) {
         ipv6Hostname = result.hostname[0] === '[' && result.hostname[result.hostname.length - 1] === ']';
         if (!ipv6Hostname) {
             hostparts = result.hostname.split(/\./);
-            for (i = 0; i < hostparts.length; i++) {
-                part = hostparts[i];
-                if (!part) {
-                    continue;
+            flag = true;
+            util.each(hostparts, function (i, part) {
+                if (!part || !flag) {
+                    return;
                 }
                 if (!part.match(hostnamePartPattern)) {
-                    var newpart = '';
-                    for (var j = 0, k = part.length; j < k; j++) {
+                    var newpart = '',
+                        validParts = hostparts.slice(0, i),
+                        notHost = hostparts.slice(i + 1),
+                        bit = part.match(hostnamePartStart);
+                    util.each(part, function (j, item) {
                         if (part.charCodeAt(j) > 127) {
                             newpart += 'x';
                         } else {
-                            newpart += part[j];
+                            newpart += item;
                         }
-                    }
+                    });
                     if (!newpart.match(hostnamePartPattern)) {
-                        var validParts = hostparts.slice(0, i);
-                        var notHost = hostparts.slice(i + 1);
-                        var bit = part.match(hostnamePartStart);
                         if (bit) {
                             validParts.push(bit[1]);
                             notHost.unshift(bit[2]);
@@ -223,10 +222,10 @@ function parse(url) {
                             rest = '/' + notHost.join('.') + rest;
                         }
                         result.hostname = validParts.join('.');
-                        break;
+                        flag = false;
                     }
                 }
-            }
+            });
         }
         if (result.hostname.length > hostnameMaxLen) {
             result.hostname = '';
@@ -234,15 +233,15 @@ function parse(url) {
             result.hostname = result.hostname.toLowerCase();
         }
         if (!ipv6Hostname) {
-            var domainArray = result.hostname.split('.');
-            var newOut = [];
+            domainArray = result.hostname.split('.');
+            newOut = [];
             for (i = 0; i < domainArray.length; ++i) {
                 newOut.push(domainArray[i]);
             }
             result.hostname = newOut.join('.');
         }
-        var p = result.port ? ':' + result.port : '';
-        var h = result.hostname || '';
+        p = result.port ? ':' + result.port : '';
+        h = result.hostname || '';
         result.host = h + p;
         result.href += result.host;
         if (ipv6Hostname) {
@@ -252,20 +251,20 @@ function parse(url) {
             }
         }
     }
-    for (i = 0; i < autoEscape.length; i++) {
-        var ae = autoEscape[i];
+    util.each(autoEscape, function (i, ae) {
         var esc = encodeURIComponent(ae);
         if (esc === ae) {
             esc = window.escape(ae);
         }
         rest = rest.split(ae).join(esc);
-    }
-    var hash = rest.indexOf('#');
+    });
+
+    hash = rest.indexOf('#');
     if (hash !== -1) {
         result.hash = rest.substr(hash);
         rest = rest.slice(0, hash);
     }
-    var qm = rest.indexOf('?');
+    qm = rest.indexOf('?');
     if (qm !== -1) {
         result.search = rest.substr(qm);
         result.query = rest.substr(qm + 1);
@@ -295,17 +294,18 @@ exports.parse = parse;
  * @returns {*}
  */
 function format(result) {
-    var auth = result.auth || '';
+    var auth = result.auth || '',
+        protocol = result.protocol || '',
+        pathname = result.pathname || '',
+        hash = result.hash || '',
+        host = false,
+        query = '',
+        search;
     if (auth) {
         auth = encodeURIComponent(auth);
         auth = auth.replace(/%3A/i, ':');
         auth += '@';
     }
-    var protocol = result.protocol || '',
-        pathname = result.pathname || '',
-        hash = result.hash || '',
-        host = false,
-        query = '';
     if (result.host) {
         host = auth + result.host;
     } else if (result.hostname) {
@@ -317,7 +317,7 @@ function format(result) {
     if (result.query && typeof result.query === 'object' && Object.keys(result.query).length) {
         query = encode(result.query);
     }
-    var search = result.search || (query && ('?' + query)) || '';
+    search = result.search || (query && ('?' + query)) || '';
     if (protocol && protocol.substr(-1) !== ':') {
         protocol += ':';
     }
@@ -372,14 +372,14 @@ function jsonp(url, data, success, error, cbname) {
     if (url.hash) {
         delete url.hash;
     }
-    var uuid = "callback" + util.uuid().replace("-", "");
+    var uuid = "callback" + util.uuid().replace("-", ""),
+        script = document.createElement("script");
     cbname = cbname || "callback";
     url.query[cbname] = uuid;
     util.merge(url.query, data || {});
     error = error || function (code, msg) {
         window.console.log("error: code=" + code + " message=" + msg);
     };
-    var script = document.createElement("script");
     script.src = format(url);
     script.async = true;
     script.charset = "utf-8";
@@ -402,7 +402,6 @@ function jsonp(url, data, success, error, cbname) {
 }
 exports.jsonp = jsonp;
 
-var cache = {};
 
 /**
  * 发起一个ajax请求
@@ -420,10 +419,17 @@ function ajax(url, data, success, error, options) {
         data = null;
     }
     options = options || {};
-
-    var cached = options.cache || false;
+    var cached = options.cache || false,
+        type = (options.type || "GET").toUpperCase(),
+        async = options.async || true,
+        username = options.username || null,
+        password = options.password || null,
+        headers = options.headers || {},
+        timeout = options.timeout || 0,
+        responseType = options.responseType || "text",
+        xhr = null,
+        token;
     //处理数据内存缓冲（只有JSON和文本格式的数据会被缓冲）
-    var token;
     if (cached && (token = url + JSON.stringify(data) ) in cache) {
         success(cache[token], 304, "使用缓冲数据", {});
         return;
@@ -443,18 +449,11 @@ function ajax(url, data, success, error, options) {
     if (url.hash) {
         delete  url.hash;
     }
-    var type = (options.type || "GET").toUpperCase();
     if (type === "GET" || type === "DELETE") {
         util.merge(url.query, data || {});
         data = null;
     }
     url = format(url);
-    var async = options.async || true;
-    var username = options.username || null;
-    var password = options.password || null;
-    var headers = options.headers || {};
-    var timeout = options.timeout || 0;
-    var responseType = options.responseType || "text";
     error = error || function (code, msg) {
         window.console.log("error: code=" + code + " message=" + msg);
     };
@@ -463,23 +462,12 @@ function ajax(url, data, success, error, options) {
         url = window.devProxy + "?id=" + util.uuid();
     }
     if (type === "POST" || type === "PUT") {
-        if (typeof data === "object") {
-            headers["Content-Type"] = "application/x-www-form-urlencoded; charset=UTF-8";
-        } else {
+        if (data instanceof FormData) {
             headers["Content-Type"] = "multipart/form-data; boundary=AaB03x";
+        } else {
+            headers["Content-Type"] = "application/x-www-form-urlencoded; charset=UTF-8";
         }
     }
-    var cookie = options.cookie;
-    if (cookie) {
-        var carr = "";
-        for (var x in cookie) {
-            if (cookie.hasOwnProperty(x) && cookie[x]) {
-                carr += x + "=" + cookie[x] + "; ";
-            }
-        }
-        headers.Cookie = carr;
-    }
-    var xhr = null;
     try {
         xhr = new XMLHttpRequest();
         if (xhr.overrideMimeType) {
@@ -492,35 +480,25 @@ function ajax(url, data, success, error, options) {
     if (!headers["X-Requested-With"]) {
         headers["X-Requested-With"] = "XMLHttpRequest";
     }
-    for (var i in headers) {
-        if (headers.hasOwnProperty(i)) {
-            xhr.setRequestHeader(i, headers[ i ]);
-        }
-    }
+    util.each(headers, function (i, item) {
+        xhr.setRequestHeader(i, item);
+    });
     xhr.onload = function () {
-        var status = xhrSuccessStatus[ xhr.status ] || xhr.status;
-        var msg = xhr.statusText;
-        var sheader = xhr.getAllResponseHeaders() || "";
-        var responseHeaders = {};
-        var filter = options.filter || function (data, status, msg, responseHeaders) {
-            if (responseType !== "buffer" && cached) {
-                cache[token] = data;
-            }
-            success(data, status, msg, responseHeaders);
-        };
-        var match;
-        while ((match = rheaders.exec(sheader))) {
-            var key = match[1].toLowerCase();
-            var value = match[ 2 ];
-            if (key === "set-cookie") {
-                responseHeaders["set-cookie"] = responseHeaders["set-cookie"] || [];
-                responseHeaders["set-cookie"].push(value);
-                if (cookie) {
-                    var str = value.split(";")[0];
-                    var arr = str.split("=");
-                    cookie[arr[0].trim()] = arr[1].trim();
+        var status = xhrSuccessStatus[ xhr.status ] || xhr.status,
+            msg = xhr.statusText,
+            sheader = xhr.getAllResponseHeaders() || "",
+            responseHeaders = {},
+            filter = options.filter(success, error) || function (data, status, msg, responseHeaders) {
+                if (responseType !== "buffer" && cached) {
+                    cache[token] = data;
                 }
-            } else {
+                success(data, status, msg, responseHeaders);
+            },
+            match, key, value, parser;
+        while ((match = rheaders.exec(sheader))) {
+            key = match[1].toLowerCase();
+            value = match[ 2 ];
+            if (key !== "set-cookie") {
                 responseHeaders[ key ] = value;
             }
         }
@@ -542,7 +520,7 @@ function ajax(url, data, success, error, options) {
             }
         } else if (responseType === "xml" && xhr.responseText) {
             try {
-                var parser = new DOMParser();
+                parser = new DOMParser();
                 filter(parser.parseFromString(xhr.responseText, "text/xml"), status, msg, responseHeaders);
             } catch (e) {
                 error(500, "返回的数据格式非法");
@@ -614,16 +592,14 @@ exports.setProtocol = function (type, target) {
         type = {};
         type[ora] = target;
     }
-    for (var x in type) {
-        if (type.hasOwnProperty(x)) {
-            if (x.indexOf(":") < 0) {
-                protocols[x.toLowerCase() + ":"] = target;
-            }
-            else {
-                protocols[x.toLowerCase()] = target;
-            }
+    util.each(type, function (x, target) {
+        if (x.indexOf(":") < 0) {
+            protocols[x.toLowerCase() + ":"] = target;
         }
-    }
+        else {
+            protocols[x.toLowerCase()] = target;
+        }
+    });
 };
 
 /**
@@ -643,14 +619,15 @@ exports.protocol = function (url, data, success, error, options) {
     }
     options = options || {};
     data = data || {};
-    var rest = url.trim();
-    var proto = protocolPattern.exec(rest);
+    var rest = url.trim(),
+        proto = protocolPattern.exec(rest),
+        result, target;
     if (proto) {
         proto = proto[0].toLowerCase();
         rest = rest.substr(proto.length + 2);
         if (proto in protocols) {
-            var result = "";
-            var target = protocols[proto].url;
+            result = "";
+            target = protocols[proto].url;
             if (target[target.length - 1] === "/") {
                 result += target.slice(0, -1);
             } else {

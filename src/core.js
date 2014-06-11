@@ -106,7 +106,7 @@ function href(name, data, style, transform) {
 
             function done() {
                 var arr, j;
-//                item.emitAll("load");
+                item.emit("load");
                 //从dom树上摘除当前页
                 if (style !== "frame" && current) {
                     current.detach();
@@ -180,7 +180,7 @@ function back(data, style, transform) {
     }
     current.emit("back", data);//触发回退页面的back事件
     function done() {
-//        item.emitAll("unload");
+        item.emit("unload");
         item.destroy(true);//销毁页面元素，并清理元素内部的事件，释放内存
         prevent = false;
     }

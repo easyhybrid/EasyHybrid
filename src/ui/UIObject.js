@@ -85,7 +85,6 @@ UIObject.prototype.append = function (ele, refNode) {
     refNode.appendChild(ele._dom);
 };
 
-//noinspection JSUnusedGlobalSymbols
 /**
  * 在某DOM元素前插入一个UIObject
  * @param ele {UIObject}  要追加的元素
