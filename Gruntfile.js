@@ -89,4 +89,5 @@ module.exports = function (grunt) {
     grunt.task.loadTasks("tasks");
     grunt.task.registerTask("demo", [ "hybrid:demo", "proxy-server:demo", "watch"]);
     grunt.task.registerTask("default", [ "hybrid:template", "proxy-server:template", "watch"]);
+    grunt.task.registerTask("task", [ "hybrid:demo"])
 };
