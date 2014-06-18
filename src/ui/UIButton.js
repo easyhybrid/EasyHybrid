@@ -62,4 +62,8 @@ UIButton.prototype.passive = function () {
     dom.removeClass(this._dom, this._style);
 };
 
+UIButton.prototype.tap = UIButton.prototype.click = function () {
+    this.emit("click", this._data);
+};
+
 exports.UIButton = UIButton;

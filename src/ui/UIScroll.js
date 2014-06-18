@@ -135,9 +135,15 @@ UIScroll.prototype.remove = function () {
 };
 
 UIScroll.prototype.clear = function () {
-    UIObject.prototype.clear.call(this);
-    if (!this.freeScroll && this._inited) {
-        this.refresh();
+    if (this.freeScroll) {
+        UIObject.prototype.clear.apply(this,arguments);
+    } else {
+        this._dom = this.scroller;
+        UIObject.prototype.clear.apply(this,arguments);
+        if (this._inited) {
+            this.refresh();
+        }
+        this._dom = this.wrapper;
     }
 };
 
