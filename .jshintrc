@@ -17,5 +17,6 @@
     "laxbreak": true,
     "browser": true,
     "devel": true,
-    "node": true
+    "node": true,
+    "-W069": true
 }

@@ -7,35 +7,35 @@
  *          window.devProxy = "http://xxxx"
  */
 var protocolPattern = /^([a-z0-9.+-]+:)/i,
-    portPattern = /:[0-9]*$/,
-    delims = ['<', '>', '"', '`', ' ', '\r', '\n', '\t'],
-    unwise = ['{', '}', '|', '\\', '^', '~', '`'].concat(delims),
-    autoEscape = ['\''].concat(delims),
-    nonHostChars = ['%', '/', '?', ';', '#'].concat(unwise).concat(autoEscape),
-    hostEndingChars = ['/', '?', '#'],
-    hostnameMaxLen = 255,
-    rheaders = /^(.*?):[ \t]*([^\r\n]*)$/mg,
-    hostnamePartPattern = /^[a-z0-9A-Z_-]{0,63}$/,
-    hostnamePartStart = /^([a-z0-9A-Z_-]{0,63})(.*)$/,
-    slashedProtocol = {
-        'http': true,
-        'https': true,
-        'ftp': true,
-        'gopher': true,
-        'file': true,
-        'http:': true,
-        'https:': true,
-        'ftp:': true,
-        'gopher:': true,
-        'file:': true
-    },
-    xhrSuccessStatus = {
-        0: 200,
-        1223: 204
-    },
-    cache = {},
-    protocols = {}, //自定义特殊的协议，以简化书写
-    util = require("./util");
+portPattern = /:[0-9]*$/,
+delims = ['<', '>', '"', '`', ' ', '\r', '\n', '\t'],
+unwise = ['{', '}', '|', '\\', '^', '~', '`'].concat(delims),
+autoEscape = ['\''].concat(delims),
+nonHostChars = ['%', '/', '?', ';', '#'].concat(unwise).concat(autoEscape),
+hostEndingChars = ['/', '?', '#'],
+hostnameMaxLen = 255,
+rheaders = /^(.*?):[ \t]*([^\r\n]*)$/mg,
+hostnamePartPattern = /^[a-z0-9A-Z_-]{0,63}$/,
+hostnamePartStart = /^([a-z0-9A-Z_-]{0,63})(.*)$/,
+slashedProtocol = {
+    'http': true,
+    'https': true,
+    'ftp': true,
+    'gopher': true,
+    'file': true,
+    'http:': true,
+    'https:': true,
+    'ftp:': true,
+    'gopher:': true,
+    'file:': true
+},
+xhrSuccessStatus = {
+    0: 200,
+    1223: 204
+},
+cache = {},
+protocols = {}, //自定义特殊的协议，以简化书写
+util = require("./util");
 
 /**
  * 将对象转化成queryString
@@ -118,7 +118,6 @@ function decode(qs, sep, eq) {
     return obj;
 }
 exports.decode = decode;
-
 
 /**
  * 将url转换成对象
@@ -402,7 +401,6 @@ function jsonp(url, data, success, error, cbname) {
 }
 exports.jsonp = jsonp;
 
-
 /**
  * 发起一个ajax请求
  * @param url 要请求的网址
@@ -489,7 +487,7 @@ function ajax(url, data, success, error, options) {
             msg = xhr.statusText,
             sheader = xhr.getAllResponseHeaders() || "",
             responseHeaders = {},
-            filter = options.filter(success, error) || function (data, status, msg, responseHeaders) {
+            filter = options.filter && options.filter(success, error) || function (data, status, msg, responseHeaders) {
                 if (responseType !== "buffer" && cached) {
                     cache[token] = data;
                 }
@@ -579,7 +577,6 @@ exports.get = function (url, data, success, error, type) {
 exports.post = function (url, data, success, error, type) {
     ajax(url, data, success, error, {type: "post", responseType: type});
 };
-
 
 /**
  * 添加特殊的协议
