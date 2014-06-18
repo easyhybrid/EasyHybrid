@@ -2059,5 +2059,5 @@ dom.contains = Sizzle.contains;
 //替换dom.unique方法，优化排序方式
 dom.unique = Sizzle.uniqueSort;
 //替换dom.text方法，处理某些浏览器不支持textContent的问题
-dom.text = Sizzle.getText;
+dom._text = Sizzle.getText;
 

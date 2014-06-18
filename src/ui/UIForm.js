@@ -24,7 +24,7 @@ function UIForm(options) {
     if (!dom.nodeName(this._dom, "form")) {
         var form = dom.parse("<form action='#'></form>")[0];
         var parent = this._dom.parentNode;
-        form.append(this._dom);
+        form.appendChild(this._dom);
         if (parent) {
             parent.appendChild(form);
         }

@@ -5,9 +5,9 @@
  * @note 本文件包括了大部分与DOM相关的工具函数（IE10+（PC及WP7/8）、Firefox和Webkit浏览器(PC及Android 2.3+,IOS 5+)）
  */
 var util = require("./util"),
-    slice = [].slice,
-    strundefined = typeof undefined,
-    dom = {};
+slice = [].slice,
+strundefined = typeof undefined,
+dom = {};
 
 //浏览器状态判断（只包括IE10+（PC及WP7/8）、Firefox和Webkit浏览器(PC及Android 2.3+,IOS 5+)）
 dom.support = (function () {
@@ -56,9 +56,9 @@ dom.support = (function () {
     container.appendChild(div);
     function computePixelPositionAndBoxSizingReliable() {
         div.style.cssText =
-            "-webkit-box-sizing:border-box;-moz-box-sizing:border-box;" +
-            "box-sizing:border-box;display:block;margin-top:1%;top:1%;" +
-            "border:1px;padding:1px;width:4px;position:absolute";
+        "-webkit-box-sizing:border-box;-moz-box-sizing:border-box;" +
+        "box-sizing:border-box;display:block;margin-top:1%;top:1%;" +
+        "border:1px;padding:1px;width:4px;position:absolute";
         div.innerHTML = "";
         docElem.appendChild(container);
 
@@ -85,8 +85,8 @@ dom.support = (function () {
             var ret,
                 marginDiv = div.appendChild(document.createElement("div"));
             marginDiv.style.cssText = div.style.cssText =
-                "-webkit-box-sizing:content-box;-moz-box-sizing:content-box;" +
-                "box-sizing:content-box;display:block;margin:0;border:0;padding:0";
+                                      "-webkit-box-sizing:content-box;-moz-box-sizing:content-box;" +
+                                      "box-sizing:content-box;display:block;margin:0;border:0;padding:0";
             marginDiv.style.marginRight = marginDiv.style.width = "0";
             div.style.width = "1px";
             docElem.appendChild(container);
@@ -125,10 +125,7 @@ dom.support = (function () {
         rxhtmlTag = /<(?!area|br|col|embed|hr|img|input|link|meta|param)(([\w:]+)[^>]*)\/>/gi;
 
     function getAll(context, tag) {
-        var ret = dom.find(tag || "*", context);
-        return tag === undefined || tag && dom.nodeName(context, tag) ?
-            util.merge([ context ], ret) :
-            ret;
+        return dom.find(tag || "*", context);
     }
 
     function fixInput(src, dest) {
@@ -223,6 +220,7 @@ dom.support = (function () {
             for (i = 0, l = srcElements.length; i < l; i++) {
                 fixInput(srcElements[ i ], destElements[ i ]);
             }
+            fixInput(elem, clone);
         }
         return clone;
     };
@@ -233,6 +231,7 @@ dom.support = (function () {
      */
     dom.destroy = function (elem) {
         dom.event.clean(getAll(elem));
+        dom.event.clean([elem]);
         var garbageBin = document.getElementById('LeakGarbageBin');
         if (!garbageBin) {
             garbageBin = document.createElement('div');
@@ -242,6 +241,14 @@ dom.support = (function () {
         }
         garbageBin.appendChild(elem);
         garbageBin.textContent = '';
+    };
+    /**
+     * 清空元素内容
+     * @param elem
+     */
+    dom.empty = function (elem) {
+        dom.event.clean(getAll(elem));
+        elem.textContent = "";
     };
 
     wrapMap.tbody = wrapMap.tfoot = wrapMap.colgroup = wrapMap.caption = wrapMap.thead;
@@ -253,15 +260,17 @@ dom.support = (function () {
     //noinspection JSUnresolvedVariable
     var docElem = window.document.documentElement,
         matches = docElem.matchesSelector ||
-            docElem.webkitMatchesSelector ||
-            docElem.mozMatchesSelector ||
-            docElem.oMatchesSelector ||
-            docElem.msMatchesSelector,
+                  docElem.webkitMatchesSelector ||
+                  docElem.mozMatchesSelector ||
+                  docElem.oMatchesSelector ||
+                  docElem.msMatchesSelector,
         selector_sortOrder = function (a, b) {
             if (a === b) {
                 return 0;
             }
-            var compare = b.compareDocumentPosition && a.compareDocumentPosition && a.compareDocumentPosition(b);
+            var compare = b.compareDocumentPosition &&
+                          a.compareDocumentPosition &&
+                          a.compareDocumentPosition(b);
             if (compare) {
                 /*jshint bitwise:false */
                 //noinspection JSBitwiseOperatorUsage
@@ -317,7 +326,7 @@ dom.support = (function () {
      * @param elem {Element} 要获取的元素
      * @returns {*}
      */
-    dom.text = function (elem) {
+    dom._text = function (elem) {
         var ret = "",
             nodeType = elem.nodeType;
         if (nodeType === 1 || nodeType === 9 || nodeType === 11) {
@@ -326,6 +335,20 @@ dom.support = (function () {
             return elem.nodeValue;
         }
         return ret;
+    };
+
+    /**
+     * 获取或者设置元素的文本
+     * @param elem {Element} 要操作的元素
+     * @param [value] {string} 要设置的值
+     */
+    dom.text = function (elem, value) {
+        if (arguments.length > 1) {
+            dom.empty(elem);
+            elem.appendChild((elem && elem.ownerDocument || document).createTextNode(value));
+        } else if (elem) {
+            return dom._text(elem);
+        }
     };
 
     /**
@@ -392,8 +415,8 @@ dom.support = (function () {
             tabIndex: {
                 get: function (elem) {
                     return elem.hasAttribute("tabindex") || rfocusable.test(elem.nodeName) || elem.href ?
-                        elem.tabIndex :
-                        -1;
+                           elem.tabIndex :
+                           -1;
                 }
             }
         },
@@ -402,8 +425,8 @@ dom.support = (function () {
                 get: function (elem) {
                     var val = dom.find.attr(elem, "value");
                     return val != null ?
-                        val :
-                        util.trim(dom.text(elem));
+                           val :
+                           util.trim(dom.text(elem));
                 }
             },
             select: {
@@ -512,13 +535,13 @@ dom.support = (function () {
         }
         if (value !== undefined) {
             return hooks && "set" in hooks && (ret = hooks.set(elem, value, name)) !== undefined ?
-                ret :
-                ( elem[ name ] = value );
+                   ret :
+                   ( elem[ name ] = value );
 
         } else {
             return hooks && "get" in hooks && (ret = hooks.get(elem, name)) !== null ?
-                ret :
-                elem[ name ];
+                   ret :
+                   elem[ name ];
         }
     };
     /**
@@ -540,8 +563,8 @@ dom.support = (function () {
             //noinspection JSUnresolvedVariable
             ret = elem.value;
             return typeof ret === "string" ?
-                ret.replace(rreturn, "") :
-                    ret == null ? "" : ret;
+                   ret.replace(rreturn, "") :
+                   ret == null ? "" : ret;
         }
         if (value == null) {
             value = "";
@@ -717,8 +740,8 @@ dom.support = (function () {
     function setPositiveNumber(elem, value, subtract) {
         var matches = rnumsplit.exec(value);
         return matches ?
-            Math.max(0, matches[ 1 ] - ( subtract || 0 )) + ( matches[ 2 ] || "px" ) :
-            value;
+               Math.max(0, matches[ 1 ] - ( subtract || 0 )) + ( matches[ 2 ] || "px" ) :
+               value;
     }
 
     function vendorPropName(style, name) {
@@ -829,14 +852,14 @@ dom.support = (function () {
             val = parseFloat(val) || 0;
         }
         return ( val +
-            augmentWidthOrHeight(
-                elem,
-                name,
-                    extra || ( isBorderBox ? "border" : "content" ),
-                valueIsBorderBox,
-                styles
-            )
-            ) + "px";
+                 augmentWidthOrHeight(
+                     elem,
+                     name,
+                         extra || ( isBorderBox ? "border" : "content" ),
+                     valueIsBorderBox,
+                     styles
+                 )
+                   ) + "px";
     }
 
     function addGetHookIf(conditionFn, hookFn) {
@@ -1007,22 +1030,22 @@ dom.support = (function () {
             get: function (elem, computed, extra) {
                 if (computed) {
                     return rdisplayswap.test(dom.css(elem, "display")) && elem.offsetWidth === 0 ?
-                        swap(elem, cssShow, function () {
-                            return getWidthOrHeight(elem, name, extra);
-                        }) :
-                        getWidthOrHeight(elem, name, extra);
+                           swap(elem, cssShow, function () {
+                               return getWidthOrHeight(elem, name, extra);
+                           }) :
+                           getWidthOrHeight(elem, name, extra);
                 }
             },
             set: function (elem, value, extra) {
                 var styles = extra && getStyles(elem);
                 return setPositiveNumber(elem, value, extra ?
-                        augmentWidthOrHeight(
-                            elem,
-                            name,
-                            extra,
-                                dom.css(elem, "boxSizing", false, styles) === "border-box",
-                            styles
-                        ) : 0
+                                                      augmentWidthOrHeight(
+                                                          elem,
+                                                          name,
+                                                          extra,
+                                                              dom.css(elem, "boxSizing", false, styles) === "border-box",
+                                                          styles
+                                                      ) : 0
                 );
             }
         };
@@ -1054,8 +1077,8 @@ dom.support = (function () {
                 if (computed) {
                     computed = curCSS(elem, prop);
                     return rnumnonpx.test(computed) ?
-                        dom.position(elem)[ prop ] + "px" :
-                        computed;
+                           dom.position(elem)[ prop ] + "px" :
+                           computed;
                 }
             }
         );
@@ -1510,8 +1533,8 @@ dom.support = (function () {
                 fixHook = fixHooks[ type ];
             if (!fixHook) {
                 fixHooks[ type ] = fixHook = rmouseEvent.test(type) ? mouseHooks :
-                    rkeyEvent.test(type) ? keyHooks :
-                        rtouchEvent.test(type) ? touchHooks : {};
+                                             rkeyEvent.test(type) ? keyHooks :
+                                             rtouchEvent.test(type) ? touchHooks : {};
             }
             copy = fixHook.props ? props.concat(fixHook.props) : props;
             event = new dom.Event(originalEvent);
@@ -1574,8 +1597,8 @@ dom.support = (function () {
             this.type = src.type;
             //noinspection JSUnresolvedVariable
             this.isDefaultPrevented = src.defaultPrevented || src.defaultPrevented === undefined && src.returnValue === false ?
-                returnTrue :
-                returnFalse;
+                                      returnTrue :
+                                      returnFalse;
         } else {
             this.type = src;
         }

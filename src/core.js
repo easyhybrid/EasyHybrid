@@ -164,11 +164,9 @@ core.href = href;
  * @param [transform] {string} 页面切换的样式
  */
 function back(data, style, transform) {
-    if (prevent || backStack.length === 0 || !current || current.style === "none") {//已经回退完毕
+    if (backStack.length === 0 || !current || current.style === "none") {//已经回退完毕
         return false;
     }
-    prevent = true;
-
     var item = current;
     style = style || item._style || "none";//页面样式
     current = backStack.pop();//获取上一页面
@@ -177,10 +175,10 @@ function back(data, style, transform) {
         current.attach(root);//恢复当前页
     }
     current.emit("back", data);//触发回退页面的back事件
+
     function done() {
         item.emit("unload");
         item.destroy(true);//销毁页面元素，并清理元素内部的事件，释放内存
-        prevent = false;
     }
 
     dom.removeClass(item._dom, transformString);

@@ -5,9 +5,9 @@
  * UI组件基础类库
  */
 var util = require("../util/util"),
-    dom = require("../util/dom"),
-    EventEmitter = util.EventEmitter,
-    rhtml = /<|&#?\w+;/;
+dom = require("../util/dom"),
+EventEmitter = util.EventEmitter,
+rhtml = /<|&#?\w+;/;
 
 /**
  * UI对象基类
@@ -142,16 +142,17 @@ UIObject.prototype.clear = function (type) {
     this._children = null;
 };
 
-
 /**
  * 查询元素
  * @param selector {string}  需要查询的元素
  * @returns {*}
  */
 UIObject.prototype.find = function (selector) {
+    if (!selector) {
+        return [this._dom];
+    }
     return dom.find(selector, this._dom);
 };
-
 
 /**
  * 绑定事件或者委托

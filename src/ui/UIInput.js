@@ -32,7 +32,7 @@ function UIInput(options) {
     this._input = this._dom;
     var form = dom.parse("<form action='#'></form>")[0];
     var parent = this._dom.parentNode;
-    form.append(this._dom);
+    form.appendChild(this._dom);
     if (parent) {
         parent.appendChild(form);
     }
