@@ -186,7 +186,7 @@ function back(data, style, transform) {
 
     if (transform !== "none") {
         dom.addClass(item._dom, transforms[transform].back);
-        setTimeout(done, 400);
+        setTimeout(done, 250);
     } else {
         done();
     }
