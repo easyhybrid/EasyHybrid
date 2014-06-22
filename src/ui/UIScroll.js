@@ -136,10 +136,10 @@ UIScroll.prototype.remove = function () {
 
 UIScroll.prototype.clear = function () {
     if (this.freeScroll) {
-        UIObject.prototype.clear.apply(this,arguments);
+        UIObject.prototype.clear.apply(this, arguments);
     } else {
         this._dom = this.scroller;
-        UIObject.prototype.clear.apply(this,arguments);
+        UIObject.prototype.clear.apply(this, arguments);
         if (this._inited) {
             this.refresh();
         }
@@ -195,7 +195,6 @@ UIScroll.prototype.scrollToElement = function (ele, time) {
     time = time === undefined || time === null || time === 'auto' ? Math.max(Math.abs(pos.left) * 2, Math.abs(pos.top) * 2) : time;
     this.scrollTo(pos.left, pos.top, time);
 };
-
 
 /**
  * 重新初始化页面位置
@@ -272,7 +271,7 @@ UIScroll.prototype._resetPosition = function (time) {
                 self.emit("left");
             }, 10);
         }
-        if (this._horizontal && this.x < this.maxScrollX) {
+        if (this._horizontal && this.x < this.maxScrollX && this.x < 0) {
             setTimeout(function () {
                 self.emit("right");
             }, 10);
@@ -282,7 +281,7 @@ UIScroll.prototype._resetPosition = function (time) {
                 self.emit("top");
             }, 10);
         }
-        if (this._vertical && this.y < this.maxScrollY) {
+        if (this._vertical && this.y < this.maxScrollY && this.y < 0) {
             setTimeout(function () {
                 self.emit("bottom");
             }, 10);
@@ -383,7 +382,6 @@ UIScroll.prototype._translate = function (x, y) {
     this.x = x;
     this.y = y;
 };
-
 
 exports.UIScroll = UIScroll;
 

@@ -5,9 +5,9 @@
  * @note 本文件包括了大部分与DOM相关的工具函数（IE10+（PC及WP7/8）、Firefox和Webkit浏览器(PC及Android 2.3+,IOS 5+)）
  */
 var util = require("./util"),
-slice = [].slice,
-strundefined = typeof undefined,
-dom = {};
+    slice = [].slice,
+    strundefined = typeof undefined,
+    dom = {};
 
 //浏览器状态判断（只包括IE10+（PC及WP7/8）、Firefox和Webkit浏览器(PC及Android 2.3+,IOS 5+)）
 dom.support = (function () {

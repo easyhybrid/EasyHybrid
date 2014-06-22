@@ -37,13 +37,13 @@ module.exports = function (grunt) {
                 ui: [],//用于屏蔽用不到的ui插件，请注意平台不匹配的插件已经自动屏蔽
                 sources: {//需要额外添加的其它CSS或者JS库，当cordova，当为true时,请在此添加cordova.js和cordova_plugin.js
                     css: [],
-                    js: []
+                    js: [/*"js/setting.js"*/]
                 }
             }
         },
         watch: {//监视文件改动
             template: {
-                files: ['src/**','template/**'],
+                files: ['src/**', 'template/**'],
                 tasks: ['hybrid:template']
             }
 

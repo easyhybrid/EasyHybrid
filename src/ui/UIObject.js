@@ -5,9 +5,9 @@
  * UI组件基础类库
  */
 var util = require("../util/util"),
-dom = require("../util/dom"),
-EventEmitter = util.EventEmitter,
-rhtml = /<|&#?\w+;/;
+    dom = require("../util/dom"),
+    EventEmitter = util.EventEmitter,
+    rhtml = /<|&#?\w+;/;
 
 /**
  * UI对象基类
@@ -209,6 +209,14 @@ UIObject.prototype.destroy = function (type) {
         dom.destroy(this._dom);
     }
     this._dom = null;
+};
+
+/**
+ * 获取子元素的个数
+ * @returns {Number}
+ */
+UIObject.prototype.length = function () {
+    return this._children && this._children.length || 0;
 };
 
 exports.UIObject = UIObject;
