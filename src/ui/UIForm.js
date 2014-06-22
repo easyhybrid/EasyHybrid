@@ -9,7 +9,6 @@ var util = require("../util/util"),
     dom = require("../util/dom"),
     UIObject = require("./UIObject").UIObject;
 
-
 /**
  * Form控件
  * @constructor
@@ -28,6 +27,10 @@ function UIForm(options) {
         if (parent) {
             parent.appendChild(form);
         }
+        this._target = this._dom;
+        this._dom = form;
+    } else {
+        this._target = this._dom;
     }
     this._dom.appendChild(dom.parse("<input type='submit' style='width: 0;opacity: 0;border: none' value='" + (options.button || "前往") + "'/>")[0]);
     var self = this;
@@ -48,5 +51,30 @@ util.inherits(UIForm, UIObject);
 UIForm.prototype.submit = function () {
     this.emit("submit", this._dom);
 };
+
+/**
+ * 添加一个子元素
+ */
+UIForm.prototype.append = function () {
+    var dom = this._dom;
+    this._dom = this._target;
+    UIObject.prototype.append.apply(this, arguments);
+    this._dom = dom;
+};
+
+UIForm.prototype.insert = function () {
+    var dom = this._dom;
+    this._dom = this._target;
+    UIObject.prototype.insert.apply(this, arguments);
+    this._dom = dom;
+};
+
+UIForm.prototype.clear = function () {
+    var dom = this._dom;
+    this._dom = this._target;
+    UIObject.prototype.clear.apply(this, arguments);
+    this._dom = dom;
+};
+
 
 exports.UIForm = UIForm;

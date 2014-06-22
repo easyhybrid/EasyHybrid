@@ -20,6 +20,7 @@ function UIPager(options) {
             html: options
         };
     }
+    options.event = true;
     UIScroll.call(this, options);
     var me = this;
     me._options = {};
@@ -50,10 +51,12 @@ UIPager.prototype.reset = function () {
 UIPager.prototype.load = function () {
     var me = this;
 
-    if (me.finish || me._loading || me.index > me.max || me.index === me.max && me.cache.length > 0) {
+    if (me.finish || me.loading || me.index > me.max || me.index === me.max && me.cache.length > 0) {
         return;
     }
     me.emit("start");
+    me.loading = true;
+
     //缓冲数据，并形成闭包
     var uuid = me.uuid;
     var current = me.index;
@@ -61,6 +64,7 @@ UIPager.prototype.load = function () {
 
     //事件回调
     function done(data) {
+        me.loading = false;
         if (uuid !== me.uuid) {
             return;
         }
@@ -84,11 +88,9 @@ UIPager.prototype.load = function () {
     }
 
     me.emit("load", me.index, me.index++ === 1 ? me.size * 2 : me.size, done);
-    if(me.index === 2){
+    if (me.index === 2) {
         me.index++;
     }
-    me.loading = true;
 };
-
 
 exports.UIPager = UIPager;

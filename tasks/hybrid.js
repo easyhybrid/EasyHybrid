@@ -521,7 +521,7 @@ module.exports = function (grunt) {
                 project: {
                     files: [
                         {
-                            src: me.target + "**/*.js"
+                            src: me.target + "/**/*.js"
                         }
                     ],
                     options: {

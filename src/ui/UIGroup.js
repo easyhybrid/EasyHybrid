@@ -13,7 +13,7 @@ var util = require("../util/util"),//引入工具类
  * @param options 配置信息
  * @constructor
  */
-function UIButtonGroup(options) {
+function UIGroup(options) {
     if (!options || typeof options === "string" || options.nodeType) {
         options = {
             html: options
@@ -23,14 +23,14 @@ function UIButtonGroup(options) {
     this._items = {};
 }
 
-util.inherits(UIButtonGroup, UIObject);
+util.inherits(UIGroup, UIObject);
 
 /**
  * 添加一个按钮
  * @param name 按钮名字
  * @param item UIButton类型
  */
-UIButtonGroup.prototype.append = function (name, item) {
+UIGroup.prototype.append = function (name, item) {
     var start = +( typeof name === "string");
     var args = Array.prototype.slice.call(arguments, start);
     if (start) {
@@ -47,7 +47,7 @@ UIButtonGroup.prototype.append = function (name, item) {
     UIObject.prototype.append.apply(this, args);
 };
 
-UIButtonGroup.prototype.insert = function (name, item) {
+UIGroup.prototype.insert = function (name, item) {
     var start = +( typeof name === "string");
     var args = Array.prototype.slice.call(arguments, start);
     if (start) {
@@ -64,7 +64,7 @@ UIButtonGroup.prototype.insert = function (name, item) {
     UIObject.prototype.insert.apply(this, args);
 };
 
-UIButtonGroup.prototype.add = function (name, item) {
+UIGroup.prototype.add = function (name, item) {
     var start = +( typeof name === "string");
     var args = Array.prototype.slice.call(arguments, start);
     if (start) {
@@ -85,7 +85,7 @@ UIButtonGroup.prototype.add = function (name, item) {
  * 删除一个按钮
  * @param name 按钮名字
  */
-UIButtonGroup.prototype.remove = function (name) {
+UIGroup.prototype.remove = function (name) {
     if (typeof name !== "string") {
         //表示正常追加元素
         UIObject.prototype.remove.apply(this, arguments);
@@ -101,7 +101,7 @@ UIButtonGroup.prototype.remove = function (name) {
 /**
  * 清除所有的项目
  */
-UIButtonGroup.prototype.clear = function () {
+UIGroup.prototype.clear = function () {
     this._items = {};
     UIObject.prototype.clear.apply(this, arguments);
 };
@@ -110,7 +110,7 @@ UIButtonGroup.prototype.clear = function () {
  * 显示导航项目
  * @param name {string} 项目的名字
  */
-UIButtonGroup.prototype.active = function (name) {
+UIGroup.prototype.active = function (name) {
     var items = this._items;
     for (var x in items) {
         if (items.hasOwnProperty(x)) {
@@ -124,4 +124,4 @@ UIButtonGroup.prototype.active = function (name) {
     }
 };
 
-exports.UIButtonGroup = UIButtonGroup;
+exports.UIGroup = UIGroup;
