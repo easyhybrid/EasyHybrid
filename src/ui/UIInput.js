@@ -40,10 +40,10 @@ function UIInput(options) {
     this._dom.appendChild(dom.parse("<input type='submit' style='width: 0;opacity: 0;border: none' value='" + (options.button || "前往") + "'/>")[0]);
     var self = this;
     this.bind(this._input, "click", function () {
-        self.emit("click", this.value);
+        self.emit("click", dom.val(self._input));
     });
     this.bind(this._input, "keyup", function () {
-        self.emit("change", this.value);
+        self.emit("change", dom.val(self._input));
     });
     this.bind(null, "submit", function (e) {
         e.preventDefault();

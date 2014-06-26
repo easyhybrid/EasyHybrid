@@ -1,0 +1,42 @@
+<div class="absolute full-screen ui-page">
+    <div class="ui-header">
+        <div class="ui-header-left">
+            <div class="ui-header-menu" data-name="menu" data-role="button"></div>
+        </div>
+        <div class="ui-header-title">Easy Hybrid框架</div>
+    </div>
+    <div class="home-index-content" data-role="scroll" data-name="scroll">
+        <div class="home-section">
+            <h3>示例</h3>
+            <p>本示例介绍了Easy Hybrid框架的开发方式和所有的API函数定义。</p>
+        </div>
+        <div class="home-section">
+            <h3>作者</h3>
+            <ul>
+                {{for data=Author key=key item=item}}
+                <li class="home-author">
+                    <p>姓名：{{item.name}}</p>
+                    <p>邮箱：{{item.email}}</p>
+                </li>
+                {{endfor}}
+            </ul>
+        </div>
+        <div class="home-section">
+            <h3>书写方式</h3>
+            <p>Easy Hybrid提供了4种代码书写方式，分别是：<br/></p>
+            <p><a href="type/normal">普通写法</a></p>
+            <p><a href="type/object">JS对象法</a></p>
+            <p><a href="type/attr">属性法</a></p>
+            <p><a href="type/page">页面法</a></p>
+        </div>
+        <div class="home-section">
+            <h3>实用工具</h3>
+            <p>Easy Hybrid提供了很多默认工具，如果您不需要他们，可以在Gruntfile.js中排除它们（util和dom无法被排除）：<br/></p>
+            <p><a href="tools/util" data-role="link">util：ECMA工具函数</a></p>
+            <p><a href="tools/dom" data-role="link">dom：DOM操作函数</a></p>
+            <p><a href="tools/network" data-role="link">network：网络请求函数</a></p>
+            <p><a href="tools/data" data-role="link">data：本地存储函数</a></p>
+            <p><a href="tools/os" data-role="link">os：UA判断函数</a></p>
+        </div>
+    </div>
+</div>

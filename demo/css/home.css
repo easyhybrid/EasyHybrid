@@ -1,0 +1,42 @@
+.home-index-content {
+    position: absolute;
+    top: 51px;
+    left: 0;
+    bottom: 0;
+    width: 100%;
+}
+
+.home-section {
+    margin: 0 10px 10px;
+    background: #FFFFFF;
+    border: 1px solid #EEEEEE;
+    border-radius: 5px 5px;
+    padding: 10px;
+    -webkit-box-sizing: border-box;
+    -moz-box-sizing: border-box;
+    box-sizing: border-box;
+}
+
+.home-section p {
+    line-height: 24px;
+    font-size: 16px;
+}
+
+.home-section h3 {
+    border-bottom: 1px solid #DDDDDD;
+    color: #3EB249;
+    font-size: 20px;
+    padding-bottom: 5px;
+    margin-bottom: 5px;
+}
+
+.home-section a {
+    color: #3388CC;
+}
+
+.home-author {
+    padding-left: 25px;
+    background: url("img/home-point.png") scroll 4px 8px no-repeat;
+    background-size: 8px 8px;
+    margin-left: 10px;
+}

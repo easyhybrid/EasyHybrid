@@ -4,11 +4,14 @@
  *        赤菁风铃(liuxuanzy@qq.com)
  * @note 快速创建页面的方法
  */
-var ui = require("../core").ui,
+var core = require("../core"),
+    ui = core.ui,
     util = require("../util/util"),
     dom = require("../util/dom"),
     UIObject = require("./UIObject").UIObject,
+    rhttp = /^http:/i,
     ruiprefix = /^UI[A-Z]]/;
+
 /**
  * 根据一个配置对象创建一个UIObject类对象
  * @param obj {*} 要创建的对象
@@ -75,21 +78,42 @@ function createItem(elem, names) {
     }
     var attrs = elem.attributes,
         i = attrs.length,
-        results = {},
-        name, type, UIType, obj;
+        results = {}, href,
+        name, role, UIType, obj;
+
     while (i--) {
         name = attrs[i].name;
         if (name.indexOf("data-") === 0) {
             results[name.slice(5).toLowerCase()] = dom.attr(elem, name);
         }
     }
-    if (!( type = results.type)) {
+
+    if (dom.nodeName(elem, "a")) {
+        href = dom.attr(elem, "href");
+        obj = new ui.UIButton(elem);
+        if (rhttp.test(href)) {
+            obj.on("click", function () {
+                core.browser.open(href);
+            });
+        } else if (href === "back") {
+            obj.on("click", function () {
+                core.href(href, results, results.style, results.transform);
+            });
+        } else {
+            obj.on("click", function () {
+                core.href(href, results, results.style || "back", results.transform || "horizontal");
+            });
+        }
+        return;
+    }
+
+    if (!( role = results.role)) {
         UIType = UIObject;
-    } else if (!ruiprefix.test(type)) {
-        type = "UI" + type[0].toUpperCase() + type.slice(1);
-        UIType = ui[type] || UIObject;
+    } else if (!ruiprefix.test(role)) {
+        role = "UI" + role[0].toUpperCase() + role.slice(1);
+        UIType = ui[role] || UIObject;
     } else {
-        UIType = ui[type] || UIObject;
+        UIType = ui[role] || UIObject;
     }
     if (UIType === UIObject) {
         obj = new UIObject(elem);
@@ -114,10 +138,10 @@ function tree(elem, names) {
         elem = dom.parse(elem)[0];
     }
     var root = createItem(elem, names), item;
-    for (item = elem.firstChild; item; item = item.nextSibling) {
+    for (item = elem.firstElementChild; item; item = item.nextElementSibling) {
         if (item.nodeType === 3) {
             root.add(new UIObject(item));
-        } else if (item.nodeType === 1 && (dom.attr(item, "data-tree") === "false" || dom.find("[data-type],[data-name]", item).length === 0)) {
+        } else if (item.nodeType === 1 && (dom.attr(item, "data-tree") === "false" || dom.find("[data-role],[data-name],a", item).length === 0)) {
             root.add(load(item, names));
         } else if (item.nodeType === 1) {
             root.add(tree(item, names));
@@ -139,7 +163,7 @@ function load(elem, names) {
         elem = dom.parse(elem)[0];
     }
     var root = createItem(elem, names);
-    util.each(dom.find("[data-type],[data-name]", elem), function (i, item) {
+    util.each(dom.find("[data-role],[data-name],a", elem), function (i, item) {
         root.add(createItem(item, names));
     });
     return root;

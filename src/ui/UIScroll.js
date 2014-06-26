@@ -66,8 +66,11 @@ function UIScroll(options) {
     }
     dom.style(this.wrapper, "overflow", "hidden");
     this.scroller = dom.parse('<div class="absolute" style="width: 100%;"></div>')[0];
-    for (var item = this.wrapper.firstChild; item; item.nextSibling) {
-        this.scroller.appendChild(item);
+    var current = null;
+    for (var item = this.wrapper.firstElementChild; item;) {
+        current = item;
+        item = item.nextElementSibling;
+        this.scroller.appendChild(current);
     }
     this.wrapper.appendChild(this.scroller);
     this.x = 0;//水平滚动位置
@@ -186,13 +189,12 @@ UIScroll.prototype.scrollToElement = function (ele, time) {
     if (!ele) {
         return;
     }
-    var pos = dom.offset(ele);
-    var wap = dom.offset(this.wrapper);
-    pos.left -= wap.left;
-    pos.top -= wap.top;
+    var pos = dom.position(ele);
+    pos.left = -pos.left;
+    pos.top = -pos.top;
     pos.left = pos.left > 0 || this.maxScrollX > 0 ? 0 : pos.left < this.maxScrollX ? this.maxScrollX : pos.left;
     pos.top = pos.top > 0 || this.maxScrollY > 0 ? 0 : pos.top < this.maxScrollY ? this.maxScrollY : pos.top;
-    time = time === undefined || time === null || time === 'auto' ? Math.max(Math.abs(pos.left) * 2, Math.abs(pos.top) * 2) : time;
+    time = time === undefined || time === null || time === 'auto' ? Math.min(2000, Math.max(Math.abs(pos.left) * 2, Math.abs(pos.top) * 2)) : time;
     this.scrollTo(pos.left, pos.top, time);
 };
 

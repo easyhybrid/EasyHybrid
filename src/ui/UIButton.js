@@ -26,19 +26,19 @@ function UIButton(options) {
     me._disabled = options.disabled || false;//当按钮处于passive状态时，是否触发点击事件
     me._active = false;
     me._style = options.style || "active";//激活时添加的样式
-    me.bind(null, "click", function () {
+    me.bind(null, "click", function (e) {
         if (me._disabled && !me._active) {
             return false;
         }
-        me.emit("click", me._data);
-        return true;
+        me.emit("click", me._data, e);
+        return false;
     });
-    me.bind(null, "tap", function () {
+    me.bind(null, "tap", function (e) {
         if (me._disabled && !me._active) {
             return false;
         }
-        me.emit("tap", me._data);
-        return true;
+        me.emit("tap", me._data, e);
+        return false;
     });
 }
 

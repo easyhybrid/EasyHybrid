@@ -219,4 +219,17 @@ UIObject.prototype.length = function () {
     return this._children && this._children.length || 0;
 };
 
+/**
+ * 获取当前元素的子元素
+ * @param index
+ * @returns {*}
+ */
+UIObject.prototype.eq = function (index) {
+    if (!this._children) {
+        return null;
+    }
+    index = (index + this._children.length ) % this._children.length;
+    return this._children[index];
+};
+
 exports.UIObject = UIObject;

@@ -215,7 +215,7 @@ module.exports = function (grunt) {
                         {
                             expand: true,
                             cwd: config.lib,
-                            src: ["**", "!css/**"],
+                            src: ["**", "!css/**", "!source/self/**", "source/self/load.js", "source/self/require.js"],
                             dest: ".tmp/js/",
                             filter: config.filter.lib
                         }
@@ -248,7 +248,7 @@ module.exports = function (grunt) {
                         {
                             expand: true,
                             cwd: config.src,
-                            src: ["**.js","**.html",  "!**/css/**"],
+                            src: ["**","!**/*.iml","!**/*.md","!**/.*",  "!**/css/**"],
                             dest: ".tmp/js/",
                             filter: config.filter.source
                         }
