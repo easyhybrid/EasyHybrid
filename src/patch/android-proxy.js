@@ -10,6 +10,7 @@ var plugin = require("../plugin/plugin"),
     cordova = require("cordova");//确保在ANDROID项目中引用了cordova
 
 plugin.exec(null, null, 'PluginManager', 'startup', []);
+plugin.platform = "android";
 
 var backButtonChannel = cordova.addDocumentEventHandler('backbutton');
 backButtonChannel.onHasSubscribersChange = function () {

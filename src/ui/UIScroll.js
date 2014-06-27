@@ -65,13 +65,13 @@ function UIScroll(options) {
         return;
     }
     dom.style(this.wrapper, "overflow", "hidden");
-    this.scroller = dom.parse('<div class="absolute" style="width: 100%;"></div>')[0];
-    var current = null;
-    for (var item = this.wrapper.firstElementChild; item;) {
-        current = item;
-        item = item.nextElementSibling;
-        this.scroller.appendChild(current);
-    }
+    var scroller = this.scroller = dom.parse('<div class="absolute" style="width: 100%;"></div>')[0];
+    var arr = [].slice.call(this.wrapper.childNodes);
+    util.each(arr, function (i, item) {
+        if (item.nodeType === 1 || item.nodeType === 3 && util.trim(item.textContent)) {
+            scroller.appendChild(item);
+        }
+    });
     this.wrapper.appendChild(this.scroller);
     this.x = 0;//水平滚动位置
     this.y = 0;//竖直滚动位置
@@ -328,6 +328,7 @@ UIScroll.prototype._start = function (e) {
  * @private
  */
 UIScroll.prototype._move = function (e) {
+    e.preventDefault();
     var point = e.touches ? e.touches[0] : e,
         deltaX = point.pageX - this.pointX,
         deltaY = point.pageY - this.pointY,

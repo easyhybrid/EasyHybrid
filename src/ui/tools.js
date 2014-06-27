@@ -96,11 +96,13 @@ function createItem(elem, names) {
                 core.browser.open(href);
             });
         } else if (href === "back") {
-            obj.on("click", function () {
+            obj.on("click", function (data, e) {
+                e.preventDefault();
                 core.href(href, results, results.style, results.transform);
             });
         } else {
-            obj.on("click", function () {
+            obj.on("click", function (data, e) {
+                e.preventDefault();
                 core.href(href, results, results.style || "back", results.transform || "horizontal");
             });
         }
@@ -137,16 +139,17 @@ function tree(elem, names) {
     if (typeof elem === "string") {
         elem = dom.parse(elem)[0];
     }
-    var root = createItem(elem, names), item;
-    for (item = elem.firstElementChild; item; item = item.nextElementSibling) {
-        if (item.nodeType === 3) {
+    var root = createItem(elem, names),
+        arr = [].slice.call(elem.childNodes);
+    util.each(arr, function (i, item) {
+        if (item.nodeType === 3 && util.trim(item.textContent)) {
             root.add(new UIObject(item));
         } else if (item.nodeType === 1 && (dom.attr(item, "data-tree") === "false" || dom.find("[data-role],[data-name],a", item).length === 0)) {
             root.add(load(item, names));
         } else if (item.nodeType === 1) {
             root.add(tree(item, names));
         }
-    }
+    });
     return root;
 }
 exports.tree = tree;

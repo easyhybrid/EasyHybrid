@@ -142,9 +142,9 @@ function href(name, data, style, transform) {
             dom.removeClass(item._dom, transformString);
             transform = item._transform = transform || "none";
             if (transform !== "none") {
+                item.attach(root);
                 dom.addClass(item._dom, transforms[transform].href);
                 setTimeout(done, 400);
-                item.attach(root);
             } else {
                 item.attach(root);
                 done();
@@ -186,7 +186,7 @@ function back(data, style, transform) {
 
     if (transform !== "none") {
         dom.addClass(item._dom, transforms[transform].back);
-        setTimeout(done, 250);
+        setTimeout(done, 350);
     } else {
         done();
     }

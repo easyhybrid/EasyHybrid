@@ -12,7 +12,8 @@ var os = require("../util/os"),//引入系统库
     head = document.getElementsByTagName('head'),
     viewport = document.createElement('meta'),
     style = document.body.style;
-if (os.ios) {
+//TODO 不完美修复Android 4.42的问题
+if (os.ios || window.screen.width <= 360) {
     dpr = 1;
 }
 viewport.name = 'viewport';

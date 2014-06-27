@@ -146,18 +146,18 @@ function run(data) {
         source += ');';
     }
     return '' +
-        'module.exports = {\n' +
-        '    render: function(map) {\n' +
-        '        var p = [],\n' +
-        '            v = [];\n' +
-        '        map = map || {};\n' +
-        '        for(var i in map) {\n' +
-        '           p.push(i);\n' +
-        '           v.push(map[i]);\n' +
-        '        }\n' +
-        '        return (new Function(p, \"var _s=[];_s.push(' + source + ' return _s;\")).apply(null, v).join("");\n' +
-        '    }\n' +
-        '};';
+           'module.exports = {\n' +
+           '    render: function(map) {\n' +
+           '        var p = [],\n' +
+           '            v = [];\n' +
+           '        map = map || {};\n' +
+           '        for(var i in map) {\n' +
+           '           p.push(i);\n' +
+           '           v.push(map[i]);\n' +
+           '        }\n' +
+           '        return (new Function(p, \"var _s=[];_s.push(' + source + ' return _s;\")).apply(null, v).join("");\n' +
+           '    }\n' +
+           '};';
 }
 exports.run = run;
 
@@ -224,7 +224,6 @@ function platformInit(target, pkg) {
 }
 
 exports.platformInit = platformInit;
-
 
 /**
  * 初始化开发包信息

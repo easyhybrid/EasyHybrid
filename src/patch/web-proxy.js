@@ -5,11 +5,13 @@
  * @note 部分在web无法使用的插件的代理函数
  */
 
-var register = require("./../plugin/plugin").register;
+var plugin = require("./../plugin/plugin");
+var register = plugin.register;
 var util = require("../util/util");
 var data =  require("../util/data");
 var os = require("../util/os");
 
+plugin.platform = "web";
 /**
  * 返回设备信息
  */

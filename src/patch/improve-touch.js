@@ -66,9 +66,6 @@ document.addEventListener('touchstart', function (e) {
         gestureStart = true;
     }
     var now = Date.now(), delta = now - (touch.last || now);
-    if (!e.touches || e.touches.length === 0) {
-        return;
-    }
     touch.el = parentIfText(e.touches[0].target);
     if (touchTimeout) {
         clearTimeout(touchTimeout);
@@ -81,9 +78,10 @@ document.addEventListener('touchstart', function (e) {
     }
     touch.last = now;
     longTapTimer = setTimeout(longTap, longTapDelay);
-});
+}, true);
 
 document.addEventListener('touchmove', function (e) {
+    e.preventDefault();
     if (gestureStart && e.touches.length > 1) {
         var event;
         gesture.fx2 = e.touches[0].pageX;
@@ -108,7 +106,7 @@ document.addEventListener('touchmove', function (e) {
     if (longTapTimer) {
         clearTimeout(longTapTimer);
     }
-});
+}, true);
 
 document.addEventListener('touchend', function (e) {
     var event;
@@ -130,6 +128,7 @@ document.addEventListener('touchend', function (e) {
         touch = {};
     } else if (touch.x2 > 0 || touch.y2 > 0) {
         if (Math.abs(touch.x1 - touch.x2) > 30 || Math.abs(touch.y1 - touch.y2) > 30) {
+
             event = document.createEvent("HTMLEvents");
             event.initEvent('swipe', true, true);
             touch.el.dispatchEvent(event);
@@ -153,7 +152,7 @@ document.addEventListener('touchend', function (e) {
             touch = {};
         }, 250);
     }
-});
+}, true);
 document.addEventListener('touchcancel', function () {
     touch = {};
     gestureStart = false;
@@ -161,6 +160,6 @@ document.addEventListener('touchcancel', function () {
     if (longTapTimer) {
         clearTimeout(longTapTimer);
     }
-});
+}, true);
 
 

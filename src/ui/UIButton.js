@@ -31,14 +31,12 @@ function UIButton(options) {
             return false;
         }
         me.emit("click", me._data, e);
-        return false;
     });
     me.bind(null, "tap", function (e) {
         if (me._disabled && !me._active) {
             return false;
         }
         me.emit("tap", me._data, e);
-        return false;
     });
 }
 

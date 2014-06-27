@@ -79,14 +79,18 @@ UIPager.prototype.load = function () {
             loaded++;
             me.emit("build", me.current++, item);
         });
-        me.emit("finish");
+        if (loaded !== true) {
+            me.emit("finish");
+        }
     }
 
     while (me.current < me.cache.length) {
         loaded = true;
         me.emit("build", me.current, me.cache[me.current++]);
     }
-
+    if (loaded === true) {
+        me.emit("finish");
+    }
     me.emit("load", me.index, me.index++ === 1 ? me.size * 2 : me.size, done);
     if (me.index === 2) {
         me.index++;

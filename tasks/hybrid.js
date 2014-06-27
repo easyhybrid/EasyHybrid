@@ -126,10 +126,10 @@ module.exports = function (grunt) {
             content += '    window.devProxy = "' + config.proxy + '";\n';
         }
         content += '    exports.init = function () {\n' +
-            '        core.util.join(function(){\n' +
-            '            require("hybrid/init")(core);\n' +
-            '        }, core.plugin.channels);\n' +
-            '    };\n';
+                   '        core.util.join(function(){\n' +
+                   '            require("hybrid/init")(core);\n' +
+                   '        }, core.plugin.channels);\n' +
+                   '    };\n';
         content += '});';
         grunt.file.write(config.dest, content);
     });
@@ -142,12 +142,12 @@ module.exports = function (grunt) {
         var css = config.sources.css;
         var js = config.sources.js;
         var content = '<html>\n    <head>' +
-            '\n        <meta charset="utf-8"/>' +
-            '\n        <meta name="apple-touch-fullscreen" content="yes"/>' +
-            '\n        <meta name="apple-mobile-web-app-capable" content="yes" />' +
-            '\n        <meta name="apple-mobile-web-app-status-bar-style" content="black">' +
-            '\n        <base target="_self"/>' +
-            '\n        <title>' + config.name + '</title>';
+                      '\n        <meta charset="utf-8"/>' +
+                      '\n        <meta name="apple-touch-fullscreen" content="yes"/>' +
+                      '\n        <meta name="apple-mobile-web-app-capable" content="yes" />' +
+                      '\n        <meta name="apple-mobile-web-app-status-bar-style" content="black">' +
+                      '\n        <base target="_self"/>' +
+                      '\n        <title>' + config.name + '</title>';
         css.forEach(function (item) {
             content += '\n        <link href="' + item + '" rel="stylesheet"/>';
         });
@@ -179,9 +179,9 @@ module.exports = function (grunt) {
         });
         js.push("js/load.js");
         var content = '<html>\n    <head>' +
-            '\n        <meta charset="utf-8"/>' +
-            '\n        <base target="_self"/>' +
-            '\n        <title>' + config.name + '</title>';
+                      '\n        <meta charset="utf-8"/>' +
+                      '\n        <base target="_self"/>' +
+                      '\n        <title>' + config.name + '</title>';
         css.forEach(function (item) {
             content += '\n        <link href="' + item + '" rel="stylesheet"/>';
         });
@@ -215,7 +215,7 @@ module.exports = function (grunt) {
                         {
                             expand: true,
                             cwd: config.lib,
-                            src: ["**", "!css/**", "!source/self/**", "source/self/load.js", "source/self/require.js"],
+                            src: ["**", "!css/**"],
                             dest: ".tmp/js/",
                             filter: config.filter.lib
                         }
@@ -248,7 +248,7 @@ module.exports = function (grunt) {
                         {
                             expand: true,
                             cwd: config.src,
-                            src: ["**","!**/*.iml","!**/*.md","!**/.*",  "!**/css/**"],
+                            src: ["**", "!**/css/**"],
                             dest: ".tmp/js/",
                             filter: config.filter.source
                         }
@@ -406,7 +406,7 @@ module.exports = function (grunt) {
                         {
                             expand: true,
                             cwd: config.src,
-                            src: ["**","!**/*.iml","!**/*.md","!**/.*",  "!**/css/**"],
+                            src: ["**", "!**/*.iml", "!**/*.md", "!**/.*", "!**/css/**"],
                             dest: ".tmp/js/",
                             filter: config.filter.source
                         }
