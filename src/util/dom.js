@@ -96,10 +96,18 @@ dom.support = (function () {
             return ret;
         }
     });
+    //firefox浏览器不支持focusin事件
     support.focusinBubbles = "onfocusin" in window;
-
+    //检测浏览器是否支持原生自由滚动
     support.nativeTouchScroll = div.style["-webkit-overflow-scrolling"] !== undefined
         && (navigator.userAgent.match(/(iPad).*OS\s([\d_]+)/) || navigator.userAgent.match(/(iPhone\sOS)\s([\d_]+)/));
+    if (!support.nativeTouchScroll && "ontouchstart" in  document) {
+        //检测浏览器是否需要禁用touchmove事件
+
+    } else {
+        support.badTouchEvent = false;
+    }
+
     return support;
 })();
 

@@ -59,9 +59,9 @@ function UIScroll(options) {
     this.emitEvent = event;
     this.emitMove = event && options.move;
     if (this.freeScroll) {
-        dom.style(this.wrapper, "overflowY", this._horizontal ? "scroll" : "hidden");
-        dom.style(this.wrapper, "overflowX", this._vertical ? "scroll" : "hidden");
-        dom.style(this.wrapper, "webkitOverflowScrolling", "touch");
+        dom.style(this.wrapper, "overflowX", this._horizontal ? "scroll" : "hidden");
+        dom.style(this.wrapper, "overflowY", this._vertical ? "scroll" : "hidden");
+        dom.style(this.wrapper, "-webkit-overflow-scrolling", "touch");
         return;
     }
     dom.style(this.wrapper, "overflow", "hidden");
@@ -328,7 +328,6 @@ UIScroll.prototype._start = function (e) {
  * @private
  */
 UIScroll.prototype._move = function (e) {
-    e.preventDefault();
     var point = e.touches ? e.touches[0] : e,
         deltaX = point.pageX - this.pointX,
         deltaY = point.pageY - this.pointY,

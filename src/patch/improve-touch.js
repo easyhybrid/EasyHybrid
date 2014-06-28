@@ -81,7 +81,6 @@ document.addEventListener('touchstart', function (e) {
 }, true);
 
 document.addEventListener('touchmove', function (e) {
-    e.preventDefault();
     if (gestureStart && e.touches.length > 1) {
         var event;
         gesture.fx2 = e.touches[0].pageX;

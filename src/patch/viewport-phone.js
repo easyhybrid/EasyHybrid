@@ -26,7 +26,7 @@ if (os.iphone) {
     viewport.content = 'width=device-width, initial-scale=1.0, user-scalable=no';
 } else if ((os.ipad && (style.width * style.height) % 320 !== 0) || !os.fullscreen) {//处理使用ipad浏览器或者使用PC浏览器的情况，排除使用iphone虚拟机
     style.width = "360px";
-    style.height = "615px";
+    style.height = "515px";
 } else if (width % 180 === 0) {
     //按照360宽度优化页面
     style.width = "360px";

@@ -6,4 +6,13 @@
  */
 
 var plugin = require("./../plugin/plugin");
+
 plugin.platform = "ios";
+
+setTimeout(function () {
+    plugin.exec("SplashScreen", "hide", []);
+}, 3000);
+
+////TODO 临时性禁用IOS自然滚动
+//var dom = require("../util/dom");
+//dom.support.nativeTouchScroll = false;
