@@ -83,7 +83,7 @@ document.addEventListener('touchstart', function (e) {
 }, true);
 
 document.addEventListener('touchmove', function (e) {
-    if (!dom.support.nativeTouchScroll) {
+    if (dom.support.badAndroid) {
         e.preventDefault();
     }
 

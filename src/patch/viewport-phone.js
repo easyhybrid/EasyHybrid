@@ -8,7 +8,7 @@
  */
 
 var os = require("../util/os"),//引入系统库
-    dpr = window.devicePixelRatio = window.devicePixelRatio || Math.round(window.screen.availWidth / document.documentElement.clientWidth) || 1,//实际像素比
+    dpr = window.devicePixelRatio || Math.round(window.screen.availWidth / document.documentElement.clientWidth) || 1,//实际像素比
     head = document.getElementsByTagName('head'),
     viewport = document.createElement('meta'),
     style = document.body.style;
@@ -25,7 +25,7 @@ if (os.iphone) {
     style.width = "320px";
     style.height = "100%";
     viewport.content = 'width=device-width, initial-scale=1.0, user-scalable=no';
-} else if ((os.ipad && (style.width * style.height) % 320 !== 0) || !os.fullscreen) {//处理使用ipad浏览器或者使用PC浏览器的情况，排除使用iphone虚拟机
+} else if (os.ipad || !os.fullscreen) {//处理使用ipad浏览器或者使用PC浏览器的情况，排除使用iphone虚拟机
     style.width = "320px";
     style.height = "568px";
 } else if (width % 180 === 0) {

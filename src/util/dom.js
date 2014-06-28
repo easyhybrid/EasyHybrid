@@ -102,6 +102,10 @@ dom.support = (function () {
     support.nativeTouchScroll = div.style["-webkit-overflow-scrolling"] !== undefined
         && (navigator.userAgent.match(/(iPad).*OS\s([\d_]+)/) || navigator.userAgent.match(/(iPhone\sOS)\s([\d_]+)/));
 
+    //错误Android滚动处理
+
+    support.badAndroid = !support.nativeTouchScroll && window.devicePixelRatio && window.devicePixelRatio === 3 && window.screen.width <= 360;
+
     return support;
 })();
 
