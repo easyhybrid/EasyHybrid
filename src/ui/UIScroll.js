@@ -202,6 +202,9 @@ UIScroll.prototype.scrollToElement = function (ele, time) {
  * 重新初始化页面位置
  */
 UIScroll.prototype.refresh = function () {
+    if (this.freeScroll) {
+        return;
+    }
     if (!this._inited) {
         var position = dom.css(this.wrapper, "position");
         if (position !== "absolute") {

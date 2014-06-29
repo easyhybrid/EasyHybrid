@@ -99,13 +99,11 @@ dom.support = (function () {
     //firefox浏览器不支持focusin事件
     support.focusinBubbles = "onfocusin" in window;
     //检测浏览器是否支持原生自由滚动
-    support.nativeTouchScroll = div.style["-webkit-overflow-scrolling"] !== undefined
+    support.nativeTouchScroll =div.style["-webkit-overflow-scrolling"] !== undefined
         && (navigator.userAgent.match(/(iPad).*OS\s([\d_]+)/) || navigator.userAgent.match(/(iPhone\sOS)\s([\d_]+)/));
 
-    //错误Android滚动处理
-
-    support.badAndroid = !support.nativeTouchScroll && window.devicePixelRatio && window.devicePixelRatio === 3 && window.screen.width <= 360;
-
+    //错误Android滚动处理(目前只知道QQ浏览器和某个版本的小米有问题)
+    support.badAndroid = !support.nativeTouchScroll && window.devicePixelRatio && window.devicePixelRatio === 3 && /KVT49L|QQ/i.test(navigator.userAgent);
     return support;
 })();
 
