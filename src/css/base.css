@@ -136,6 +136,14 @@ html, body {
     -webkit-tap-highlight-color: rgba(0, 0, 0, 0);
 }
 
+/*.absolute div{*/
+    /*-moz-transform: translate3d(0, 0, 0);*/
+    /*-ms-transform: translate3d(0, 0, 0);*/
+    /*-o-transform: translate3d(0, 0, 0);*/
+    /*-webkit-transform: translate3d(0, 0, 0);*/
+    /*transform: translate3d(0, 0, 0);*/
+/*}*/
+
 /*单行文字显示*/
 .line {
     overflow: hidden;

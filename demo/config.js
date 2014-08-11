@@ -67,7 +67,7 @@ module.exports = window.EASYHYBRID_CONFIG || {
     more: {
         enable: true,//禁用此模块将导致所有依赖用户的模块不可用
         name: "更多",
-        server: "http://soft.hnu.edu.cn/wszxfw/public/api.php",
+        server: "http://soft.hnu.edu.cn/wsqyfw/public/zgddzyw.php",
         version: "1.0.0",
         phone: "18688886665"
     },
