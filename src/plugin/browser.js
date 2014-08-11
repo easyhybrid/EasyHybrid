@@ -61,6 +61,27 @@ exports.action = function (url, success, fail) {
 };
 
 /**
+ * 未完成
+ * 在系统的浏览器中打开url（拨打电话，使用地图）
+ * @param url 要打开的地址
+ * @param success
+ * @param fail
+ */
+exports.video = function (url, success, fail) {
+    function win() {
+        var div = document.createElement("div");
+        div.style.position = "absolute";
+        document.body.appendChild(div);
+        success.call(undefined, arguments);
+        document.removeChild(div);
+    }
+
+    base.exec(win, fail, "Action", "video", [url]);
+};
+
+
+
+/**
  * 找到一组应用中存在的一个
  * @param arr
  * @param success

@@ -105,6 +105,10 @@ register("Action", {
         window.open(args[0], "_blank");
         success();
     },
+    video: function (success, fail, args) {
+        window.open(args[0], "_blank");
+        success();
+    },
     exist: function (success) {
         success(0);
     }
